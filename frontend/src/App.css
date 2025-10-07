@@ -9,29 +9,31 @@
 /* Background container */
 .auth-page {
   position: relative;
-  min-height: 100vh;
+  height: 100vh; /* Thay min-height bằng height để phủ full */
+  width: 100vw; /* Thêm width full */
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
 }
 
-/* 🔹 Video Background */
 .bg-video {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw; /* Full width */
+  height: 100vh; /* Full height */
   object-fit: cover;
   z-index: 0;
   filter: brightness(0.7) saturate(1.1);
 }
 
-/* 🔹 Overlay giúp chữ rõ hơn */
 .bg-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0; /* Dùng top/left/right/bottom thay inset cho tương thích */
   background: linear-gradient(
     180deg,
     rgba(5, 5, 10, 0.4),
@@ -40,12 +42,22 @@
   z-index: 1;
 }
 
+/* Đảm bảo body/html full screen */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 /* Glass effect card */
 .glass-card {
   position: relative;
   z-index: 2;
-  width: 380px;
-  padding: 40px;
+  width: 90%; /* Thay 380px bằng % để responsive */
+  max-width: 380px; /* Giữ max-width */
+  padding: 40px 20px; /* Giảm padding trên mobile */
+  margin: 0 auto; /* Đảm bảo center */
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(25px);
@@ -55,6 +67,22 @@
   color: white;
   text-align: center;
   animation: fadeInUp 0.8s ease;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center; /* Center inputs */
+  width: 100%;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 480px) {
+  .glass-card {
+    width: 95%;
+    padding: 30px 15px;
+  }
 }
 
 /* Title */

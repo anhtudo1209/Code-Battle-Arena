@@ -22,7 +22,14 @@ export default function App() {
         loop
         muted
         playsInline
-      ></video>
+        onError={(e) => {
+          console.log("Video load error"); // Log lỗi nếu cần
+          e.target.style.display = "none"; // Ẩn nếu lỗi
+        }}
+      >
+        {/* Fallback GIF nếu video không hỗ trợ */}
+        <source src="/assets/img/2471303.gif" type="video/gif" />
+      </video>
 
       {/* 🔹 Overlay giúp chữ rõ hơn */}
       <div className="bg-overlay"></div>
