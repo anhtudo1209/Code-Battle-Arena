@@ -1,0 +1,92 @@
+# ==========================
+# 🌐 Global
+# ==========================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.bak
+*.old
+*.out
+*.exe
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# ==========================
+# 🧠 Node.js (backend)
+# ==========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Compiled output
+dist/
+build/
+out/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.code-workspace
+
+# ==========================
+# 💻 Frontend (React/Vite)
+# ==========================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env*
+
+# ==========================
+# 🐳 Docker
+# ==========================
+# Docker artifacts
+**/Dockerfile
+**/docker-compose.yml
+# Nếu bạn muốn giữ Dockerfile trên GitHub, hãy BỎ comment 2 dòng trên.
+
+# Docker cache / volumes
+*.pid
+*.seed
+*.log
+docker-data/
+volumes/
+tmp/
+
+# ==========================
+# ⚙️ Build & Run outputs
+# ==========================
+*.o
+*.obj
+*.exe
+*.class
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+main
+main.cpp
+main.exe
+
+# ==========================
+# 📦 System / OS
+# ==========================
+# Windows
+ehthumbs.db
+Desktop.ini
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
