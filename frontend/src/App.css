@@ -1,0 +1,223 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Background container */
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* 🔹 Video Background */
+.bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  filter: brightness(0.7) saturate(1.1);
+}
+
+/* 🔹 Overlay giúp chữ rõ hơn */
+.bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 5, 10, 0.4),
+    rgba(10, 10, 20, 0.6)
+  );
+  z-index: 1;
+}
+
+/* Glass effect card */
+.glass-card {
+  position: relative;
+  z-index: 2;
+  width: 380px;
+  padding: 40px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: white;
+  text-align: center;
+  animation: fadeInUp 0.8s ease;
+}
+
+/* Title */
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  letter-spacing: 2px;
+  background: linear-gradient(120deg, #56aef2, #2f80ed, #5c87ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+}
+
+.subtitle {
+  margin-bottom: 20px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input-container {
+  position: relative;
+  animation: fadeInUp 0.8s ease;
+}
+
+.input-container:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.input-container:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.input-container:nth-child(3) {
+  animation: none;
+}
+.input-container:nth-child(4) {
+  animation: none;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.8);
+  z-index: 1;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
+.form input {
+  padding: 12px 12px 12px 40px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  outline: none;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.form input:focus {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 15px rgba(86, 204, 242, 0.6),
+    inset 0 0 5px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(86, 204, 242, 0.5);
+}
+
+/* Buttons */
+.btn {
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #56aef2, #2f80ed, #5c87ff);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(86, 204, 242, 0.3);
+  animation: none;
+}
+
+.btn:hover {
+  background: linear-gradient(120deg, #5c87ff, #56aef2, #2f80ed);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+}
+
+/* Social Login */
+.social-login {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.social-btn {
+  width: 25px;
+  height: 25px;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-btn:hover {
+  transform: scale(1.1);
+}
+
+.facebook {
+  background: #1877f2;
+}
+
+.google {
+  background: #db4437;
+}
+
+.github {
+  background: #333;
+}
+
+/* Switch text */
+.switch {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.switch span {
+  color: #a2d2ff;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.switch span:hover {
+  color: #509adf;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
