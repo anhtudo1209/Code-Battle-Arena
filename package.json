@@ -1,0 +1,20 @@
+{
+  "name": "code-battle-arena",
+  "version": "1.0.0",
+  "description": "",
+  "main": "backend/src/app.js",
+  "type": "module",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node backend/src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}
