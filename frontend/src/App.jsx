@@ -17,7 +17,7 @@ export default function App() {
       {/* 🔹 Video Background */}
       <video
         className="bg-video"
-        src="/assets/img/rain-drops-city-moody-moewalls-com.mp4"
+        src="/assets/img/coding-deck-moewalls-com.mp4"
         autoPlay
         loop
         muted

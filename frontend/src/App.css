@@ -77,12 +77,11 @@ body {
   font-weight: 800;
   letter-spacing: 3px;
   margin-bottom: 10px;
-  background: linear-gradient(120deg, #7bdff2, #56aef2, #5c87ff);
+  background: linear-gradient(120deg, #7af2b2, #34d399, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-transform: uppercase;
-  text-shadow: 0 0 15px rgba(86, 204, 242, 0.4),
-    0 0 25px rgba(92, 135, 255, 0.3);
+  text-shadow: 0 0 15px rgba(34, 197, 94, 0.4), 0 0 25px rgba(6, 182, 212, 0.3);
   animation: glowText 3s ease-in-out infinite alternate;
 }
 
@@ -91,7 +90,7 @@ body {
   font-weight: 600;
   letter-spacing: 1px;
   color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 0 8px rgba(86, 204, 242, 0.4);
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
   margin-bottom: 25px;
   position: relative;
 }
@@ -102,7 +101,7 @@ body {
   width: 40px;
   height: 2px;
   margin: 8px auto 0;
-  background: linear-gradient(90deg, #56aef2, #5c87ff);
+  background: linear-gradient(90deg, #34d399, #06b6d4);
   border-radius: 2px;
 }
 
@@ -161,9 +160,9 @@ body {
 
 .form input:focus {
   background: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 15px rgba(86, 204, 242, 0.6),
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.6),
     inset 0 0 5px rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(86, 204, 242, 0.5);
+  border: 1px solid rgba(52, 211, 153, 0.5);
 }
 
 .btn {
@@ -171,18 +170,18 @@ body {
   padding: 12px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(120deg, #56aef2, #2f80ed, #5c87ff);
+  background: linear-gradient(120deg, #34d399, #10b981, #06b6d4);
   color: white;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(86, 204, 242, 0.3);
+  box-shadow: 0 4px 15px rgba(52, 211, 153, 0.3);
   position: relative;
 }
 
 .btn:hover {
-  background: linear-gradient(120deg, #5c87ff, #56aef2, #2f80ed);
-  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+  background: linear-gradient(120deg, #06b6d4, #34d399, #10b981);
+  box-shadow: 0 6px 20px rgba(52, 211, 153, 0.4);
 }
 
 .social-login {
@@ -237,14 +236,14 @@ body {
 }
 
 .switch span {
-  color: #a2d2ff;
+  color: #7af2b2;
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.3s ease;
 }
 
 .switch span:hover {
-  color: #509adf;
+  color: #34d399;
 }
 
 @keyframes fadeInUp {
@@ -260,11 +259,11 @@ body {
 
 @keyframes glowText {
   from {
-    text-shadow: 0 0 10px rgba(86, 204, 242, 0.3),
-      0 0 20px rgba(92, 135, 255, 0.3);
+    text-shadow: 0 0 10px rgba(52, 211, 153, 0.3),
+      0 0 20px rgba(6, 182, 212, 0.3);
   }
   to {
-    text-shadow: 0 0 20px rgba(86, 204, 242, 0.6),
-      0 0 35px rgba(92, 135, 255, 0.5);
+    text-shadow: 0 0 20px rgba(52, 211, 153, 0.6),
+      0 0 35px rgba(6, 182, 212, 0.5);
   }
 }
