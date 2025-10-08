@@ -7,16 +7,18 @@
 
 .auth-page {
   position: relative;
-  height: 100vh;
   width: 100vw;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  min-height: 100vh;
+  padding: 10px 0;
+  overflow-y: auto;
 }
 
 .bg-video {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
@@ -27,7 +29,7 @@
 }
 
 .bg-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -45,6 +47,9 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 .glass-card {
@@ -53,7 +58,7 @@ body {
   width: 90%;
   max-width: 380px;
   padding: 40px 20px 60px;
-  margin: 0 auto;
+  margin: 20px auto;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(25px);
@@ -72,6 +77,22 @@ body {
   }
 }
 
+@media (max-width: 350px) {
+  .glass-card {
+    width: 100%;
+    padding: 20px 10px 40px;
+  }
+}
+@media (max-height: 600px) {
+  .glass-card {
+    margin-top: 10px;
+  }
+  .auth-page {
+    justify-content: flex-start;
+    padding-top: 10px;
+    min-height: auto;
+  }
+}
 .title {
   font-size: 30px;
   font-weight: 800;
@@ -116,20 +137,6 @@ body {
 .input-container {
   position: relative;
   width: 100%;
-  animation: fadeInUp 0.8s ease;
-}
-
-.input-container:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.input-container:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.input-container:nth-child(3),
-.input-container:nth-child(4) {
-  animation: none;
 }
 
 .input-icon {
@@ -151,7 +158,6 @@ body {
   color: white;
   outline: none;
   font-size: 15px;
-  transition: all 0.3s ease;
 }
 
 .form input::placeholder {
@@ -193,8 +199,8 @@ body {
 }
 
 .social-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 50%;
   color: white;
@@ -231,7 +237,7 @@ body {
 }
 
 .switch {
-  margin-top: 15px;
+  margin-top: 10px;
   font-size: 14px;
 }
 
