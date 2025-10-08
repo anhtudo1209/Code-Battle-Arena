@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 export default function GoogleLogin({ children, onLogin }) {
   const clientId =
-    "330125511175-iavuhoc2rhac1aft1s18dtfvop0863nk.apps.googleusercontent.com";
+    "330125511175-iavuhoc2rhac1aft1s18dtfvop0863nk.apps.googleusercontent.com"; // client id của credential
   let tokenClient;
 
   useEffect(() => {
@@ -11,7 +11,7 @@ export default function GoogleLogin({ children, onLogin }) {
     tokenClient = window.google.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope:
-        "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email", // scope
       callback: (tokenResponse) => {
         if (tokenResponse.access_token) {
           fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
