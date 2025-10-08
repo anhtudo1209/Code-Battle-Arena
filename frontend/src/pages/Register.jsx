@@ -8,6 +8,7 @@ import {
   FaLock,
 } from "react-icons/fa";
 import "./Register.css";
+import GoogleLogin from "../components/GoogleLogin";
 
 export default function Register({ onSwitchToLogin }) {
   return (
@@ -43,9 +44,11 @@ export default function Register({ onSwitchToLogin }) {
         <button className="social-btn facebook">
           <FaFacebook />
         </button>
-        <button className="social-btn google">
-          <FaGoogle />
-        </button>
+        <GoogleLogin>
+          <button className="social-btn google">
+              <FaGoogle />
+          </button>
+        </GoogleLogin>
         <button className="social-btn github">
           <FaGithub />
         </button>
