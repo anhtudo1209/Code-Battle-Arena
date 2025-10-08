@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
+import GoogleLogin from "./GoogleLogin";
 import {
   FaFacebook,
   FaGoogle,
@@ -11,6 +12,7 @@ import {
 
 export default function App() {
   const [isLogin, setIsLogin] = useState(true);
+  const [googleUser, setGoogleUser] = useState(null);
 
   return (
     <div className="auth-page">
@@ -58,9 +60,11 @@ export default function App() {
               <button className="social-btn facebook">
                 <FaFacebook />
               </button>
-              <button className="social-btn google">
+              {/* <button className="social-btn google" onClick={() => window.google.accounts.id.prompt()}>
                 <FaGoogle />
-              </button>
+              </button> */}
+              {/* GoogleLogin component để chuẩn bị Google login */}
+              <GoogleLogin onLogin={setGoogleUser} />
               <button className="social-btn github">
                 <FaGithub />
               </button>
@@ -100,9 +104,10 @@ export default function App() {
               <button className="social-btn facebook">
                 <FaFacebook />
               </button>
-              <button className="social-btn google">
+              {/*<button className="social-btn google" onClick={() => window.google.accounts.id.prompt()}>
                 <FaGoogle />
-              </button>
+              </button> */}
+              <GoogleLogin onLogin={setGoogleUser} />
               <button className="social-btn github">
                 <FaGithub />
               </button>
