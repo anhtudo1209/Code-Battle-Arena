@@ -1,0 +1,57 @@
+.letter-glitch {
+  display: inline-block;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  position: relative;
+}
+
+.letter-glitch__letter {
+  display: inline-block;
+  position: relative;
+  animation: glitch 2s infinite;
+}
+
+@keyframes glitch {
+  0%, 100% {
+    transform: translate(0);
+    color: inherit;
+  }
+  10% {
+    transform: translate(-2px, 2px);
+    color: #ff0000;
+  }
+  20% {
+    transform: translate(2px, -2px);
+    color: #00ff00;
+  }
+  30% {
+    transform: translate(-1px, 1px);
+    color: #0000ff;
+  }
+  40% {
+    transform: translate(1px, -1px);
+    color: #ffff00;
+  }
+  50% {
+    transform: translate(0);
+    color: inherit;
+  }
+  60% {
+    transform: translate(2px, 2px);
+    color: #ff00ff;
+  }
+  70% {
+    transform: translate(-2px, -2px);
+    color: #00ffff;
+  }
+  80% {
+    transform: translate(1px, 1px);
+    color: #ffffff;
+  }
+  90% {
+    transform: translate(-1px, -1px);
+    color: #ff8000;
+  }
+}
