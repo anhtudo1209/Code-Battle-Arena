@@ -1,6 +1,7 @@
 import React from "react";
 import { FaFacebook, FaGoogle, FaGithub, FaUser, FaLock } from "react-icons/fa";
 import "./Login.css";
+import GoogleLogin from "../components/GoogleLogin";
 
 export default function Login({ onSwitchToRegister, rememberMe, setRememberMe }) {
   const handleRememberChange = () => {
@@ -45,9 +46,11 @@ export default function Login({ onSwitchToRegister, rememberMe, setRememberMe })
         <button className="social-btn facebook">
           <FaFacebook />
         </button>
-        <button className="social-btn google">
+        <GoogleLogin>
+          <button className="social-btn google">
           <FaGoogle />
-        </button>
+          </button>
+        </GoogleLogin>
         <button className="social-btn github">
           <FaGithub />
         </button>
