@@ -25,21 +25,8 @@ export default function App() {
 
   return (
     <div className="auth-page">
-      {/* 🔹 Video Background */}
-      <video
-        className="bg-video"
-        src="/assets/img/coding-deck-moewalls-com.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        onError={(e) => {
-          console.log("Video load error");
-          e.target.style.display = "none";
-        }}
-      >
-        <source src="/assets/img/2471303.gif" type="video/gif" />
-      </video>
+      {/* 🔹 Image Background */}
+      <div className="bg-image"></div>
 
       {/* 🔹 Overlay giúp chữ rõ hơn */}
       <div className="bg-overlay"></div>
