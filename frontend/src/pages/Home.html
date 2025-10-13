@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CODE BATTLE ARENA</title>
+    <link rel="stylesheet" href="Home.css" />
+    <style>
+      /* Giữ style nút link giống button */
+      a.btn {
+        display: inline-block;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      a.play-btn {
+        text-decoration: none;
+        background: linear-gradient(135deg, #34d399, #06b6d4);
+        color: white;
+        padding: 10px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        border: none;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 15px rgba(52, 211, 153, 0.4);
+      }
+
+      a.play-btn:hover {
+        background: linear-gradient(120deg, #06b6d4, #34d399);
+        box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="home-page">
+      <!-- Background -->
+      <div class="bg-image"></div>
+      <div class="bg-overlay"></div>
+
+      <!-- Header -->
+      <header class="header">
+        <h1 class="logo">CODE BATTLE ARENA</h1>
+        <div class="header-right">
+          <input type="text" placeholder="Search..." class="search-bar" />
+          <div class="icon-btn">⚙️</div>
+          <div class="icon-btn">☰</div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="glass-card streak">
+            <h2>0 Day Streak</h2>
+            <p>Take a lesson today to start a new streak!</p>
+            <div class="streak-dots">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+
+          <div class="glass-card leaderboard">
+            <h2>LEADERBOARD</h2>
+            <ul>
+              <li>NO.1 Username1</li>
+              <li>NO.2 Username2</li>
+              <li>NO.3 Username3</li>
+              <li>NO.4 Username4</li>
+            </ul>
+          </div>
+
+          <div class="glass-card daily">
+            <h2>DAILY CHALLENGE</h2>
+            <p>Earn 10 Exp</p>
+            <div class="progress-bar">
+              <div class="progress"></div>
+            </div>
+
+            <!-- 🔹 Link PLAY styled like button -->
+            <a href="Practice.html" class="btn play-btn">PLAY</a>
+          </div>
+        </aside>
+
+        <!-- Main Section -->
+        <main class="main-area">
+          <p class="subtitle">
+            Code Battle Arena is an online code battle game with multiple game
+            modes.
+          </p>
+
+          <div class="battle-area">
+            <div class="monitor">
+              <div class="code-line"></div>
+              <div class="code-line short"></div>
+              <div class="code-line"></div>
+              <div class="code-line short"></div>
+            </div>
+
+            <div class="vs">VS</div>
+
+            <div class="monitor">
+              <div class="code-line"></div>
+              <div class="code-line short"></div>
+              <div class="code-line"></div>
+              <div class="code-line short"></div>
+            </div>
+          </div>
+
+          <button class="btn start-btn">GET STARTED</button>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
