@@ -17,13 +17,16 @@
   overflow-y: auto;
 }
 
-.bg-video {
+.bg-image {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  object-fit: cover;
+  background-image: url('/assets/img/cyberpunk-desk-3d-graphics-laptop-1828201-wallhere.com.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   z-index: 0;
   filter: brightness(0.7) saturate(1.1);
 }

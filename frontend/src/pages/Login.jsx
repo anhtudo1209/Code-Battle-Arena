@@ -4,7 +4,11 @@ import "./Login.css";
 import GoogleLogin from "../components/GoogleLogin";
 import { login as loginService } from "../services/authService";
 
-export default function Login({ onSwitchToRegister, rememberMe, setRememberMe }) {
+export default function Login({
+  onSwitchToRegister,
+  rememberMe,
+  setRememberMe,
+}) {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,6 +59,7 @@ export default function Login({ onSwitchToRegister, rememberMe, setRememberMe })
             required
           />
         </div>
+        <a href="\src\pages\Home.html">Go to Home</a>
 
         {error && (
           <div className="error" style={{ color: "#f87171", marginBottom: 8 }}>
@@ -88,7 +93,7 @@ export default function Login({ onSwitchToRegister, rememberMe, setRememberMe })
         </button>
         <GoogleLogin>
           <button className="social-btn google">
-          <FaGoogle />
+            <FaGoogle />
           </button>
         </GoogleLogin>
         <button className="social-btn github">
