@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 
 export default function GoogleLogin({ children, onLogin }) {
-  const clientId =
-    "330125511175-iavuhoc2rhac1aft1s18dtfvop0863nk.apps.googleusercontent.com"; // client id của credential
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   let tokenClient;
 
   useEffect(() => {
@@ -11,19 +10,19 @@ export default function GoogleLogin({ children, onLogin }) {
     tokenClient = window.google.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope:
-        "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email", // scope
-      callback: (tokenResponse) => {
+        "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+      callback: async (tokenResponse) => {
         if (tokenResponse.access_token) {
-          fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-            },
-          })
-            .then((res) => res.json())
-            .then((userInfo) => {
-              console.log("Google User:", userInfo);
-              onLogin?.(userInfo);
-            });
+          const userInfoRes = await fetch(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+            }
+          );
+          const userInfo = await userInfoRes.json();
+          console.log("Google User:", userInfo);
+
+          onLogin?.(userInfo);
         }
       },
     });
