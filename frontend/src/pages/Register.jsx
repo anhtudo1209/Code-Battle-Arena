@@ -101,7 +101,11 @@ export default function Register({ onSwitchToLogin }) {
         <button className="social-btn facebook">
           <FaFacebook />
         </button>
-        <GoogleLogin>
+        <GoogleLogin
+          onLogin={() => {
+            window.location.href = "/src/pages/home.html";
+          }}
+          >
           <button className="social-btn google">
               <FaGoogle />
           </button>

@@ -35,5 +35,49 @@ router.post("/login", async (req, res) => {
         return res.sendStatus(503);
     }
 })
+router.post("/oauth-login", async (req, res) => {
+    const { provider, provider_user_id, email, username } = req.body;
+
+    try {
+        const getOAuth = db.prepare(`
+            SELECT * FROM oauth_accounts WHERE provider = ? AND provider_user_id = ?
+        `).get(provider, provider_user_id);
+
+        let userId;
+
+        if (getOAuth) {
+            userId = getOAuth.user_id;
+        } else {
+            const getUser = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
+
+            if (getUser) {
+                userId = getUser.id;
+            } else {
+                const insertUser = db.prepare(`
+                    INSERT INTO users (username, email, password) VALUES (?, ?, ?)
+                `);
+                const result = insertUser.run(username || email, email, ""); // password để trống cho OAuth
+                userId = result.lastInsertRowid;
+            }
+
+            const insertOAuth = db.prepare(`
+                INSERT INTO oauth_accounts (user_id, provider, provider_user_id)
+                VALUES (?, ?, ?)
+            `);
+            insertOAuth.run(userId, provider, provider_user_id);
+        }
+        const allUsers = db.prepare(`SELECT * FROM users`).all();
+        const allOAuth = db.prepare(`SELECT * FROM oauth_accounts`).all();
+        console.log("📊 Users table:", allUsers);
+        console.log("📊 OAuth_accounts table:", allOAuth);
+
+        const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "24h" });
+        return res.json({ token });
+
+    } catch (err) {
+        console.error("OAuth login error:", err);
+        return res.sendStatus(503);
+    }
+});
 
 export default router;
