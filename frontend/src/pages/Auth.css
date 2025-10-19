@@ -241,6 +241,7 @@ body {
 
 .switch {
   margin-top: 10px;
+  margin-bottom: 40px; /* Add space for social buttons */
   font-size: 14px;
 }
 
