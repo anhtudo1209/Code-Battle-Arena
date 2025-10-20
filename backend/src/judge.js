@@ -22,11 +22,27 @@ class CodeJudge {
       const codeFile = path.join(tempDir, 'solution.cpp');
       await fs.promises.writeFile(codeFile, code);
 
-      // For now, simulate compilation and testing without Docker
-      // TODO: Replace with actual Docker execution when Docker is available
-      const result = await this.simulateJudging(code, exerciseId);
+      // Compile the code
+      const compileResult = await this.compileCode(tempDir);
+      if (!compileResult.success) {
+        return {
+          success: false,
+          compilationSuccess: false,
+          compilationError: compileResult.error,
+          testResults: []
+        };
+      }
 
-      return result;
+      // Run test cases
+      const testResults = await this.runTestCases(tempDir, exerciseId);
+
+      const allPassed = testResults.every(test => test.passed);
+
+      return {
+        success: allPassed,
+        compilationSuccess: true,
+        testResults: testResults
+      };
 
     } catch (error) {
       console.error('Judging error:', error);
@@ -45,35 +61,24 @@ class CodeJudge {
     }
   }
 
-  // Temporary simulation method until Docker is set up
-  async simulateJudging(code, exerciseId) {
-    // Simple check for basic C++ hello world
-    const hasHelloWorld = code.includes('cout') && code.includes('Hello, World!');
-    const hasInclude = code.includes('#include <iostream>');
-    const hasUsingNamespace = code.includes('using namespace std;');
-    const hasMain = code.includes('int main()');
+  async compileCode(tempDir) {
+    try {
+      const compileCmd = `docker run --rm -v "${tempDir}:/judge/temp" -w /judge/temp ${this.dockerImage} g++ -o solution solution.cpp`;
 
-    if (hasInclude && hasUsingNamespace && hasMain && hasHelloWorld) {
-      return {
-        success: true,
-        compilationSuccess: true,
-        testResults: [
-          {
-            testCase: 'testcase1',
-            passed: true,
-            expected: 'Hello, World!',
-            actual: 'Hello, World!',
-            executionTime: 0.001,
-            memoryUsed: 1024
-          }
-        ]
-      };
-    } else {
+      const { stdout, stderr } = await execAsync(compileCmd, { timeout: 30000 });
+
+      if (stderr && stderr.trim()) {
+        return {
+          success: false,
+          error: stderr.trim()
+        };
+      }
+
+      return { success: true };
+    } catch (error) {
       return {
         success: false,
-        compilationSuccess: false,
-        compilationError: 'Compilation failed: Missing required C++ elements',
-        testResults: []
+        error: error.stderr || error.stdout || error.message
       };
     }
   }
@@ -85,11 +90,11 @@ class CodeJudge {
     try {
       // Find all test case files
       const files = await fs.promises.readdir(exerciseDir);
-      const inputFiles = files.filter(f => f.endsWith('.input.txt')).sort();
+      const outputFiles = files.filter(f => f.endsWith('.output.txt')).sort();
 
-      for (const inputFile of inputFiles) {
-        const testCaseNum = inputFile.replace('.input.txt', '');
-        const outputFile = `${testCaseNum}.output.txt`;
+      for (const outputFile of outputFiles) {
+        const testCaseNum = outputFile.replace('.output.txt', '');
+        const inputFile = `${testCaseNum}.input.txt`;
 
         const inputPath = path.join(exerciseDir, inputFile);
         const expectedOutputPath = path.join(exerciseDir, outputFile);
@@ -112,12 +117,12 @@ class CodeJudge {
       // Read expected output
       const expectedOutput = await fs.promises.readFile(expectedOutputPath, 'utf8');
 
-      // Run the program with input
-      const runCmd = `docker run --rm -v "${tempDir}:/judge/temp" -w /judge/temp --memory=256m --cpus=0.5 --ulimit nproc=50 gcc:latest timeout 5s ./solution < /judge/temp/input.txt`;
-
       // Copy input file to temp directory
       const tempInputPath = path.join(tempDir, 'input.txt');
       await fs.promises.copyFile(inputPath, tempInputPath);
+
+      // Run the program with input using Docker
+      const runCmd = `docker run --rm -v "${tempDir}:/judge/temp" -w /judge/temp --memory=256m --cpus=0.5 --ulimit nproc=50 ${this.dockerImage} timeout 5s ./solution < input.txt`;
 
       const { stdout, stderr } = await execAsync(runCmd, { timeout: 10000 });
 
@@ -129,8 +134,8 @@ class CodeJudge {
         passed: actualOutput === expectedTrimmed,
         expected: expectedTrimmed,
         actual: actualOutput,
-        executionTime: 0, // Could be measured with /usr/bin/time
-        memoryUsed: 0    // Could be measured
+        executionTime: 0.001, // Placeholder
+        memoryUsed: 1024     // Placeholder
       };
 
     } catch (error) {
