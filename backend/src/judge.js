@@ -63,28 +63,28 @@ class CodeJudge {
 
   async compileCode(tempDir) {
     try {
-      const compileCmd = `docker run --rm -v "${tempDir}:/judge/temp" -w /judge/temp ${this.dockerImage} g++ -o solution solution.cpp`;
+      // Convert Windows path to Docker-compatible format (forward slashes)
+      const dockerPath = tempDir.replace(/\\/g, '/');
 
+      const compileCmd = `docker run --rm -v "${dockerPath}:/judge/temp" -w /judge/temp ${this.dockerImage} g++ -o solution solution.cpp 2>&1`;
       const { stdout, stderr } = await execAsync(compileCmd, { timeout: 30000 });
 
-      if (stderr && stderr.trim()) {
-        return {
-          success: false,
-          error: stderr.trim()
-        };
-      }
-
+      // Compilation succeeded if the command didn't throw an error
+      // stderr may contain warnings which are not errors
       return { success: true };
+
     } catch (error) {
+      // If compilation actually failed (non-zero exit code), show the error
+      const errorMessage = error.stdout || error.stderr || error.message;
       return {
         success: false,
-        error: error.stderr || error.stdout || error.message
+        error: errorMessage
       };
     }
   }
 
   async runTestCases(tempDir, exerciseId) {
-    const exerciseDir = path.join(process.cwd(), 'exercises', exerciseId);
+    const exerciseDir = path.join(process.cwd(), 'backend', 'exercises', exerciseId);
     const testResults = [];
 
     try {
@@ -117,12 +117,24 @@ class CodeJudge {
       // Read expected output
       const expectedOutput = await fs.promises.readFile(expectedOutputPath, 'utf8');
 
-      // Copy input file to temp directory
+      // Check if input file exists and read it
+      let inputContent = '';
+      try {
+        inputContent = await fs.promises.readFile(inputPath, 'utf8');
+      } catch (inputError) {
+        // Input file not found or empty, using empty input
+      }
+
+      // Write input to temp directory
       const tempInputPath = path.join(tempDir, 'input.txt');
-      await fs.promises.copyFile(inputPath, tempInputPath);
+      await fs.promises.writeFile(tempInputPath, inputContent);
+
+      // Convert Windows path to Docker-compatible format (forward slashes)
+      const dockerPath = tempDir.replace(/\\/g, '/');
 
       // Run the program with input using Docker
-      const runCmd = `docker run --rm -v "${tempDir}:/judge/temp" -w /judge/temp --memory=256m --cpus=0.5 --ulimit nproc=50 ${this.dockerImage} timeout 5s ./solution < input.txt`;
+      // Use sh -c to properly handle input redirection in Docker
+      const runCmd = `docker run --rm -v "${dockerPath}:/judge/temp" -w /judge/temp --memory=256m --cpus=0.5 --ulimit nproc=50 ${this.dockerImage} sh -c "timeout 5s ./solution < input.txt"`;
 
       const { stdout, stderr } = await execAsync(runCmd, { timeout: 10000 });
 

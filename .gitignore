@@ -59,6 +59,7 @@ frontend/.env*
 docker-data/
 volumes/
 tmp/
+temp/
 
 # ==========================
 # ⚙️ Build & Run outputs
