@@ -104,6 +104,11 @@ class CodeJudge {
           testCase: testCaseNum,
           ...result
         });
+
+        // Stop running tests after first failure
+        if (!result.passed) {
+          break;
+        }
       }
     } catch (error) {
       console.error('Error running test cases:', error);
@@ -145,9 +150,7 @@ class CodeJudge {
       return {
         passed: actualOutput === expectedTrimmed,
         expected: expectedTrimmed,
-        actual: actualOutput,
-        executionTime: 0.001, // Placeholder
-        memoryUsed: 1024     // Placeholder
+        actual: actualOutput
       };
 
     } catch (error) {

@@ -11,8 +11,9 @@ const app = express();
 
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
+
 app.use("/api/auth", authRoutes);
-app.use("/api/practice", practiceRoutes);
+app.use("/api/practice", authMiddleware, practiceRoutes);
 
 
 const PORT = process.env.PORT || 3000;
