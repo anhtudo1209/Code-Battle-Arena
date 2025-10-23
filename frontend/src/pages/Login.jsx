@@ -20,6 +20,8 @@ export default function Login({
     setRememberMe(!rememberMe);
   };
 
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID; // abc xyz 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -95,6 +97,7 @@ export default function Login({
           <FaFacebook />
         </button>
         <GoogleLogin
+          clientId={googleClientId} // abc xyz
           onLogin={async (userInfo) => {
             try {
               const data = await oauthLogin({
