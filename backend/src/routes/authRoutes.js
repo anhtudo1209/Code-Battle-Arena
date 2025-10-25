@@ -7,6 +7,28 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
+    
+    // Username validation: 6-20 characters
+    if (!username || username.length < 6 || username.length > 20) {
+        return res.status(400).json({ error: "Username must be 6-20 characters" });
+    }
+    
+    // Username pattern: alphanumeric, underscore, hyphen only
+    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+    if (!usernameRegex.test(username)) {
+        return res.status(400).json({ error: "Username can only contain letters, numbers, underscore, and hyphen" });
+    }
+    
+    // Password validation: minimum 8 characters, at least 1 letter and 1 number
+    if (!password || password.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+    
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
+    if (!passwordRegex.test(password)) {
+        return res.status(400).json({ error: "Password must contain at least 1 letter and 1 number" });
+    }
+    
     const hashedPassword = bcrypt.hashSync(password, 10);
     try {
         const result = await query(
