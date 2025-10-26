@@ -9,11 +9,11 @@ An array of integers
 The array after each of the 3 passes of Bubble Sort.
 
 ## Sample Input
-[7, 3, 5, 2, 9]
+5
+7 3 5 2 9
 
 ## Sample Output
-[3, 5, 2, 7, 9]
-[3, 2, 5, 7, 9]
-[2, 3, 5, 7, 9]
-[2, 3, 5, 7, 9]
+3 5 2 7 9
+3 2 5 7 9
+2 3 5 7 9
 

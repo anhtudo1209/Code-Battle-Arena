@@ -9,11 +9,11 @@ An array of integers
 The array after each of the 3 passes of Selection Sort.
 
 ## Sample Input
-[5, 3, 4, 1, 2]
+5
+5 3 4 1 2
 
 ## Sample Output
-[3, 4, 1, 2, 5]
-[3, 1, 2, 4, 5]
-[1, 2, 3, 4, 5]
-[1, 2, 3, 4, 5]
+2 3 4 1 5
+2 3 1 4 5
+2 1 3 4 5
 
