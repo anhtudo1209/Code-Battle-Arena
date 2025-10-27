@@ -1,12 +1,12 @@
 # Multiples of Three
 
-Write a program that prints all multiples of 3 from 3 to n using a for loop.
+Write a program that prints all multiples of 3 from 3 to n.
 
 ## Input
-
+A number n
 
 ## Output
-prints all multiples of 3 from 3 to n using a for loop.
+All multiples of 3 from 3 to n.
 
 ## Sample Input
 30

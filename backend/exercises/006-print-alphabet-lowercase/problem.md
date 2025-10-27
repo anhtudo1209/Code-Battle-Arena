@@ -12,5 +12,5 @@ All lowercase letters from a to z.
 
 
 ## Sample Output
-a b c d e . . z
+a b c .. x y z
 

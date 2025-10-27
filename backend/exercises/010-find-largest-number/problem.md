@@ -1,6 +1,6 @@
 # Find Largest Number
 
-Given N integers, find the largest number using a loop.
+Given N integers, find the largest number.
 
 ## Input
 N integers

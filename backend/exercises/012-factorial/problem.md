@@ -1,6 +1,6 @@
 # Factorial
 
-Input a number N. Use a loop to calculate and print N!.
+Input a number N. Calculate and print N!.
 
 
 ## Input

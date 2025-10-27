@@ -6,7 +6,7 @@ Write a C++ program that counts down from N to 1
 A positive integer N
 
 ## Output
-Print numbers from N down to 1 using a while loop.
+Print numbers from N down to 1.
 
 ## Sample Input
 5

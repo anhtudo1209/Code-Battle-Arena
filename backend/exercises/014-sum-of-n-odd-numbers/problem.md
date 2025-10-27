@@ -1,13 +1,13 @@
 # Sum of N Odd Numbers
 
-Input an integer N. Use a loop to calculate the sum of the first N odd numbers.
+Input an integer N. Calculate the sum of the first N odd numbers.
 
 
 ## Input
 An integer N
 
 ## Output
-Use a loop to calculate the sum of the first N odd numbers.
+The sum of the first N odd numbers.
 
 ## Sample Input
 4
