@@ -1,12 +1,12 @@
 # Product of Multiples of Three
 
-Input an integer N. Use a loop to calculate the product of the first N natural numbers divisible by 3.
+Input an integer N. Calculate the product of the first N natural numbers divisible by 3.
 
 ## Input
 Input an integer N
 
 ## Output
-Use a loop to calculate the product of the first N natural numbers divisible by 3.
+The product of the first N natural numbers divisible by 3.
 
 ## Sample Input
 3 

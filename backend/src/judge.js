@@ -158,14 +158,24 @@ class CodeJudge {
       const execTimeout = (timeLimit + 5) * 1000;
       const { stdout, stderr } = await execAsync(runCmd, { timeout: execTimeout });
 
-      // Compare outputs (trim whitespace)
-      const actualOutput = stdout.trim();
-      const expectedTrimmed = expectedOutput.trim();
+      // Normalize line endings and collapse whitespace so 1-line vs 3-line both pass
+      const normalize = (s) =>
+        s
+          .replace(/\r\n/g, '\n')
+          .replace(/\r/g, '\n')
+          .trim()
+          .split(/\s+/)
+          .join(' ');
+
+      const actualOutput = stdout;
+      const expectedRaw = expectedOutput;
+      const actualNormalized = normalize(actualOutput);
+      const expectedNormalized = normalize(expectedRaw);
 
       return {
-        passed: actualOutput === expectedTrimmed,
-        expected: expectedTrimmed,
-        actual: actualOutput
+        passed: actualNormalized === expectedNormalized,
+        expected: expectedNormalized,
+        actual: actualNormalized
       };
 
     } catch (error) {
