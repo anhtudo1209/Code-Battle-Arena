@@ -25,6 +25,11 @@ export default function AuthPage() {
 
   return (
     <div className="auth-page">
+      {/* 🔹 Fixed Header */}
+      <header className="auth-header">
+        <h1 className="header-title">CODE BATTLE ARENA</h1>
+      </header>
+
       {/* 🔹 Image Background */}
       <div className="bg-image"></div>
 
@@ -37,8 +42,6 @@ export default function AuthPage() {
       </div>
 
       <div className="glass-card">
-        <h1 className="title">CODE BATTLE ARENA</h1>
-
         {isLogin ? (
           <Login
             onSwitchToRegister={() => setIsLogin(false)}
