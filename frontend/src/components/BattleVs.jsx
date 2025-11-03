@@ -6,10 +6,14 @@ export default function BattleVs() {
     <div className="arena">
       {/* Left side: human vs computer */}
       <div className="side">
-        <div className="warrior">
-          <div className="arm-right"></div>
-          <div className="sword"></div>
-        </div>
+        <img
+          src="/assets/img/human.png"
+          alt="warrior icon"
+          width="180"
+          height="160"
+          className="glow"
+          style={{ filter: 'drop-shadow(0 0 10px rgba(122, 242, 178, 0.8))' }}
+        />
         <div className="computer">
           <div className="screen">
             <div className="code">function battle() &#123;</div>
@@ -39,10 +43,14 @@ export default function BattleVs() {
             <div className="code">let warrior = new Warrior("Hero");</div>
           </div>
         </div>
-        <div className="warrior mirror">
-          <div className="arm-right"></div>
-          <div className="sword"></div>
-        </div>
+        <img
+          src="/assets/img/human.png"
+          alt="warrior icon"
+          width="180"
+          height="160"
+          className="glow"
+          style={{ transform: 'scaleX(-1)', filter: 'drop-shadow(0 0 10px rgba(122, 242, 178, 0.8))' }}
+        />
       </div>
     </div>
   );

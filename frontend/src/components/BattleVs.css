@@ -15,14 +15,12 @@
   gap: 40px;
 }
 
-/* === VS text === */
 .vs {
   font-size: 48px;
   font-weight: 800;
   text-shadow: 0 0 15px #00ffc8, 0 0 30px #00ffc8;
 }
 
-/* === COMPUTER === */
 .computer {
   width: 120px;
   height: 90px;
@@ -56,7 +54,6 @@
   border-radius: 2px;
 }
 
-/* === WARRIOR === */
 .warrior {
   position: relative;
   width: 70px;
@@ -64,7 +61,6 @@
   filter: drop-shadow(0 0 10px #00ffc8);
 }
 
-/* Đầu */
 .warrior::before {
   content: "";
   position: absolute;
@@ -76,7 +72,6 @@
   border-radius: 50%;
 }
 
-/* Thân */
 .warrior::after {
   content: "";
   position: absolute;
@@ -88,7 +83,6 @@
   clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%);
 }
 
-/* Tay phải cầm kiếm */
 .arm-right {
   position: absolute;
   width: 10px;
@@ -100,7 +94,6 @@
   transform-origin: top right;
 }
 
-/* Kiếm */
 .sword {
   position: absolute;
   width: 10px;
@@ -121,12 +114,14 @@
   border-radius: 2px;
 }
 
-/* Dạng mirror cho bên phải */
 .mirror {
   transform: scaleX(-1);
 }
 
-/* Screen and code on computer */
+.glow {
+  filter: drop-shadow(0 0 20px rgba(0,255,220,0.8)) drop-shadow(0 0 32px rgba(0,140,255,0.25));
+}
+
 .screen {
   position: absolute;
   top: 10px;

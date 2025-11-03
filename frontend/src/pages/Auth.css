@@ -240,19 +240,19 @@ body {
 
 .switch {
   margin-top: 10px;
-  margin-bottom: 40px; /* Add space for social buttons */
+  margin-bottom: 40px;
   font-size: 14px;
 }
 
 .switch span {
-  color: #7af2b2;
+  color: white;
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.3s ease;
 }
 
 .switch span:hover {
-  color: #34d399;
+  color: #7af2b2;
 }
 
 @keyframes fadeInUp {

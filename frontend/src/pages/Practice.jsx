@@ -1,50 +1,52 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { post, get } from "../services/httpClient";
+import Header from "../components/Header";
 import "./Practice.css";
 
 export default function Practice() {
-  const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
-  const [problemContent, setProblemContent] = useState('');
-  const [code, setCode] = useState(`#include <iostream>
-using namespace std;
-
-int main() {
-    cout << "Hello, World!" << endl;
-    return 0;
-}`);
+  const [problemContent, setProblemContent] = useState("");
+  const [code, setCode] = useState(``);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingExercises, setLoadingExercises] = useState(true);
+  const [loadingExercises, setLoadingExercises] = useState(false);
 
-  // Fetch exercises on component mount
-  useEffect(() => {
-    const fetchExercises = async () => {
-      try {
-        const data = await get("/practice/exercises");
-        setExercises(data.exercises || []);
-        
-        // Auto-select first exercise
-        if (data.exercises && data.exercises.length > 0) {
-          loadExercise(data.exercises[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching exercises:", error);
-      } finally {
-        setLoadingExercises(false);
+  const [showModal, setShowModal] = useState(true);
+
+  const fetchExercises = async (difficulty) => {
+    setLoadingExercises(true);
+    try {
+      const data = await get("/practice/exercises");
+      const allExercises = data.exercises || [];
+      const filtered = allExercises.filter(
+        (ex) => ex.difficulty === difficulty
+      );
+
+      if (filtered.length > 0) {
+        const randomIndex = Math.floor(Math.random() * filtered.length);
+        const randomExercise = filtered[randomIndex];
+        loadExercise(randomExercise.id);
+      } else {
+        setProblemContent("No exercises found for this difficulty.");
       }
-    };
-    
-    fetchExercises();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching exercises:", error);
+    } finally {
+      setLoadingExercises(false);
+    }
+  };
 
-  // Load exercise details
+  const handleDifficultySelect = (difficulty) => {
+    setShowModal(false);
+    fetchExercises(difficulty);
+  };
+
   const loadExercise = async (exerciseId) => {
     try {
       const data = await get(`/practice/exercises/${exerciseId}`);
       setSelectedExercise(exerciseId);
       setProblemContent(data.content);
-      setResults(null); // Clear previous results
+      setResults(null);
     } catch (error) {
       console.error("Error loading exercise:", error);
     }
@@ -63,9 +65,9 @@ int main() {
 
     setLoading(true);
     try {
-      const data = await post("/practice/submit", { 
-        code, 
-        exerciseId: selectedExercise 
+      const data = await post("/practice/submit", {
+        code,
+        exerciseId: selectedExercise,
       });
       setResults(data);
     } catch (error) {
@@ -78,104 +80,92 @@ int main() {
 
   return (
     <div className="practice-page">
-      {/* Background */}
-      <div className="bg-image"></div>
-      <div className="bg-overlay"></div>
-
-      {/* Header */}
-      <header className="header">
-        <h1 className="logo">CODE BATTLE ARENA</h1>
-        <div className="header-right">
-          <input type="text" placeholder="Search..." className="search-bar" />
-          <div className="icon-btn">⚙️</div>
-          <div className="icon-btn">☰</div>
-        </div>
-      </header>
-
-      {/* Content */}
-      <div className="content">
-        <div className="practice-container">
-          {/* Exercise List Sidebar */}
-          <div className="exercises-sidebar">
-            <h3>Problems</h3>
-            {loadingExercises ? (
-              <p>Loading exercises...</p>
-            ) : (
-              <ul className="exercise-list">
-                {exercises.map((exercise) => (
-                  <li 
-                    key={exercise.id}
-                    className={selectedExercise === exercise.id ? 'active' : ''}
-                    onClick={() => loadExercise(exercise.id)}
-                  >
-                    <div className="exercise-title">{exercise.title}</div>
-                    <div className="exercise-description">{exercise.description}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="difficulty-modal">
+            <h2>Select Difficulty</h2>
+            <div className="difficulty-buttons">
+              <button onClick={() => handleDifficultySelect("easy")}>
+                Easy
+              </button>
+              <button onClick={() => handleDifficultySelect("medium")}>
+                Medium
+              </button>
+              <button onClick={() => handleDifficultySelect("difficult")}>
+                Difficult
+              </button>
+            </div>
           </div>
+        </div>
+      )}
 
-          {/* Main Content */}
-          <div className="practice-main">
-            {selectedExercise ? (
-              <>
-                <div className="problem-description">
+      {!showModal && (
+        <>
+          <Header />
+
+          <div className="practice-layout">
+            <aside className="problem-sidebar">
+              <h3>Problem</h3>
+              {loadingExercises ? (
+                <p>Loading problem...</p>
+              ) : (
+                <div className="problem-content">
                   <pre>{problemContent}</pre>
                 </div>
+              )}
+            </aside>
 
-                <div className="code-section">
-                  <h3>Your Code:</h3>
-                  <textarea
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="Write your C++ code here..."
-                    rows={15}
-                    cols={80}
-                  />
-                  <button onClick={handleSubmit} disabled={loading}>
-                    {loading ? "Submitting..." : "Submit Code"}
-                  </button>
-                </div>
+            <main className="practice-main">
+              <section className="code-section">
+                <h3>Your Code:</h3>
+                <textarea
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="Write your C++ code here..."
+                  rows={20}
+                />
+                <button onClick={handleSubmit} disabled={loading}>
+                  {loading ? "Submitting..." : "Submit Code"}
+                </button>
+              </section>
 
-                {results && (
-                  <div className="results-section">
-                    <h3>Results:</h3>
-                    {results.compilationError ? (
-                      <div className="error">
-                        <p>❌ Compilation Error</p>
-                        <pre>{results.compilationError}</pre>
-                      </div>
-                    ) : results.success ? (
-                      <div className="success">
-                        <p>🎉 Congratulations! You passed all test cases!</p>
-                        <p>Total test cases: {results.testResults?.length || 0}</p>
-                      </div>
-                    ) : (
-                      <div className="error">
-                        <p>❌ Test Failed</p>
-                        <p className="stop-message">Testing stopped at first failure</p>
-                        <div className="test-results">
-                          {results.testResults?.filter(test => !test.passed).map((test, index) => (
-                            <div key={index} className="test-case failed">
-                              <p><strong>Test Case {test.testCase}:</strong> ❌ FAILED</p>
-                              {test.error && <p><strong>Error:</strong> {test.error}</p>}
-                              {test.expected && <p><strong>Expected:</strong> {test.expected}</p>}
-                              {test.actual && <p><strong>Your Output:</strong> {test.actual}</p>}
-                            </div>
-                          ))}
-                        </div>
+              <section className="output-section">
+                <h3>Output:</h3>
+                {results ? (
+                  <>
+                    {results.success && (
+                      <div className="success">🎉 Accepted</div>
+                    )}
+                    {!results.compilationSuccess && (
+                      <div className="error">⚠️ Compilation Error: {results.compilationError}</div>
+                    )}
+                    {results.compilationSuccess && !results.success && (
+                      <div className="error">❌ Wrong Answer</div>
+                    )}
+                    {results.error && (
+                      <div className="error">{results.error}</div>
+                    )}
+                    {results.testResults && results.testResults.length > 0 && (
+                      <div className="test-results">
+                        {results.testResults.map((test, index) => (
+                          <div key={index} className={`test-case ${test.passed ? 'passed' : 'failed'}`}>
+                            <p><strong>Test Case {index + 1}:</strong></p>
+                            <p>Input: {test.input}</p>
+                            <p>Expected: {test.expected}</p>
+                            <p>Got: {test.actual}</p>
+                          </div>
+                        ))}
                       </div>
                     )}
-                  </div>
+                  </>
+                ) : (
+                  <p>No output yet.</p>
                 )}
-              </>
-            ) : (
-              <p>Select a problem to start coding</p>
-            )}
+              </section>
+            </main>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
