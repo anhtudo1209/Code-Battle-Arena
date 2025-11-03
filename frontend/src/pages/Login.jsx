@@ -173,7 +173,7 @@ export default function Login({
   <FaFacebook />
 </button>
 
-        {/* <GoogleLogin
+        <GoogleLogin
           clientId={googleClientId} // abc xyz
           onLogin={async (userInfo) => {
             try {
@@ -194,7 +194,7 @@ export default function Login({
           <button className="social-btn google">
             <FaGoogle />
           </button>
-        </GoogleLogin> */}
+        </GoogleLogin>
         <button className="social-btn github">
           <FaGithub />
         </button>
