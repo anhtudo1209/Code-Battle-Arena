@@ -3,6 +3,7 @@ import { FaFacebook, FaGoogle, FaGithub, FaUser, FaLock } from "react-icons/fa";
 import "./Login.css";
 import GoogleLogin from "../components/GoogleLogin";
 import { login as loginService, oauthLogin } from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
 const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
 
@@ -172,7 +173,7 @@ export default function Login({
   <FaFacebook />
 </button>
 
-        <GoogleLogin
+        {/* <GoogleLogin
           clientId={googleClientId} // abc xyz
           onLogin={async (userInfo) => {
             try {
@@ -193,7 +194,7 @@ export default function Login({
           <button className="social-btn google">
             <FaGoogle />
           </button>
-        </GoogleLogin>
+        </GoogleLogin> */}
         <button className="social-btn github">
           <FaGithub />
         </button>
