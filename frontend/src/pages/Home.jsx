@@ -86,20 +86,60 @@ export default function Home() {
           </p>
 
           <div className="battle-area">
-            <div className="monitor">
-              <div className="code-line"></div>
-              <div className="code-line short"></div>
-              <div className="code-line"></div>
-              <div className="code-line short"></div>
+            {/* Người - trái */}
+            <div className="icon-wrap">
+              <svg className="person-svg glowing" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden>
+                {/* head */}
+                <circle cx="16" cy="12" r="8" fill="#7af2b2" />
+                {/* torso + shield shape (silhouette) */}
+                <path d="M4 28 L28 28 L40 56 L12 56 Z" fill="#34d399" />
+                {/* left lower base to match icon shape */}
+                <path d="M12 56 L2 72 L4 76 L18 62 Z" fill="#34d399"/>
+                {/* raised arm and sword (to right upward) */}
+                <path d="M26 24 L38 4 L42 6 L30 26 Z" fill="#06b6d4"/>
+                <rect x="40" y="-6" width="4" height="28" transform="rotate(0 42 -6)" fill="#06b6d4" />
+              </svg>
             </div>
 
+            {/* Máy tính - trái */}
+            <div className="icon-wrap">
+              <svg className="monitor-svg glowing" viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden>
+                {/* bezel */}
+                <rect x="6" y="6" rx="8" ry="8" width="108" height="60" fill="#34d399" stroke="#06b6d4" strokeWidth="4"/>
+                {/* inner screen (light) */}
+                <rect x="14" y="14" rx="4" ry="4" width="92" height="44" fill="#ffffff"/>
+                {/* bottom bezel strip */}
+                <rect x="44" y="70" width="32" height="8" rx="3" fill="#34d399"/>
+                {/* stand base */}
+                <rect x="50" y="78" width="20" height="6" rx="3" fill="#06b6d4"/>
+                {/* center button */}
+                <circle cx="60" cy="74" r="2.5" fill="#7af2b2" />
+              </svg>
+            </div>
+
+            {/* VS */}
             <div className="vs">VS</div>
 
-            <div className="monitor">
-              <div className="code-line"></div>
-              <div className="code-line short"></div>
-              <div className="code-line"></div>
-              <div className="code-line short"></div>
+            {/* Máy tính - phải (giống trái) */}
+            <div className="icon-wrap">
+              <svg className="monitor-svg glowing" viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden>
+                <rect x="6" y="6" rx="8" ry="8" width="108" height="60" fill="#34d399" stroke="#06b6d4" strokeWidth="4"/>
+                <rect x="14" y="14" rx="4" ry="4" width="92" height="44" fill="#ffffff"/>
+                <rect x="44" y="70" width="32" height="8" rx="3" fill="#34d399"/>
+                <rect x="50" y="78" width="20" height="6" rx="3" fill="#06b6d4"/>
+                <circle cx="60" cy="74" r="2.5" fill="#7af2b2" />
+              </svg>
+            </div>
+
+            {/* Người - phải (mirrored) */}
+            <div className="icon-wrap">
+              <svg className="person-svg mirrored glowing" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden>
+                <circle cx="44" cy="12" r="8" fill="#7af2b2" />
+                <path d="M56 28 L32 28 L20 56 L48 56 Z" fill="#34d399" />
+                <path d="M48 56 L58 72 L56 76 L42 62 Z" fill="#34d399"/>
+                <path d="M34 24 L22 4 L18 6 L30 26 Z" fill="#06b6d4"/>
+                <rect x="14" y="-6" width="4" height="28" transform="rotate(0 16 -6)" fill="#06b6d4" />
+              </svg>
             </div>
           </div>
 
