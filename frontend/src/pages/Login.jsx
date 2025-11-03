@@ -3,7 +3,8 @@ import { FaFacebook, FaGoogle, FaGithub, FaUser, FaLock } from "react-icons/fa";
 import "./Login.css";
 import GoogleLogin from "../components/GoogleLogin";
 import { login as loginService } from "../services/authService";
-const FB_APP_ID =1364483765389153
+
+const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
 
 export default function Login({
   onSwitchToRegister,
