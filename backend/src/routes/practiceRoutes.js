@@ -21,13 +21,13 @@ router.post("/submit", async (req, res) => {
     const result = await judge.judgeSubmission(code, exerciseId);
 
     // Determine status based on result
-    let status = 'error';
+    let statusText = 'error';
     if (!result.compilationSuccess) {
-      status = 'compilation_error';
+      statusText = 'compilation error';
     } else if (result.success) {
-      status = 'passed';
+      statusText = 'accepted';
     } else {
-      status = 'failed';
+      statusText = 'wrong answer';
     }
 
     // Save submission to database
@@ -40,20 +40,15 @@ router.post("/submit", async (req, res) => {
         exerciseId,
         code,
         'cpp',
-        status,
+        statusText,
         result.compilationSuccess || false,
         result.compilationError || null,
-        JSON.stringify(result.testResults || [])
+        JSON.stringify([])
       ]
     );
 
-    res.json({
-      success: result.success,
-      compilationSuccess: result.compilationSuccess,
-      compilationError: result.compilationError,
-      testResults: result.testResults,
-      timestamp: new Date().toISOString()
-    });
+    // Return minimal response as requested
+    res.json({ status: statusText });
 
   } catch (error) {
     console.error("Submission error:", error);

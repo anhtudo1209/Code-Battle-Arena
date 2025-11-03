@@ -67,7 +67,7 @@ int main() {
         code, 
         exerciseId: selectedExercise 
       });
-      setResults(data);
+      setResults(data); // { status: 'accepted' | 'wrong answer' | 'compilation error' }
     } catch (error) {
       console.error("Submission error:", error);
       setResults({ error: error.message || "Failed to submit code" });
@@ -141,30 +141,24 @@ int main() {
                 {results && (
                   <div className="results-section">
                     <h3>Results:</h3>
-                    {results.compilationError ? (
-                      <div className="error">
-                        <p>❌ Compilation Error</p>
-                        <pre>{results.compilationError}</pre>
-                      </div>
-                    ) : results.success ? (
+                    {results.status === 'accepted' && (
                       <div className="success">
-                        <p>🎉 Congratulations! You passed all test cases!</p>
-                        <p>Total test cases: {results.testResults?.length || 0}</p>
+                        <p>🎉 accepted</p>
                       </div>
-                    ) : (
+                    )}
+                    {results.status === 'wrong answer' && (
                       <div className="error">
-                        <p>❌ Test Failed</p>
-                        <p className="stop-message">Testing stopped at first failure</p>
-                        <div className="test-results">
-                          {results.testResults?.filter(test => !test.passed).map((test, index) => (
-                            <div key={index} className="test-case failed">
-                              <p><strong>Test Case {test.testCase}:</strong> ❌ FAILED</p>
-                              {test.error && <p><strong>Error:</strong> {test.error}</p>}
-                              {test.expected && <p><strong>Expected:</strong> {test.expected}</p>}
-                              {test.actual && <p><strong>Your Output:</strong> {test.actual}</p>}
-                            </div>
-                          ))}
-                        </div>
+                        <p>❌ wrong answer</p>
+                      </div>
+                    )}
+                    {results.status === 'compilation error' && (
+                      <div className="error">
+                        <p>❌ compilation error</p>
+                      </div>
+                    )}
+                    {!['accepted','wrong answer','compilation error'].includes(results.status) && (
+                      <div>
+                        <p>{results.status || 'Unknown result'}</p>
                       </div>
                     )}
                   </div>
