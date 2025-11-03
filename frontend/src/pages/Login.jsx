@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { FaFacebook, FaGoogle, FaGithub, FaUser, FaLock } from "react-icons/fa";
 import "./Login.css";
 import GoogleLogin from "../components/GoogleLogin";
 import { login as loginService } from "../services/authService";
+const FB_APP_ID =1364483765389153
 
 export default function Login({
   onSwitchToRegister,
@@ -13,6 +14,75 @@ export default function Login({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fbLoading, setFbLoading] = useState(false);
+  const [fbReady, setFbReady] = useState(false);
+
+  const handleFacebookLogin = () => {
+    setError("");
+    if (!window.FB) {
+      setError("Facebook SDK chưa sẵn sàng. Thử lại sau.");
+      return;
+    }
+    if (fbLoading) return;
+
+    setFbLoading(true);
+    window.FB.login(
+      (response) => {
+        if (response?.authResponse) {
+          const { accessToken } = response.authResponse;
+          window.FB.api("/me", { fields: "id,name,email,picture" }, () => {
+            window.location.href = "/src/pages/home.html";
+            setFbLoading(false);
+          });
+        } else {
+          setError("Bạn đã huỷ hoặc chưa cấp quyền đăng nhập Facebook.");
+          setFbLoading(false);
+        }
+      },
+      { scope: "public_profile,email" }
+    );
+  };
+
+  useEffect(() => {
+    // Don't reload SDK if it's already loaded
+    if (document.getElementById("facebook-jssdk")) return;
+
+    // Define fbAsyncInit before loading SDK
+    window.fbAsyncInit = function () {
+      window.FB.init({
+        appId: FB_APP_ID,
+        cookie: true,
+        xfbml: false,
+        version: "v24.0",
+      });
+
+      // Check login status only on HTTPS or localhost
+      const isSecureContext = 
+        window.location.protocol === 'https:' || 
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+
+      if (isSecureContext) {
+        try {
+          window.FB.getLoginStatus(() => setFbReady(true));
+        } catch {
+          setFbReady(true);
+        }
+      } else {
+        setFbReady(true); // Skip status check on HTTP
+      }
+    };
+
+    // Load Facebook SDK
+    const script = document.createElement("script");
+    script.id = "facebook-jssdk";
+    script.src = "https://connect.facebook.net/en_US/sdk.js";
+    script.async = true;
+    script.defer = true;
+
+    const firstScript = document.getElementsByTagName("script")[0];
+    firstScript.parentNode.insertBefore(script, firstScript);
+  }, []);
 
   const handleRememberChange = () => {
     setRememberMe(!rememberMe);
@@ -88,9 +158,15 @@ export default function Login({
       </form>
 
       <div className="social-login">
-        <button className="social-btn facebook">
-          <FaFacebook />
-        </button>
+        <button
+  className="social-btn facebook"
+  onClick={handleFacebookLogin}
+  disabled={fbLoading}
+  title="Login with Facebook"
+>
+  <FaFacebook />
+</button>
+
         <GoogleLogin
           onLogin={() => {
             window.location.href = "/src/pages/home.html";
