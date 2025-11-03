@@ -1,0 +1,7 @@
+{
+  "timeLimit": 4,
+  "memoryLimit": "256m",
+  "difficulty": "very-hard",
+  "tags": ["loops", "strings"]
+}
+

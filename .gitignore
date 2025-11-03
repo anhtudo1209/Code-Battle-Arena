@@ -49,9 +49,8 @@ frontend/.env*
 # 🐳 Docker
 # ==========================
 # Docker artifacts
-**/Dockerfile
-**/docker-compose.yml
-# Nếu bạn muốn giữ Dockerfile trên GitHub, hãy BỎ comment 2 dòng trên.
+#**/Dockerfile
+#**/docker-compose.yml
 
 # Docker cache / volumes
 *.pid
@@ -60,6 +59,7 @@ frontend/.env*
 docker-data/
 volumes/
 tmp/
+temp/
 
 # ==========================
 # ⚙️ Build & Run outputs

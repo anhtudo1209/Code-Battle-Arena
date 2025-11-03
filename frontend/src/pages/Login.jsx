@@ -2,7 +2,7 @@ import React, { useState,useEffect } from "react";
 import { FaFacebook, FaGoogle, FaGithub, FaUser, FaLock } from "react-icons/fa";
 import "./Login.css";
 import GoogleLogin from "../components/GoogleLogin";
-import { login as loginService } from "../services/authService";
+import { login as loginService, oauthLogin } from "../services/authService";
 
 const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
 
@@ -11,6 +11,7 @@ export default function Login({
   rememberMe,
   setRememberMe,
 }) {
+  const navigate = useNavigate();
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -89,6 +90,8 @@ export default function Login({
     setRememberMe(!rememberMe);
   };
 
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID; // abc xyz 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -98,6 +101,7 @@ export default function Login({
       const data = await loginService({ username: usernameOrEmail, password });
       const storage = rememberMe ? window.localStorage : window.sessionStorage;
       storage.setItem("token", data.token);
+      navigate("/home");
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
@@ -130,7 +134,7 @@ export default function Login({
             required
           />
         </div>
-        <a href="\src\pages\Home.html">Go to Home</a>
+
 
         {error && (
           <div className="error" style={{ color: "#f87171", marginBottom: 8 }}>
@@ -169,8 +173,21 @@ export default function Login({
 </button>
 
         <GoogleLogin
-          onLogin={() => {
-            window.location.href = "/src/pages/home.html";
+          clientId={googleClientId} // abc xyz
+          onLogin={async (userInfo) => {
+            try {
+              const data = await oauthLogin({
+                provider: "google",
+                provider_user_id: userInfo.sub,
+                email: userInfo.email,
+                username: userInfo.name
+              });
+              const storage = rememberMe ? window.localStorage : window.sessionStorage;
+              storage.setItem("token", data.token);
+              navigate("/home");
+            } catch (err) {
+              setError("Google login failed");
+            }
           }}
           >
           <button className="social-btn google">
