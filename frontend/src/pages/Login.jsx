@@ -33,10 +33,29 @@ export default function Login({
       (response) => {
         if (response?.authResponse) {
           const { accessToken } = response.authResponse;
-          window.FB.api("/me", { fields: "id,name,email,picture" }, () => {
-            window.location.href = "/src/pages/home.html";
-            setFbLoading(false);
-          });
+          fetch(
+            `https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`
+          )
+            .then((meRes) => meRes.json())
+            .then((me) => {
+              return oauthLogin({
+                provider: "facebook",
+                provider_user_id: me.id,
+                email: me.email,
+                username: me.name,
+              });
+            })
+            .then((data) => {
+              const storage = rememberMe ? window.localStorage : window.sessionStorage;
+              storage.setItem("token", data.token);
+              navigate("/home");
+            })
+            .catch((e) => {
+              setError("Facebook login failed");
+            })
+            .finally(() => {
+              setFbLoading(false);
+            });
         } else {
           setError("Bạn đã huỷ hoặc chưa cấp quyền đăng nhập Facebook.");
           setFbLoading(false);

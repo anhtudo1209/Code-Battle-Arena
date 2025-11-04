@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Editor } from "@monaco-editor/react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
 import "./Practice.css";
@@ -118,11 +119,18 @@ export default function Practice() {
             <main className="practice-main">
               <section className="code-section">
                 <h3>Your Code:</h3>
-                <textarea
+                <Editor
+                  height="60vh"
+                  language="cpp"
+                  theme="vs-dark"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Write your C++ code here..."
-                  rows={20}
+                  onChange={(val) => setCode(val ?? "")}
+                  options={{
+                    minimap: { enabled: false },
+                    automaticLayout: true,
+                    fontSize: 14,
+                    wordWrap: "on",
+                  }}
                 />
                 <button onClick={handleSubmit} disabled={loading}>
                   {loading ? "Submitting..." : "Submit Code"}
@@ -133,29 +141,14 @@ export default function Practice() {
                 <h3>Output:</h3>
                 {results ? (
                   <>
-                    {results.success && (
-                      <div className="success">🎉 Accepted</div>
-                    )}
-                    {!results.compilationSuccess && (
-                      <div className="error">⚠️ Compilation Error: {results.compilationError}</div>
-                    )}
-                    {results.compilationSuccess && !results.success && (
-                      <div className="error">❌ Wrong Answer</div>
-                    )}
-                    {results.error && (
+                    {results.error ? (
                       <div className="error">{results.error}</div>
-                    )}
-                    {results.testResults && results.testResults.length > 0 && (
-                      <div className="test-results">
-                        {results.testResults.map((test, index) => (
-                          <div key={index} className={`test-case ${test.passed ? 'passed' : 'failed'}`}>
-                            <p><strong>Test Case {index + 1}:</strong></p>
-                            <p>Input: {test.input}</p>
-                            <p>Expected: {test.expected}</p>
-                            <p>Got: {test.actual}</p>
-                          </div>
-                        ))}
-                      </div>
+                    ) : !results.compilationSuccess ? (
+                      <div className="error">⚠️ Compilation Error{results.compilationError ? `: ${results.compilationError}` : ''}</div>
+                    ) : results.success ? (
+                      <div className="success">🎉 Accepted</div>
+                    ) : (
+                      <div className="error">❌ Wrong Answer</div>
                     )}
                   </>
                 ) : (
