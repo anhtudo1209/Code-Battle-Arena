@@ -1,12 +1,12 @@
 # Countdown from N
 
-Write a C++ program that counts down from N to 1
+Write a program that counts down from n to 1
 
 ## Input
-A positive integer N
+A positive integer n
 
 ## Output
-Print numbers from N down to 1.
+Print numbers from n down to 1.
 
 ## Sample Input
 5

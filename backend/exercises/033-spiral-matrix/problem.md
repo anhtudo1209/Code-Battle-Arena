@@ -1,12 +1,12 @@
 # Spiral Matrix
 
-Given an integer N, print an N x N matrix filled with numbers from 1 to N*N in spiral order
+Given an integer n, print an n x n matrix filled with numbers from 1 to n*n in spiral order
 
 ## Input
-An integer N
+An integer n
 
 ## Output
-An N x N matrix filled with numbers from 1 to N*N in spiral order.
+An n x n matrix filled with numbers from 1 to n*n in spiral order.
 
 ## Sample Input
 3

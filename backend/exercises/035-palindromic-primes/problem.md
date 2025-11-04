@@ -1,6 +1,6 @@
 # Palindromic Primes
 
-Input two numbers L and R. Print all palindromic primes in this range.
+Input two numbers L and R. Print all palindromic primes in this range. A palindromic prime is a number that is both prime and palindromic (both only divisible by 1 and itself and reads the same forward and backward). If there is no number, print "-1"
 
 ## Input
 Two numbers L and R

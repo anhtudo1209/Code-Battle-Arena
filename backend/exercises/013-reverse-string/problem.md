@@ -1,6 +1,6 @@
 # Reverse String
 
-Given a string (without spaces), print the string in reverse order
+Given a string (without spaces), print the string in reverse order.
 
 ## Input
 a string (without spaces)

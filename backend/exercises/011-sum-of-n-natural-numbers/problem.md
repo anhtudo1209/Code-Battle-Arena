@@ -1,13 +1,13 @@
 # Sum of N Natural Numbers
 
-Input a number N, calculate the sum of the first N natural numbers.
+Input a number n, calculate the sum of the first n natural numbers.
 
 
 ## Input
-A number N
+A number n
 
 ## Output
-The sum of the first N natural numbers.
+The sum of the first n natural numbers.
 
 ## Sample Input
 5

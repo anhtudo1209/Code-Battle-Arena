@@ -7,7 +7,7 @@ Write a program that takes an integer n as input and checks whether n is a palin
 An integer n
 
 ## Output
-Checks whether n is a palindrome number. If yes, print "Palindrome", else print "Not Palindrome"
+If n is palindrome, print "Palindrome", else print "Not Palindrome"
 
 ## Sample Input
 1001

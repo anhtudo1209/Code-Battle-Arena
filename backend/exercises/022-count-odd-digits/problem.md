@@ -3,7 +3,7 @@
 Input an integer. Count how many odd digits it has.
 
 ## Input
-An integer N
+An integer n
 
 ## Output
 Number of its odd digits.

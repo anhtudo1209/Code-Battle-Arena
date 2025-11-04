@@ -9,7 +9,8 @@ An array a of n positive integers
 YES if the elements can be rearranged to be strictly increasing, NO otherwise.
 
 ## Sample Input
-4 1 1 1 1
+4
+1 1 1 1
 
 ## Sample Output
 NO

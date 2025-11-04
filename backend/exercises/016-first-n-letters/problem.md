@@ -1,12 +1,12 @@
 # First N Letters
 
-Input a positive integer N. Print the first N lowercase letters of the English alphabet.
+Input a positive integer n. Print the first n lowercase letters of the English alphabet.
 
 ## Input
-A positive integer N
+A positive integer n
 
 ## Output
-Print the first N lowercase letters of the English alphabet.
+Print the first n lowercase letters of the English alphabet.
 
 ## Sample Input
 5

@@ -6,13 +6,15 @@ You are given an integer array heights representing the current order that the s
 
 
 ## Input
-Array heights
+The input consists of an integer n, representing the number of students,
+followed by n integers representing the current heights of the students in line.
 
 ## Output
 Number of students not in the correct position.
 
 ## Sample Input
-[1,1,4,2,1,3]
+6
+1 1 4 2 1 3
 
 
 ## Sample Output

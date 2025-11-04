@@ -1,7 +1,7 @@
 # Armstrong Numbers in Range
 
 Input two integers L and R. Print all Armstrong numbers in this range.
-(An Armstrong number is one where the sum of its digits raised to the power of the number of digits equals the number itself.)
+(An Armstrong number is one where the sum of its digits raised to the power of the number of digits equals the number itself). If there is no number, print "-1"
 
 
 ## Input
