@@ -3,19 +3,57 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { query } from "../database/db-postgres.js";
 
+const generateAccessToken = (userId) => jwt.sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+const generateRefreshToken = (userId) => jwt.sign({ id: userId, type: 'refresh' }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    
+    // Username validation: 6-20 characters
+    if (!username || username.length < 6 || username.length > 20) {
+        return res.status(400).send({ message: "Username must be 6-20 characters" });
+    }
+    
+    // Username pattern: alphanumeric, underscore, hyphen only
+    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+    if (!usernameRegex.test(username)) {
+        return res.status(400).send({ message: "Username can only contain letters, numbers, underscore, and hyphen" });
+    }
+    
+    // Password validation: minimum 8 characters, at least 1 letter and 1 number
+    if (!password || password.length < 8) {
+        return res.status(400).send({ message: "Password must be at least 8 characters" });
+    }
+    
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
+    if (!passwordRegex.test(password)) {
+        return res.status(400).send({ message: "Password must contain at least 1 letter and 1 number" });
+    }
+
+    const usernameExists = await query("SELECT id from users WHERE username = $1", [username]);
+    if (usernameExists.rows.length > 0) {
+        return res.status(400).send({ message: "Username exists"});
+    }
+
+    const emailExists = await query("SELECT id from users WHERE email = $1", [email]);
+    if (emailExists.rows.length > 0) {
+        return res.status(400).send({ message: "Email already registered"});
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
     try {
         const result = await query(
             "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id",
             [username, email, hashedPassword]
         );
         const userId = result.rows[0].id;
-        const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "24h" });
-        return res.status(201).json({ token });
+        const accessToken = generateAccessToken(userId);
+        const refreshToken = generateRefreshToken(userId);
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        await query("INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)", [userId, refreshToken, expiresAt]);
+        return res.status(201).json({ accessToken, refreshToken });
     } catch (err) {
         console.error("Registration error:", err);
         return res.status(503).json({ error: "Registration failed" });
@@ -31,13 +69,19 @@ router.post("/login", async (req, res) => {
             return res.status(404).send({ message: "User not found" });
         }
         
-        const isPasswordValid = bcrypt.compareSync(password, user.password);
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return res.status(401).send({ message: "Invalid credentials" });
         }
-        
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "24h" });
-        return res.json({ token });
+
+        // Revoke old refresh tokens
+        await query("DELETE FROM refresh_tokens WHERE user_id = $1", [user.id]);
+
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = generateRefreshToken(user.id);
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        await query("INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)", [user.id, refreshToken, expiresAt]);
+        return res.json({ accessToken, refreshToken });
     } catch (err) {
         console.error("Login error:", err);
         return res.status(503).json({ error: "Login failed" });
@@ -83,8 +127,14 @@ router.post("/oauth-login", async (req, res) => {
             );
         }
 
-        const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "24h" });
-        return res.json({ token });
+        // Revoke old refresh tokens
+        await query("DELETE FROM refresh_tokens WHERE user_id = $1", [userId]);
+
+        const accessToken = generateAccessToken(userId);
+        const refreshToken = generateRefreshToken(userId);
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        await query("INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)", [userId, refreshToken, expiresAt]);
+        return res.json({ accessToken, refreshToken });
 
     } catch (err) {
         console.error("OAuth login error:", err);

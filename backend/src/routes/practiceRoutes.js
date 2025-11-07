@@ -114,39 +114,43 @@ router.get("/exercises", async (req, res) => {
   try {
     const exercisesDir = path.join(process.cwd(), 'backend', 'exercises');
     const folders = await fs.promises.readdir(exercisesDir, { withFileTypes: true });
-    
+
     const exercises = [];
-    
+
     for (const folder of folders) {
       if (folder.isDirectory()) {
         const exerciseId = folder.name;
         const problemPath = path.join(exercisesDir, exerciseId, 'problem.md');
-        
+        const configPath = path.join(exercisesDir, exerciseId, 'config.json');
+
         try {
           const problemContent = await fs.promises.readFile(problemPath, 'utf8');
-          
+          const configContent = await fs.promises.readFile(configPath, 'utf8');
+          const config = JSON.parse(configContent);
+
           // Extract title (first line after # heading)
           const titleMatch = problemContent.match(/^#\s+(.+)$/m);
           const title = titleMatch ? titleMatch[1].trim() : exerciseId;
-          
+
           // Extract description (text after title before ## heading)
           const descMatch = problemContent.match(/^#\s+.+\n\n(.+?)(?=\n##|\n$)/ms);
           const description = descMatch ? descMatch[1].trim() : '';
-          
+
           exercises.push({
             id: exerciseId,
             title,
-            description
+            description,
+            difficulty: config.difficulty
           });
         } catch (error) {
           console.error(`Error reading problem for ${exerciseId}:`, error);
         }
       }
     }
-    
+
     // Sort by exercise ID
     exercises.sort((a, b) => a.id.localeCompare(b.id));
-    
+
     res.json({ exercises });
   } catch (error) {
     console.error("Error fetching exercises:", error);

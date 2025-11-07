@@ -1,0 +1,4 @@
+5 / 2 = 2 remainder 1
+2 / 2 = 1 remainder 0
+1 / 2 = 0 remainder 1
+Binary: 101

@@ -88,6 +88,19 @@ class CodeJudge {
     const testResults = [];
 
     try {
+      // Load config (default to 5 seconds if not found)
+      let timeLimit = 5;
+      let memoryLimit = '256m';
+      try {
+        const configPath = path.join(exerciseDir, 'config.json');
+        const configData = await fs.promises.readFile(configPath, 'utf8');
+        const config = JSON.parse(configData);
+        timeLimit = config.timeLimit || 5;
+        memoryLimit = config.memoryLimit || '256m';
+      } catch (configError) {
+        // No config file, use defaults
+      }
+
       // Find all test case files
       const files = await fs.promises.readdir(exerciseDir);
       const outputFiles = files.filter(f => f.endsWith('.output.txt')).sort();
@@ -99,7 +112,7 @@ class CodeJudge {
         const inputPath = path.join(exerciseDir, inputFile);
         const expectedOutputPath = path.join(exerciseDir, outputFile);
 
-        const result = await this.runSingleTest(tempDir, inputPath, expectedOutputPath);
+        const result = await this.runSingleTest(tempDir, inputPath, expectedOutputPath, timeLimit, memoryLimit);
         testResults.push({
           testCase: testCaseNum,
           ...result
@@ -117,7 +130,7 @@ class CodeJudge {
     return testResults;
   }
 
-  async runSingleTest(tempDir, inputPath, expectedOutputPath) {
+  async runSingleTest(tempDir, inputPath, expectedOutputPath, timeLimit = 5, memoryLimit = '256m') {
     try {
       // Read expected output
       const expectedOutput = await fs.promises.readFile(expectedOutputPath, 'utf8');
@@ -139,18 +152,30 @@ class CodeJudge {
 
       // Run the program with input using Docker
       // Use sh -c to properly handle input redirection in Docker
-      const runCmd = `docker run --rm -v "${dockerPath}:/judge/temp" -w /judge/temp --memory=256m --cpus=0.5 --ulimit nproc=50 ${this.dockerImage} sh -c "timeout 5s ./solution < input.txt"`;
+      const runCmd = `docker run --rm -v "${dockerPath}:/judge/temp" -w /judge/temp --memory=${memoryLimit} --cpus=0.5 --ulimit nproc=50 ${this.dockerImage} sh -c "timeout ${timeLimit}s ./solution < input.txt"`;
 
-      const { stdout, stderr } = await execAsync(runCmd, { timeout: 10000 });
+      // Set execAsync timeout to timeLimit + 5 seconds buffer
+      const execTimeout = (timeLimit + 5) * 1000;
+      const { stdout, stderr } = await execAsync(runCmd, { timeout: execTimeout });
 
-      // Compare outputs (trim whitespace)
-      const actualOutput = stdout.trim();
-      const expectedTrimmed = expectedOutput.trim();
+      // Normalize line endings and collapse whitespace so 1-line vs 3-line both pass
+      const normalize = (s) =>
+        s
+          .replace(/\r\n/g, '\n')
+          .replace(/\r/g, '\n')
+          .trim()
+          .split(/\s+/)
+          .join(' ');
+
+      const actualOutput = stdout;
+      const expectedRaw = expectedOutput;
+      const actualNormalized = normalize(actualOutput);
+      const expectedNormalized = normalize(expectedRaw);
 
       return {
-        passed: actualOutput === expectedTrimmed,
-        expected: expectedTrimmed,
-        actual: actualOutput
+        passed: actualNormalized === expectedNormalized,
+        expected: expectedNormalized,
+        actual: actualNormalized
       };
 
     } catch (error) {

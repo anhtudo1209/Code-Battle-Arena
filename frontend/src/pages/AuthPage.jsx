@@ -9,19 +9,22 @@ export default function AuthPage() {
   const [rememberMe, setRememberMe] = useState(false);
 
   // Memoize LiquidEther to prevent re-renders when rememberMe changes
-  const liquidEtherBackground = useMemo(() => (
-    <LiquidEther
-      colors={["#7af2b2", "#34d399", "#06b6d4"]}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        zIndex: 1,
-      }}
-    />
-  ), []);
+  const liquidEtherBackground = useMemo(
+    () => (
+      <LiquidEther
+        colors={["#7af2b2", "#34d399", "#06b6d4"]}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          zIndex: 1,
+        }}
+      />
+    ),
+    []
+  );
 
   return (
     <div className="auth-page">
@@ -32,9 +35,7 @@ export default function AuthPage() {
       <div className="bg-overlay"></div>
 
       {/* 🔹 LiquidEther Background */}
-      <div className="liquid-ether-wrapper">
-        {liquidEtherBackground}
-      </div>
+      <div className="liquid-ether-wrapper">{liquidEtherBackground}</div>
 
       <div className="glass-card">
         <h1 className="title">CODE BATTLE ARENA</h1>
