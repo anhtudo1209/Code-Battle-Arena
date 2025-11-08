@@ -1,0 +1,7 @@
+{
+  "timeLimit": 2,
+  "memoryLimit": "256m",
+  "difficulty": "easy",
+  "tags": ["strings", "algorithms"]
+}
+
