@@ -14,9 +14,17 @@ export function oauthLogin({ provider, provider_user_id, email, username }) {
     provider_user_id,
     email,
     username
-  })
+  });
 }
 
-export default { login, register };
+export function refreshToken(refreshToken) {
+  return post("/auth/refresh", { refreshToken });
+}
+
+export function logout(refreshToken) {
+  return post("/auth/logout", { refreshToken });
+}
+
+export default { login, register, refreshToken, logout };
 
 

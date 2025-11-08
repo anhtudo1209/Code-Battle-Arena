@@ -142,4 +142,62 @@ router.post("/oauth-login", async (req, res) => {
     }
 });
 
+router.post("/refresh", async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+        return res.status(400).json({ error: "Refresh token required" });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        if (decoded.type !== 'refresh') {
+            return res.status(401).json({ error: "Invalid refresh token" });
+        }
+
+        const userId = decoded.id;
+
+        // Check if refresh token exists in database
+        const tokenResult = await query("SELECT * FROM refresh_tokens WHERE token = $1 AND user_id = $2", [refreshToken, userId]);
+        if (tokenResult.rows.length === 0) {
+            return res.status(401).json({ error: "Refresh token not found" });
+        }
+
+        const tokenRecord = tokenResult.rows[0];
+        if (new Date() > new Date(tokenRecord.expires_at)) {
+            return res.status(401).json({ error: "Refresh token expired" });
+        }
+
+        // Generate new access token
+        const newAccessToken = generateAccessToken(userId);
+
+        // Optionally rotate refresh token
+        const newRefreshToken = generateRefreshToken(userId);
+        const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+        // Update refresh token in database
+        await query("UPDATE refresh_tokens SET token = $1, expires_at = $2 WHERE id = $3", [newRefreshToken, newExpiresAt, tokenRecord.id]);
+
+        return res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
+    } catch (err) {
+        console.error("Refresh token error:", err);
+        return res.status(401).json({ error: "Invalid refresh token" });
+    }
+});
+
+router.post("/logout", async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+        return res.status(400).json({ error: "Refresh token required" });
+    }
+
+    try {
+        // Delete the refresh token from database
+        await query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
+        return res.json({ message: "Logged out successfully" });
+    } catch (err) {
+        console.error("Logout error:", err);
+        return res.status(503).json({ error: "Logout failed" });
+    }
+});
+
 export default router;

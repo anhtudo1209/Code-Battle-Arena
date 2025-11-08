@@ -2,8 +2,16 @@ const BASE_PATH = "/api";
 
 function getAuthToken() {
   return (
-    window.localStorage.getItem("token") ||
-    window.sessionStorage.getItem("token") ||
+    window.localStorage.getItem("accessToken") ||
+    window.sessionStorage.getItem("accessToken") ||
+    null
+  );
+}
+
+function getRefreshToken() {
+  return (
+    window.localStorage.getItem("refreshToken") ||
+    window.sessionStorage.getItem("refreshToken") ||
     null
   );
 }
@@ -22,6 +30,29 @@ async function request(path, options = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    // If 401 Unauthorized, try to refresh token
+    if (res.status === 401 && !options._retry) {
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        try {
+          const refreshResponse = await fetch(`${BASE_PATH}/auth/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refreshToken }),
+          });
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            // Store new tokens
+            window.localStorage.setItem("accessToken", refreshData.accessToken);
+            window.localStorage.setItem("refreshToken", refreshData.refreshToken);
+            // Retry the original request with new token
+            return request(path, { ...options, _retry: true });
+          }
+        } catch (refreshError) {
+          console.error("Token refresh failed:", refreshError);
+        }
+      }
+    }
     const message = data?.message || `Request failed with ${res.status}`;
     throw new Error(message);
   }
