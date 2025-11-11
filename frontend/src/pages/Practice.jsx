@@ -11,6 +11,7 @@ export default function Practice() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingExercises, setLoadingExercises] = useState(false);
+  const [submissionId, setSubmissionId] = useState(null);
 
   const [showModal, setShowModal] = useState(true);
 
@@ -65,17 +66,74 @@ export default function Practice() {
     }
 
     setLoading(true);
+    setResults(null);
     try {
       const data = await post("/practice/submit", {
         code,
         exerciseId: selectedExercise,
       });
-      setResults(data);
+      setSubmissionId(data.submissionId);
+      // Start polling for results
+      pollSubmissionStatus(data.submissionId);
     } catch (error) {
       console.error("Submission error:", error);
       setResults({ error: error.message || "Failed to submit code" });
-    } finally {
       setLoading(false);
+    }
+  };
+
+  const pollSubmissionStatus = async (id) => {
+    try {
+      const data = await get(`/practice/submissions/${id}`);
+      const submission = data.submission;
+
+      // Only show results when status is a final state (not queued or running)
+      const isProcessing = submission.status === 'queued' || submission.status === 'running';
+      
+      if (isProcessing) {
+        // Still processing, poll again in 1 second
+        setTimeout(() => pollSubmissionStatus(id), 1000);
+        return;
+      }
+
+      // Done processing - only display results for final states
+      const finalStates = ['passed', 'failed', 'compilation_error'];
+      if (!finalStates.includes(submission.status)) {
+        // Status is not final yet, keep polling (safety check)
+        setTimeout(() => pollSubmissionStatus(id), 1000);
+        return;
+      }
+
+      // We have a final status - display results
+      setLoading(false);
+      const compilationSuccess = submission.compilation_success === true;
+      
+      // Handle test_results - it might be a string (JSON) or already an object (from PostgreSQL JSONB)
+      let testResults = [];
+      if (submission.test_results) {
+        if (typeof submission.test_results === 'string') {
+          try {
+            testResults = JSON.parse(submission.test_results);
+          } catch (e) {
+            console.error('Error parsing test_results:', e);
+            testResults = [];
+          }
+        } else {
+          // Already an object (from PostgreSQL JSONB)
+          testResults = submission.test_results;
+        }
+      }
+      
+      setResults({
+        success: submission.status === 'passed',
+        compilationSuccess: compilationSuccess,
+        compilationError: submission.compilation_error || '',
+        testResults: testResults,
+      });        
+    } catch (error) {
+      console.error("Polling error:", error);
+      setLoading(false);
+      setResults({ error: "Failed to get submission status" });
     }
   };
 
@@ -133,7 +191,7 @@ export default function Practice() {
                   }}
                 />
                 <button onClick={handleSubmit} disabled={loading}>
-                  {loading ? "Submitting..." : "Submit Code"}
+                  {loading ? "Running tests..." : "Submit Code"}
                 </button>
               </section>
 

@@ -1,8 +1,23 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+// __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from project root (override any existing env vars)
+// From backend/src/database, we need to go up 3 levels to reach project root
+const envPath = path.resolve(__dirname, '../../..', '.env');
+const result = dotenv.config({ path: envPath, override: true });
+if (result.error) {
+  console.warn('Warning: Could not load .env file:', result.error.message);
+}
+
+// Ensure password is a string (trim whitespace and handle undefined/null)
+const dbPassword = process.env.DB_PASSWORD ? String(process.env.DB_PASSWORD).trim() : '';
 
 // PostgreSQL connection pool
 const pool = new Pool({
@@ -10,7 +25,7 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  password: dbPassword,
   ssl: process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('rds.amazonaws.com') 
     ? { rejectUnauthorized: false } 
     : false,

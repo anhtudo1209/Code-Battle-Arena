@@ -28,7 +28,20 @@ async function request(path, options = {}) {
     ...options,
     headers,
   });
-  const data = await res.json().catch(() => ({}));
+  
+  // Try to parse JSON, but handle errors gracefully
+  let data = {};
+  try {
+    const text = await res.text();
+    if (text) {
+      data = JSON.parse(text);
+    }
+  } catch (parseError) {
+    console.error('Failed to parse response as JSON:', parseError);
+    // If it's not JSON, try to get error message from response
+    data = { message: `Invalid response from server (${res.status})` };
+  }
+  
   if (!res.ok) {
     // If 401 Unauthorized, try to refresh token
     if (res.status === 401 && !options._retry) {
