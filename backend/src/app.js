@@ -17,7 +17,7 @@ dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true }
 const app = express();
 
 // Middlewares
-app.use(cors({ origin: "https://localhost:5173" })); // allow frontend requests
+app.use(cors({ origin: "https://codebattlearena.id.vn" })); // allow frontend requests
 app.use(express.json());
 
 // API Routes
@@ -33,5 +33,5 @@ app.get(/.*/, (req, res) => {
 // Start server
 const PORT = process.env.PORT ;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running ${PORT}`);
 });
