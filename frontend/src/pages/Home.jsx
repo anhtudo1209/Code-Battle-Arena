@@ -1,5 +1,6 @@
 import React from "react";
 import "./Home.css";
+import "./menu.css";
 
 export default function Home() {
   return (
@@ -13,8 +14,8 @@ export default function Home() {
         <h1 className="logo">CODE BATTLE ARENA</h1>
         <div className="header-right">
           <input type="text" placeholder="Search..." className="search-bar" />
-          <div className="icon-btn">⚙️</div>
-          <div className="icon-btn">☰</div>
+          <button className="icon-btn">⚙️</button>
+          <button className="icon-btn">☰</button>
         </div>
       </header>
 
