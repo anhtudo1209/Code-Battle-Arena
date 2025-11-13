@@ -51,9 +51,9 @@
   background-position: 0 0, 0 0, 0 0, 40px 40px, center;
 }
 
-.header {
+.header.home-header {
   position: relative;
-  z-index: 1200;
+  z-index: 5000;
   height: 50px;
   padding: 10px 20px;
   background: rgba(0, 0, 0, 0.4);
@@ -65,7 +65,7 @@
   justify-content: space-between;
   align-items: center;
 }
-.logo {
+.home-header .logo {
   font-size: 26px;
   font-weight: 800;
   background: linear-gradient(120deg, #7af2b2, #34d399, #06b6d4);
@@ -74,7 +74,7 @@
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
 }
-.header-right {
+.home-header .header-right {
   position: absolute;
   margin-top: 5px;
   margin-bottom: 5px;
@@ -83,7 +83,7 @@
   align-items: center;
   gap: 15px;
 }
-.search-bar {
+.home-header .search-bar {
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 15px;
@@ -93,12 +93,12 @@
   backdrop-filter: blur(10px);
   transition: 0.3s;
 }
-.search-bar:focus {
+.home-header .search-bar:focus {
   background: rgba(255, 255, 255, 0.25);
   border-color: rgba(6, 182, 212, 0.5);
   box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
 }
-.icon-btn {
+.home-header .icon-btn {
   background: none;
   border: none;
   outline: none;
@@ -106,7 +106,7 @@
   cursor: pointer;
   transition: none;
 }
-.icon-btn:hover {
+.home-header .icon-btn:hover {
   background: none;
   border: none;
   outline: none;

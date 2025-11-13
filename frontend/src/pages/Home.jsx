@@ -50,12 +50,12 @@ export default function Home() {
         }}
       />
 
-      <header className="header">
+      <header className="header home-header">
         <h1 className="logo">CODE BATTLE ARENA</h1>
         <div className="header-right">
           <input type="text" placeholder="Search..." className="search-bar" />
           <div className="icon-btn">⚙️</div>
-          <div className="menu-container" ref={menuContainerRef}>
+          <div className="home-menu-container" ref={menuContainerRef}>
             <button className="icon-btn menu-trigger" onClick={toggleMenu}>
               ☰
             </button>
