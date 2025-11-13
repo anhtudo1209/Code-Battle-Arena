@@ -1,9 +1,9 @@
 # Find Largest Number
 
-Given N integers, find the largest number.
+Given n integers, find the largest number.
 
 ## Input
-N integers
+A number n followed by n numbers
 
 ## Output
 Largest number

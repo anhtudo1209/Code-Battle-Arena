@@ -1,6 +1,6 @@
 # Print N Stars
 
-Write a program that prints a line of N stars (*) using a for loop.
+Write a program that prints a line of N stars (*).
 
 ## Input
 An integer n

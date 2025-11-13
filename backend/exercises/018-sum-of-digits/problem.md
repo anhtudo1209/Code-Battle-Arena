@@ -1,9 +1,9 @@
 # Sum of Digits
 
-Given an integer N, find the sum of its digits.
+Given an integer n, find the sum of its digits.
 
 ## Input
-An integer N
+An integer n
 
 ## Output
 Sum of its digits.

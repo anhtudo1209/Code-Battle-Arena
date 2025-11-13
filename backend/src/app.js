@@ -1,22 +1,37 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import authRoutes from "./routes/authRoutes.js";
 import practiceRoutes from "./routes/practiceRoutes.js";
 import authMiddleware from "./middleware/authMiddleware.js";
 
-dotenv.config();
+// __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Load .env from project root (override any existing env vars)
+// From backend/src, we need to go up 2 levels to reach project root
+dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true });
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173" }));
+// Middlewares
+app.use(cors({ origin: "https://codebattlearena.id.vn" })); // allow frontend requests
 app.use(express.json());
 
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/practice", authMiddleware, practiceRoutes);
 
+// Serve frontend (static build) - only after API routes
+app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+});
 
-const PORT = process.env.PORT || 3000;
+// Start server
+const PORT = process.env.PORT ;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running ${PORT}`);
 });

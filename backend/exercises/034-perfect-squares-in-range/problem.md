@@ -1,6 +1,6 @@
 # Perfect Squares in Range
 
-Input two numbers L and R. Print all perfect squares in this range.
+Input two numbers L and R. Print all perfect square numbers in this range. A perfect square number is an integer that is the square of another integer. If there is no number, print "-1"
 
 ## Input
 Two numbers L and R

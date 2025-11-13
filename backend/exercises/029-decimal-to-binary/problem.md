@@ -1,9 +1,9 @@
 # Decimal to Binary Conversion
 
-Input an integer N. Repeatedly divide N by 2 and collect remainders until N becomes 0. Then print the binary digits in reverse order.
+Input an positive integer n. Repeatedly divide n by 2 and collect remainders until n becomes 0. Then print the binary digits in reverse order.
 
 ## Input
-An integer N
+An positive integer n
 
 ## Output
 The step-by-step division process and the final binary representation.

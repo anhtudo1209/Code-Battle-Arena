@@ -5,10 +5,10 @@ Check if a number is "strong"
 
 
 ## Input
-An integer N
+An integer n
 
 ## Output
-Check if a number is “strong”
+If a number is “strong”, print "Strong Number", else print "Not Strong Number"
 
 ## Sample Input
 145

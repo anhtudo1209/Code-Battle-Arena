@@ -1,1 +1,4 @@
-["pear", "mango", "kiwi", "apple"]
+pear
+mango
+kiwi
+apple

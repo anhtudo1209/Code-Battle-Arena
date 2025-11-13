@@ -1,13 +1,13 @@
 # Factorial
 
-Input a number N. Calculate and print N!.
+Input a number n. Calculate and print n!.
 
 
 ## Input
-A number N
+A number n
 
 ## Output
-N!
+n!
 
 ## Sample Input
 3

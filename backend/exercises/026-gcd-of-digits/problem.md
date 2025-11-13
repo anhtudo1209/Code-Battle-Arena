@@ -4,7 +4,7 @@ Input an integer. Calculate the greatest common divisor (GCD) of its digits.
 
 
 ## Input
-An integer N
+An integer n
 
 ## Output
 The greatest common divisor (GCD) of its digits.

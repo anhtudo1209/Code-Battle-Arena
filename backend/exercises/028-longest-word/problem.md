@@ -6,7 +6,7 @@ Input a sentence (words separated by spaces). Find and print the longest word. (
 A sentence
 
 ## Output
-The longest word.
+The longest word
 
 ## Sample Input
 The quick brown fox jumps

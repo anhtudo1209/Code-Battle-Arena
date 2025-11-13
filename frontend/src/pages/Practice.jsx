@@ -1,50 +1,54 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Editor } from "@monaco-editor/react";
 import { post, get } from "../services/httpClient";
+import Header from "../components/Header";
 import "./Practice.css";
 
 export default function Practice() {
-  const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
-  const [problemContent, setProblemContent] = useState('');
-  const [code, setCode] = useState(`#include <iostream>
-using namespace std;
-
-int main() {
-    cout << "Hello, World!" << endl;
-    return 0;
-}`);
+  const [problemContent, setProblemContent] = useState("");
+  const [code, setCode] = useState(``);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingExercises, setLoadingExercises] = useState(true);
+  const [loadingExercises, setLoadingExercises] = useState(false);
+  const [submissionId, setSubmissionId] = useState(null);
 
-  // Fetch exercises on component mount
-  useEffect(() => {
-    const fetchExercises = async () => {
-      try {
-        const data = await get("/practice/exercises");
-        setExercises(data.exercises || []);
-        
-        // Auto-select first exercise
-        if (data.exercises && data.exercises.length > 0) {
-          loadExercise(data.exercises[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching exercises:", error);
-      } finally {
-        setLoadingExercises(false);
+  const [showModal, setShowModal] = useState(true);
+
+  const fetchExercises = async (difficulty) => {
+    setLoadingExercises(true);
+    try {
+      const data = await get("/practice/exercises");
+      const allExercises = data.exercises || [];
+      const filtered = allExercises.filter(
+        (ex) => ex.difficulty === difficulty
+      );
+
+      if (filtered.length > 0) {
+        const randomIndex = Math.floor(Math.random() * filtered.length);
+        const randomExercise = filtered[randomIndex];
+        loadExercise(randomExercise.id);
+      } else {
+        setProblemContent("No exercises found for this difficulty.");
       }
-    };
-    
-    fetchExercises();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching exercises:", error);
+    } finally {
+      setLoadingExercises(false);
+    }
+  };
 
-  // Load exercise details
+  const handleDifficultySelect = (difficulty) => {
+    setShowModal(false);
+    fetchExercises(difficulty);
+  };
+
   const loadExercise = async (exerciseId) => {
     try {
       const data = await get(`/practice/exercises/${exerciseId}`);
       setSelectedExercise(exerciseId);
       setProblemContent(data.content);
-      setResults(null); // Clear previous results
+      setResults(null);
     } catch (error) {
       console.error("Error loading exercise:", error);
     }
@@ -62,114 +66,157 @@ int main() {
     }
 
     setLoading(true);
+    setResults(null);
     try {
-      const data = await post("/practice/submit", { 
-        code, 
-        exerciseId: selectedExercise 
+      const data = await post("/practice/submit", {
+        code,
+        exerciseId: selectedExercise,
       });
-      setResults(data); // { status: 'accepted' | 'wrong answer' | 'compilation error' }
+      setSubmissionId(data.submissionId);
+      // Start polling for results
+      pollSubmissionStatus(data.submissionId);
     } catch (error) {
       console.error("Submission error:", error);
       setResults({ error: error.message || "Failed to submit code" });
-    } finally {
       setLoading(false);
+    }
+  };
+
+  const pollSubmissionStatus = async (id) => {
+    try {
+      const data = await get(`/practice/submissions/${id}`);
+      const submission = data.submission;
+
+      // Only show results when status is a final state (not queued or running)
+      const isProcessing = submission.status === 'queued' || submission.status === 'running';
+      
+      if (isProcessing) {
+        // Still processing, poll again in 1 second
+        setTimeout(() => pollSubmissionStatus(id), 1000);
+        return;
+      }
+
+      // Done processing - only display results for final states
+      const finalStates = ['passed', 'failed', 'compilation_error'];
+      if (!finalStates.includes(submission.status)) {
+        // Status is not final yet, keep polling (safety check)
+        setTimeout(() => pollSubmissionStatus(id), 1000);
+        return;
+      }
+
+      // We have a final status - display results
+      setLoading(false);
+      const compilationSuccess = submission.compilation_success === true;
+      
+      // Handle test_results - it might be a string (JSON) or already an object (from PostgreSQL JSONB)
+      let testResults = [];
+      if (submission.test_results) {
+        if (typeof submission.test_results === 'string') {
+          try {
+            testResults = JSON.parse(submission.test_results);
+          } catch (e) {
+            console.error('Error parsing test_results:', e);
+            testResults = [];
+          }
+        } else {
+          // Already an object (from PostgreSQL JSONB)
+          testResults = submission.test_results;
+        }
+      }
+      
+      setResults({
+        success: submission.status === 'passed',
+        compilationSuccess: compilationSuccess,
+        compilationError: submission.compilation_error || '',
+        testResults: testResults,
+      });        
+    } catch (error) {
+      console.error("Polling error:", error);
+      setLoading(false);
+      setResults({ error: "Failed to get submission status" });
     }
   };
 
   return (
     <div className="practice-page">
-      {/* Background */}
-      <div className="bg-image"></div>
-      <div className="bg-overlay"></div>
-
-      {/* Header */}
-      <header className="header">
-        <h1 className="logo">CODE BATTLE ARENA</h1>
-        <div className="header-right">
-          <input type="text" placeholder="Search..." className="search-bar" />
-          <div className="icon-btn">⚙️</div>
-          <div className="icon-btn">☰</div>
-        </div>
-      </header>
-
-      {/* Content */}
-      <div className="content">
-        <div className="practice-container">
-          {/* Exercise List Sidebar */}
-          <div className="exercises-sidebar">
-            <h3>Problems</h3>
-            {loadingExercises ? (
-              <p>Loading exercises...</p>
-            ) : (
-              <ul className="exercise-list">
-                {exercises.map((exercise) => (
-                  <li 
-                    key={exercise.id}
-                    className={selectedExercise === exercise.id ? 'active' : ''}
-                    onClick={() => loadExercise(exercise.id)}
-                  >
-                    <div className="exercise-title">{exercise.title}</div>
-                    <div className="exercise-description">{exercise.description}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="difficulty-modal">
+            <h2>Select Difficulty</h2>
+            <div className="difficulty-buttons">
+              <button onClick={() => handleDifficultySelect("easy")}>
+                Easy
+              </button>
+              <button onClick={() => handleDifficultySelect("medium")}>
+                Medium
+              </button>
+              <button onClick={() => handleDifficultySelect("difficult")}>
+                Difficult
+              </button>
+            </div>
           </div>
+        </div>
+      )}
 
-          {/* Main Content */}
-          <div className="practice-main">
-            {selectedExercise ? (
-              <>
-                <div className="problem-description">
+      {!showModal && (
+        <>
+          <Header />
+
+          <div className="practice-layout">
+            <aside className="problem-sidebar">
+              <h3>Problem</h3>
+              {loadingExercises ? (
+                <p>Loading problem...</p>
+              ) : (
+                <div className="problem-content">
                   <pre>{problemContent}</pre>
                 </div>
+              )}
+            </aside>
 
-                <div className="code-section">
-                  <h3>Your Code:</h3>
-                  <textarea
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="Write your C++ code here..."
-                    rows={15}
-                    cols={80}
-                  />
-                  <button onClick={handleSubmit} disabled={loading}>
-                    {loading ? "Submitting..." : "Submit Code"}
-                  </button>
-                </div>
+            <main className="practice-main">
+              <section className="code-section">
+                <h3>Your Code:</h3>
+                <Editor
+                  height="60vh"
+                  language="cpp"
+                  theme="vs-dark"
+                  value={code}
+                  onChange={(val) => setCode(val ?? "")}
+                  options={{
+                    minimap: { enabled: false },
+                    automaticLayout: true,
+                    fontSize: 14,
+                    wordWrap: "on",
+                  }}
+                />
+                <button onClick={handleSubmit} disabled={loading}>
+                  {loading ? "Running tests..." : "Submit Code"}
+                </button>
+              </section>
 
-                {results && (
-                  <div className="results-section">
-                    <h3>Results:</h3>
-                    {results.status === 'accepted' && (
-                      <div className="success">
-                        <p>🎉 accepted</p>
-                      </div>
+              <section className="output-section">
+                <h3>Output:</h3>
+                {results ? (
+                  <>
+                    {results.error ? (
+                      <div className="error">{results.error}</div>
+                    ) : !results.compilationSuccess ? (
+                      <div className="error">⚠️ Compilation Error{results.compilationError ? `: ${results.compilationError}` : ''}</div>
+                    ) : results.success ? (
+                      <div className="success">🎉 Accepted</div>
+                    ) : (
+                      <div className="error">❌ Wrong Answer</div>
                     )}
-                    {results.status === 'wrong answer' && (
-                      <div className="error">
-                        <p>❌ wrong answer</p>
-                      </div>
-                    )}
-                    {results.status === 'compilation error' && (
-                      <div className="error">
-                        <p>❌ compilation error</p>
-                      </div>
-                    )}
-                    {!['accepted','wrong answer','compilation error'].includes(results.status) && (
-                      <div>
-                        <p>{results.status || 'Unknown result'}</p>
-                      </div>
-                    )}
-                  </div>
+                  </>
+                ) : (
+                  <p>No output yet.</p>
                 )}
-              </>
-            ) : (
-              <p>Select a problem to start coding</p>
-            )}
+              </section>
+            </main>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

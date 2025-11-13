@@ -1,6 +1,6 @@
 # Print Natural Numbers
 
-Write a C++ program that prints natural numbers from 1 to n
+Write a program that prints natural numbers from 1 to n
 
 ## Input
 An integer number n

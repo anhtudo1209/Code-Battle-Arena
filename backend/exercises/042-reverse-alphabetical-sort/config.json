@@ -1,7 +1,7 @@
 {
   "timeLimit": 2,
   "memoryLimit": "256m",
-  "difficulty": "easy",
+  "difficulty": "medium",
   "tags": ["sorting", "strings"]
 }
 

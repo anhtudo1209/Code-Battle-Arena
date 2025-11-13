@@ -1,10 +1,10 @@
 # Multiplication Table
 
-Input a number N, then print its multiplication table up to 10.
+Input a number n, then print its multiplication table up to 10.
 
 
 ## Input
-A number N
+A number n
 
 ## Output
 its multiplication table up to 10.

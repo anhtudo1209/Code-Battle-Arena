@@ -4,10 +4,10 @@ Input an integer. Check if it is a Harshad number (divisible by sum of digits).
 
 
 ## Input
-An integer N
+An integer n
 
 ## Output
-Check if it is a Harshad number (divisible by sum of digits).
+If n is a Harshad, print "Harshad", else print "Not Harshad"
 
 ## Sample Input
 18
