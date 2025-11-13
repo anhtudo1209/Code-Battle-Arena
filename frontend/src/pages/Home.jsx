@@ -1,10 +1,55 @@
-import React from "react";
+﻿import React, { useState } from "react";
 import "./Home.css";
-import "./menu.css";
+
+// Menu Component
+function Menu({ isOpen }) {
+  console.log("Menu render - isOpen:", isOpen);
+  
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="menu-popup"
+      onClick={(e) => {
+        console.log("Click inside menu");
+        e.stopPropagation();
+      }}
+    >
+      <button className="menu-item" onClick={() => console.log("Home clicked")}>
+        Home
+      </button>
+      <button className="menu-item" onClick={() => console.log("Friends clicked")}>
+        Friends
+      </button>
+      <button className="menu-item" onClick={() => console.log("Confession clicked")}>
+        Confession
+      </button>
+      <button className="menu-item" onClick={() => console.log("Support clicked")}>
+        Support
+      </button>
+      <button className="menu-item logout" onClick={() => console.log("Logout clicked")}>
+        Log out
+      </button>
+    </div>
+  );
+}
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = (e) => {
+    e.stopPropagation();
+    console.log("Toggle menu clicked - current state:", isMenuOpen);
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    console.log("Closing menu from outside click");
+    setIsMenuOpen(false);
+  };
+
   return (
-    <div className="home-page">
+    <div className="home-page" onClick={closeMenu}>
       {/* Background */}
       <div className="bg-image"></div>
       <div className="bg-overlay"></div>
@@ -14,8 +59,12 @@ export default function Home() {
         <h1 className="logo">CODE BATTLE ARENA</h1>
         <div className="header-right">
           <input type="text" placeholder="Search..." className="search-bar" />
-          <button className="icon-btn">⚙️</button>
-          <button className="icon-btn">☰</button>
+          <div className="icon-btn">⚙️</div>
+          <button className="icon-btn" onClick={toggleMenu}>
+            ☰
+          </button>
+          {/* Menu Popup */}
+          <Menu isOpen={isMenuOpen} />
         </div>
       </header>
 
@@ -54,7 +103,6 @@ export default function Home() {
               <div className="progress"></div>
             </div>
 
-            {/* 🔹 Link PLAY styled like button */}
             <a href="/practice" className="btn play-btn">PLAY</a>
           </div>
         </aside>
