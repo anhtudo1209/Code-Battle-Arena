@@ -45,7 +45,7 @@
 /* --- Header --- */
 .header {
   position: relative;
-  z-index: 2;
+  z-index: 1200;
   padding: 15px 30px;
   display: flex;
   justify-content: space-between;
@@ -55,6 +55,7 @@
   font-size: 26px;
   font-weight: 800;
   background: linear-gradient(120deg, #7af2b2, #34d399, #06b6d4);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 15px rgba(6, 182, 212, 0.4);

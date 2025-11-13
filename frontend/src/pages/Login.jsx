@@ -34,7 +34,7 @@ export default function Login({
         if (response?.authResponse) {
           const { accessToken } = response.authResponse;
           window.FB.api("/me", { fields: "id,name,email,picture" }, () => {
-            window.location.href = "/src/pages/home.html";
+            navigate("/home");
             setFbLoading(false);
           });
         } else {

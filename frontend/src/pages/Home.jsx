@@ -1,55 +1,29 @@
-﻿import React, { useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import "./Home.css";
-
-// Menu Component
-function Menu({ isOpen }) {
-  console.log("Menu render - isOpen:", isOpen);
-  
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="menu-popup"
-      onClick={(e) => {
-        console.log("Click inside menu");
-        e.stopPropagation();
-      }}
-    >
-      <button className="menu-item" onClick={() => console.log("Home clicked")}>
-        Home
-      </button>
-      <button className="menu-item" onClick={() => console.log("Friends clicked")}>
-        Friends
-      </button>
-      <button className="menu-item" onClick={() => console.log("Confession clicked")}>
-        Confession
-      </button>
-      <button className="menu-item" onClick={() => console.log("Support clicked")}>
-        Support
-      </button>
-      <button className="menu-item logout" onClick={() => console.log("Logout clicked")}>
-        Log out
-      </button>
-    </div>
-  );
-}
+import Menu from "./Menu";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuContainerRef = useRef(null);
 
   const toggleMenu = (e) => {
     e.stopPropagation();
-    console.log("Toggle menu clicked - current state:", isMenuOpen);
-    setIsMenuOpen(!isMenuOpen);
+    setIsMenuOpen((prev) => !prev);
   };
 
-  const closeMenu = () => {
-    console.log("Closing menu from outside click");
-    setIsMenuOpen(false);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuContainerRef.current && !menuContainerRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div className="home-page" onClick={closeMenu}>
+    <div className="home-page">
       {/* Background */}
       <div className="bg-image"></div>
       <div className="bg-overlay"></div>
@@ -60,11 +34,12 @@ export default function Home() {
         <div className="header-right">
           <input type="text" placeholder="Search..." className="search-bar" />
           <div className="icon-btn">⚙️</div>
-          <button className="icon-btn" onClick={toggleMenu}>
-            ☰
-          </button>
-          {/* Menu Popup */}
-          <Menu isOpen={isMenuOpen} />
+          <div className="menu-container" ref={menuContainerRef}>
+            <button className="icon-btn menu-trigger" onClick={toggleMenu}>
+              ☰
+            </button>
+            <Menu isOpen={isMenuOpen} />
+          </div>
         </div>
       </header>
 
