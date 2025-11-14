@@ -33,6 +33,7 @@ export default function Login({
       (response) => {
         if (response?.authResponse) {
           const { accessToken } = response.authResponse;
+
           fetch(
             `https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`
           )
