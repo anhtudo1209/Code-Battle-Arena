@@ -9,6 +9,7 @@ An array of digits
 The digits of the incremented integer in array form
 
 ## Sample Input
+3
 1 2 3
 
 ## Sample Output

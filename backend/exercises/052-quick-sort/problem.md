@@ -9,6 +9,7 @@ An array
 Sorts an array using the Quick Sort algorithm.
 
 ## Sample Input
+7
 7 2 1 6 8 5 3
 
 ## Sample Output

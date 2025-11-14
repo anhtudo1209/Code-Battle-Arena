@@ -9,6 +9,7 @@ An array of n integers
 Return an array of all the integers that appear twice.
 
 ## Sample Input
+8
 4 3 2 7 8 2 3 1
 
 ## Sample Output

@@ -9,6 +9,7 @@ An array
 Returns true if any value appears at least twice in the array, and false if every element is distinct.
 
 ## Sample Input
+7
 7 1 2 3 4 5 1
 
 ## Sample Output

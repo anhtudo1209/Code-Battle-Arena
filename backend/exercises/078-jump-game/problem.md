@@ -9,6 +9,7 @@ An array of non-negative integers nums
 Return true if you can reach the last index, false otherwise.
 
 ## Sample Input
+5
 2 3 1 1 4
 
 ## Sample Output

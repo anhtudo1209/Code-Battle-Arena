@@ -9,6 +9,7 @@ An array of integers
 Find all unique triplets (a, b, c) in the array that sum to zero.
 
 ## Sample Input
+6
 -1 0 1 2 -1 -4
 
 ## Sample Output

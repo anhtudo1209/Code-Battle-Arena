@@ -1,10 +1,10 @@
 # Search in Infinite Sorted Array
 
-Given a sorted array that is infinitely large (you cannot use size()), find the index of a target element. If not present, return -1.
+Given a sorted array that is finitely large, find the index of a target element. If not present, return -1.
 
 
 ## Input
-An sorted array that is infinitely large
+An sorted array that is finitely large
 
 ## Output
 Find the index of a target element. If not present, return -1.
