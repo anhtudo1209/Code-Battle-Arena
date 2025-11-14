@@ -1,6 +1,6 @@
 # Search in 2D Matrix
 
-Write a function that searches for a target in an M \times N matrix. The matrix has these properties:
+Write a function that searches for a target in an M x N matrix. The matrix has these properties:
 1.Integers in each row are sorted left-to-right.
 2.Integers in each column are sorted top-to-bottom.
 
@@ -9,7 +9,7 @@ Write a function that searches for a target in an M \times N matrix. The matrix 
 A matrix
 
 ## Output
-Searches for a target in an M \times N matrix
+Searches for a target in an M x N matrix
 
 ## Sample Input
 3 3 5 

@@ -9,6 +9,7 @@ An array
 Sorts an array of non-negative integers using the Radix Sort (LSD) algorithm.
 
 ## Sample Input
+8
 170 45 75 90 802 24 2 66
 
 ## Sample Output

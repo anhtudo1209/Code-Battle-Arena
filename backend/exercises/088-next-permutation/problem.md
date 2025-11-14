@@ -8,6 +8,7 @@ An array
 Rearranges numbers into the lexicographically next greater permutation. If no greater permutation exists, it must rearrange to the lowest possible order.
 
 ## Sample Input
+3
 1 2 3
 
 ## Sample Output

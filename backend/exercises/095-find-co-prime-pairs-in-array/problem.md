@@ -12,8 +12,6 @@ Find Co-prime Pairs in an Array
 4
 2 7 5 10
 
-
-
 ## Sample Output
 (2, 7) (2, 5) (7, 5) (7, 10) (5, 10)
 
