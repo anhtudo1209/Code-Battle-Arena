@@ -17,6 +17,50 @@ router.post("/submit", async (req, res) => {
   const { code, exerciseId = 'exercise1' } = req.body;
   const userId = req.userId;
 
+    // -----------------------------
+  // 🔒 Read-Only Code Protection
+  // -----------------------------
+  const exercisePath = path.join(__dirname, '..', '..', 'exercises', exerciseId);
+
+  const configPath = path.join(exercisePath, "config.json");
+  if (!fs.existsSync(configPath)) {
+    return res.status(400).json({ error: "Exercise config.json not found." });
+  }
+
+  const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+
+  if (config.starterCode) {
+    const starterPath = path.join(exercisePath, config.starterCode);
+    const starterCode = fs.readFileSync(starterPath, "utf8");
+
+    const editable_start = config.editable_start ?? 0;
+    const editable_end = config.editable_end ?? 0;
+
+    const starterLines = starterCode.split("\n");
+    const userLines = code.split("\n");
+
+    // User cannot delete mandatory lines
+    if (userLines.length < starterLines.length) {
+      return res.status(400).json({ error: "You removed protected starter code." });
+    }
+
+    for (let i = 0; i < starterLines.length; i++) {
+      // skip editable region
+      if (i >= editable_start && i <= editable_end) continue;
+
+      // user must NOT modify protected lines
+      if (starterLines[i].trim() !== userLines[i].trim()) {
+        return res.status(400).json({
+          error: `You modified protected line ${i + 1}.`
+        });
+      }
+    }
+  }
+  // -----------------------------
+  // END READ ONLY PROTECTION
+  // -----------------------------
+
+
   if (!code || typeof code !== "string") {
     return res.status(400).json({ error: "Code is required and must be a string" });
   }
@@ -158,12 +202,34 @@ router.get("/exercises/:id", async (req, res) => {
   try {
     const exercisesDir = path.join(__dirname, '..', '..', 'exercises');
     const problemPath = path.join(exercisesDir, exerciseId, 'problem.md');
+    
+    const exerciseDir = path.join(__dirname, "..", "..", "exercises", exerciseId);
+    const configPath = path.join(exerciseDir, "config.json");
+
+    if (!fs.existsSync(problemPath) || !fs.existsSync(configPath)) {
+      return res.status(404).json({ error: "Failed!" });
+    }
 
     const problemContent = await fs.promises.readFile(problemPath, 'utf8');
 
+    const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+
+    let starterCode = "";
+    if (config.starterCode) {
+        const starterPath = path.join(exerciseDir, config.starterCode);
+        starterCode = fs.readFileSync(starterPath, "utf8");
+    }
+
     res.json({
       id: exerciseId,
-      content: problemContent
+      content: problemContent,
+      difficulty: config.difficulty,
+      tags: config.tags,
+      timeLimit: config.timeLimit,
+      memoryLimit: config.memoryLimit,
+      editable_start: config.editable_start,
+      editable_end: config.editable_end,
+      starterCode
     });
   } catch (error) {
     console.error(`Error fetching exercise ${exerciseId}:`, error);
