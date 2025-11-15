@@ -12,6 +12,8 @@ export default function Practice() {
   const [loading, setLoading] = useState(false);
   const [loadingExercises, setLoadingExercises] = useState(false);
   const [submissionId, setSubmissionId] = useState(null);
+  const [lockedLines, setLockedLines] = useState([]);
+  const [editorRef, setEditorRef] = useState(null);
 
   const [showModal, setShowModal] = useState(true);
 
@@ -48,7 +50,13 @@ export default function Practice() {
       const data = await get(`/practice/exercises/${exerciseId}`);
       setSelectedExercise(exerciseId);
       setProblemContent(data.content);
+      setLockedLines([data.editable_start, data.editable_end]);
+
+      // Load starter code
+      setCode(data.starterCode || "");
+
       setResults(null);
+
     } catch (error) {
       console.error("Error loading exercise:", error);
     }
@@ -89,7 +97,7 @@ export default function Practice() {
 
       // Only show results when status is a final state (not queued or running)
       const isProcessing = submission.status === 'queued' || submission.status === 'running';
-      
+
       if (isProcessing) {
         // Still processing, poll again in 1 second
         setTimeout(() => pollSubmissionStatus(id), 1000);
@@ -107,7 +115,7 @@ export default function Practice() {
       // We have a final status - display results
       setLoading(false);
       const compilationSuccess = submission.compilation_success === true;
-      
+
       // Handle test_results - it might be a string (JSON) or already an object (from PostgreSQL JSONB)
       let testResults = [];
       if (submission.test_results) {
@@ -123,13 +131,13 @@ export default function Practice() {
           testResults = submission.test_results;
         }
       }
-      
+
       setResults({
         success: submission.status === 'passed',
         compilationSuccess: compilationSuccess,
         compilationError: submission.compilation_error || '',
         testResults: testResults,
-      });        
+      });
     } catch (error) {
       console.error("Polling error:", error);
       setLoading(false);
@@ -182,6 +190,63 @@ export default function Practice() {
                   language="cpp"
                   theme="vs-dark"
                   value={code}
+                  onMount={(editor, monaco) => {
+                    setEditorRef(editor);
+
+                    if (lockedLines.length === 2) {
+                      const [editableStart, editableEnd] = lockedLines;
+
+                      const model = editor.getModel();
+
+                      // -----------------------------------
+                      // 1️⃣ Highlight the LOCKED regions
+                      // -----------------------------------
+                      const decorations = [];
+
+                      // top locked region (before editableStart)
+                      if (editableStart > 1) {
+                        decorations.push({
+                          range: new monaco.Range(1, 1, editableStart - 1, 1),
+                          options: { inlineClassName: "locked-code" }
+                        });
+                      }
+
+                      // bottom locked region (after editableEnd)
+                      const totalLines = model.getLineCount();
+                      if (editableEnd < totalLines) {
+                        decorations.push({
+                          range: new monaco.Range(editableEnd + 1, 1, totalLines, 1),
+                          options: { inlineClassName: "locked-code" }
+                        });
+                      }
+
+                      editor.deltaDecorations([], decorations);
+
+                      // -----------------------------------
+                      // 2️⃣ Prevent edits OUTSIDE editable region
+                      // -----------------------------------
+                      editor.onDidChangeModelContent((event) => {
+                        event.changes.forEach((change) => {
+                          const start = change.range.startLineNumber;
+                          const end = change.range.endLineNumber;
+
+                          const touchesUpperLocked = start < editableStart;
+                          const touchesLowerLocked = end > editableEnd;
+
+                          if (touchesUpperLocked || touchesLowerLocked) {
+                            // ❌ Restore original text (undo illegal edit)
+                            editor.executeEdits("restore", [
+                              {
+                                range: change.range,
+                                text: model.getValueInRange(change.range), // revert
+                              },
+                            ]);
+                          }
+                        });
+                      });
+                    }
+                  }}
+
                   onChange={(val) => setCode(val ?? "")}
                   options={{
                     minimap: { enabled: false },
