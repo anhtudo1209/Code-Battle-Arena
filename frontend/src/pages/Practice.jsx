@@ -169,7 +169,7 @@ export default function Practice() {
                 <p>Loading problem...</p>
               ) : (
                 <div className="problem-content">
-                  <pre>{problemContent}</pre>
+                  {problemContent}
                 </div>
               )}
             </aside>
