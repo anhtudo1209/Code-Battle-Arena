@@ -169,6 +169,10 @@
   white-space: pre-wrap;
   font-family: "Courier New", monospace;
   line-height: 1.5;
+
+  word-break: break-word;      /* ngắt từ quá dài */
+   overflow-x: hidden;          /* ẩn scroll ngang */
+  overflow-y: auto;            /* scroll dọc */
 }
 
 .practice-main {
