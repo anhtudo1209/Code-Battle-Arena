@@ -239,3 +239,14 @@
 .error {
   color: #f87171;
 }
+
+.locked-code {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+  pointer-events: none;
+}
+
+.guard-message {
+  margin-top: 8px;
+  color: #fbbf24;
+  font-size: 0.9rem;
+}
