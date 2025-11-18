@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import {
   FaPlay,
   FaTrophy,
@@ -9,28 +9,8 @@ import {
 import Stepper, { Step } from "../components/Stepper";
 import Header from "../components/Header";
 import "./Home.css";
-import Menu from "./Menu";
 
 export default function Home() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuContainerRef = useRef(null);
-
-  const toggleMenu = (e) => {
-    e.stopPropagation();
-    setIsMenuOpen((prev) => !prev);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuContainerRef.current && !menuContainerRef.current.contains(event.target)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
     <div className="home-page">
       <div className="bg-overlay"></div>
@@ -50,19 +30,7 @@ export default function Home() {
         }}
       />
 
-      <header className="header home-header">
-        <h1 className="logo">CODE BATTLE ARENA</h1>
-        <div className="header-right">
-          <input type="text" placeholder="Search..." className="search-bar" />
-          <div className="icon-btn">⚙️</div>
-          <div className="home-menu-container" ref={menuContainerRef}>
-            <button className="icon-btn menu-trigger" onClick={toggleMenu}>
-              ☰
-            </button>
-            <Menu isOpen={isMenuOpen} />
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="content">
         <aside className="sidebar">
