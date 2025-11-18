@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FaPlay,
   FaTrophy,
@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 import Stepper, { Step } from "../components/Stepper";
 import "./Home.css";
+import Menu from "./Menu";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
