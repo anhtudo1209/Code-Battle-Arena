@@ -4,7 +4,6 @@ import "./Login.css";
 import GoogleLogin from "../components/GoogleLogin";
 import { login as loginService, oauthLogin } from "../services/authService";
 import { useNavigate } from "react-router-dom";
-import GithubLogin from "../components/GitHubLogin";
 
 const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
 
@@ -216,15 +215,7 @@ export default function Login({
         <FaGoogle />
       </button>
   </GoogleLogin>
-
-  <GithubLogin onLogin={({ user, token }) => {
-  const storage = rememberMe ? window.localStorage : window.sessionStorage;
-  storage.setItem("token", token);
-  navigate("/home");
-  }}>
-  <button className="social-btn github"><FaGithub /></button>
-  </GithubLogin>
-
+   
 
       </div>
 
