@@ -7,7 +7,6 @@ import {
   FaMedal,
 } from "react-icons/fa";
 import Stepper, { Step } from "../components/Stepper";
-import Header from "../components/Header";
 import "./Home.css";
 import Menu from "./Menu";
 
