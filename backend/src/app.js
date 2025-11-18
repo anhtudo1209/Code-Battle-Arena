@@ -17,7 +17,7 @@ dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true }
 const app = express();
 
 // Middlewares
-app.use(cors({ origin: "https://codebattlearena.id.vn" })); // allow frontend requests
+app.use(cors({ origin: "https://localhost:3000" })); // allow frontend requests
 app.use(express.json());
 
 // API Routes
