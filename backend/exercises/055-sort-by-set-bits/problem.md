@@ -9,6 +9,7 @@ An array of integers
 Sort them in ascending order based on the number of '1' bits in their binary representation
 
 ## Sample Input
+7
 0 1 2 3 4 5 6
 
 ## Sample Output

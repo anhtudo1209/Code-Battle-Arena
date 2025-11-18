@@ -1,1 +1,2 @@
-["eat", "tea", "tan", "ate", "nat", "bat"]
+6
+eat tea tan ate nat bat

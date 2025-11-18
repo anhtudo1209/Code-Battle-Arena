@@ -9,6 +9,7 @@ An array
 Sorts an array of non-negative integers using the Counting Sort algorithm.
 
 ## Sample Input
+6
 4 2 2 3 3 1
 
 ## Sample Output

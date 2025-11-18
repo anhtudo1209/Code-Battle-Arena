@@ -9,6 +9,7 @@ An array of integers
 true if the array can be made non-decreasing with at most one modification, otherwise false
 
 ## Sample Input
+3
 4 2 3
 
 ## Sample Output

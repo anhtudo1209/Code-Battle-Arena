@@ -9,6 +9,7 @@ An sorted array rotated at a pivot array
 Find the minimum element in the array.
 
 ## Sample Input
+7
 4 5 6 7 0 1 2
 
 ## Sample Output

@@ -7,10 +7,36 @@ import {
   FaMedal,
 } from "react-icons/fa";
 import Stepper, { Step } from "../components/Stepper";
-import Header from "../components/Header";
 import "./Home.css";
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuContainerRef = useRef(null);
+  const menuPopupRef = useRef(null);
+
+  const toggleMenu = (e) => {
+    e.stopPropagation();
+    setIsMenuOpen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const menuTrigger = menuContainerRef.current;
+      const menuPopup = menuPopupRef.current;
+
+      if (
+        menuTrigger &&
+        !menuTrigger.contains(event.target) &&
+        (!menuPopup || !menuPopup.contains(event.target))
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div className="home-page">
       <div className="bg-overlay"></div>
@@ -30,7 +56,23 @@ export default function Home() {
         }}
       />
 
-      <Header />
+      <header className="header home-header">
+        <h1 className="logo">CODE BATTLE ARENA</h1>
+        <div className="header-right">
+          <input type="text" placeholder="Search..." className="search-bar" />
+          <div className="icon-btn">⚙️</div>
+          <div className="home-menu-container" ref={menuContainerRef}>
+            <button className="icon-btn menu-trigger" onClick={toggleMenu}>
+              ☰
+            </button>
+            <Menu
+              isOpen={isMenuOpen}
+              menuPopupRef={menuPopupRef}
+              onItemClick={() => setIsMenuOpen(false)}
+            />
+          </div>
+        </div>
+      </header>
 
       <div className="content">
         <aside className="sidebar">
