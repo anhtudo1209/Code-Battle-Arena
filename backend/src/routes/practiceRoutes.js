@@ -12,7 +12,21 @@ const __dirname = path.dirname(__filename);
 const router = express.Router();
 const judge = new CodeJudge();
 
-// Practice submission endpoint with C++ judging
+function detectLanguage(code) {
+  const hasCpp =
+    code.includes("#include <iostream>") ||
+    code.includes("std::") ||
+    code.includes("using namespace std") ||
+    code.includes("cout") ||
+    code.includes("cin") ||
+    code.includes("class ") ||
+    code.includes("new ") ||
+    code.includes("delete ");
+
+  return hasCpp ? "cpp" : "c";
+}
+
+// Practice submission endpoint with C++ and c judging
 router.post("/submit", async (req, res) => {
   const { code, exerciseId = 'exercise1' } = req.body;
   const userId = req.userId;
@@ -21,25 +35,27 @@ router.post("/submit", async (req, res) => {
     return res.status(400).json({ error: "Code is required and must be a string" });
   }
 
+  // Detect language BEFORE storing in DB
+  const lang = detectLanguage(code);
+
   try {
-    // Save initial submission with status "queued" FIRST
     const result = await query(
       `INSERT INTO submissions
        (user_id, exercise_id, code, language, status)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
-      [userId, exerciseId, code, 'cpp', 'queued']
+      [userId, exerciseId, code, lang, 'queued']
     );
 
     const submissionId = result.rows[0].id;
 
-    // Push job to queue with submissionId
+    // Pass correct language to the queue
     const job = await judgeQueue.add("judge", {
       submissionId,
       userId,
       exerciseId,
       code,
-      language: "cpp"
+      language: lang
     });
 
     res.json({
@@ -48,6 +64,7 @@ router.post("/submit", async (req, res) => {
       jobId: job.id,
       submissionId
     });
+
   } catch (error) {
     console.error("Submission error:", error);
     res.status(500).json({
