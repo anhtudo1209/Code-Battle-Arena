@@ -7,13 +7,13 @@ import {
   FaMedal,
 } from "react-icons/fa";
 import Stepper, { Step } from "../components/Stepper";
-import Header from "../components/Header";
 import "./Home.css";
 import Menu from "./Menu";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuContainerRef = useRef(null);
+  const menuPopupRef = useRef(null);
 
   const toggleMenu = (e) => {
     e.stopPropagation();
@@ -22,7 +22,14 @@ export default function Home() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuContainerRef.current && !menuContainerRef.current.contains(event.target)) {
+      const menuTrigger = menuContainerRef.current;
+      const menuPopup = menuPopupRef.current;
+
+      if (
+        menuTrigger &&
+        !menuTrigger.contains(event.target) &&
+        (!menuPopup || !menuPopup.contains(event.target))
+      ) {
         setIsMenuOpen(false);
       }
     };
@@ -59,7 +66,11 @@ export default function Home() {
             <button className="icon-btn menu-trigger" onClick={toggleMenu}>
               ☰
             </button>
-            <Menu isOpen={isMenuOpen} />
+            <Menu
+              isOpen={isMenuOpen}
+              menuPopupRef={menuPopupRef}
+              onItemClick={() => setIsMenuOpen(false)}
+            />
           </div>
         </div>
       </header>

@@ -1,13 +1,7 @@
-.home-menu-container {
-  position: relative;
-  display: inline-block;
-  z-index: 0;
-}
-
-.home-menu-container .menu-popup {
-  position: absolute;
-  top: calc(100% + 0.75rem);
-  right: 0;
+.menu-popup {
+  position: fixed;
+  top: 60px;
+  right: 20px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -18,10 +12,10 @@
   border: 1px solid rgba(255,255,255,0.32);
   backdrop-filter: blur(22px);
   box-shadow: 0 28px 60px rgba(15,23,42,0.45);
-  z-index: 6000;
+  z-index: 2147483647;
 }
 
-.home-menu-container .menu-item {
+.menu-item {
   width: 100%;
   padding: 0.8rem 1rem;
   border: none;
@@ -33,15 +27,16 @@
   text-align: left;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  pointer-events: auto;
 }
 
-.home-menu-container .menu-item:hover {
+.menu-item:hover {
   background: linear-gradient(135deg, rgba(59,130,246,0.75), rgba(14,165,233,0.6));
   box-shadow: 0 10px 25px rgba(37,99,235,0.35);
   transform: translateY(-1px);
 }
 
-.home-menu-container .menu-item.logout:hover {
+.menu-item.logout:hover {
   background: linear-gradient(135deg, rgba(248,113,113,0.75), rgba(239,68,68,0.6));
   box-shadow: 0 10px 25px rgba(239,68,68,0.35);
 }

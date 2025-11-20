@@ -235,7 +235,7 @@ export default function Practice() {
       setResults({
         success: submission.status === 'passed',
         compilationSuccess: compilationSuccess,
-        compilationError: submission.compilation_error || '',
+        compilationError: "", // hide detailed error messages for compilation failures
         testResults: testResults,
       });
     } catch (error) {
@@ -314,7 +314,7 @@ export default function Practice() {
                     {results.error ? (
                       <div className="error">{results.error}</div>
                     ) : !results.compilationSuccess ? (
-                      <div className="error">⚠️ Compilation Error{results.compilationError ? `: ${results.compilationError}` : ''}</div>
+                      <div className="error">⚠️ Compilation Error</div>
                     ) : results.success ? (
                       <div className="success">🎉 Accepted</div>
                     ) : (
