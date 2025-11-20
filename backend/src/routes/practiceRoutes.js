@@ -33,27 +33,63 @@ router.post("/submit", async (req, res) => {
     const starterPath = path.join(exercisePath, config.starterCode);
     const starterCode = fs.readFileSync(starterPath, "utf8");
 
-    const editable_start = config.editable_start ?? 0;
-    const editable_end = config.editable_end ?? 0;
-
     const starterLines = starterCode.split("\n");
     const userLines = code.split("\n");
 
-    // User cannot delete mandatory lines
-    if (userLines.length < starterLines.length) {
-      return res.status(400).json({ error: "You removed protected starter code." });
+    const rawEditableStart =
+      Number.isInteger(config.editable_start) && config.editable_start > 0
+        ? config.editable_start
+        : 1;
+    const rawEditableEnd =
+      Number.isInteger(config.editable_end) && config.editable_end > 0
+        ? config.editable_end
+        : starterLines.length;
+
+    const editable_start = Math.max(
+      0,
+      Math.min(rawEditableStart - 1, starterLines.length - 1)
+    );
+    const editable_end = Math.max(
+      editable_start,
+      Math.min(rawEditableEnd - 1, starterLines.length - 1)
+    );
+
+    const protectedTopCount = editable_start;
+    const protectedBottomCount = Math.max(
+      starterLines.length - (editable_end + 1),
+      0
+    );
+
+    if (userLines.length < protectedTopCount + protectedBottomCount) {
+      return res.status(400).json({
+        error: "You removed protected starter code."
+      });
     }
 
-    for (let i = 0; i < starterLines.length; i++) {
-      // skip editable region
-      if (i >= editable_start && i <= editable_end) continue;
-
-      // user must NOT modify protected lines
-      if (starterLines[i].trim() !== userLines[i].trim()) {
-        return res.status(400).json({
-          error: `You modified protected line ${i + 1}.`
-        });
+    const compareLines = (starterLine, userLine, lineNumber) => {
+      if (starterLine.trim() !== (userLine ?? "").trim()) {
+        throw new Error(lineNumber.toString());
       }
+    };
+
+    try {
+      for (let i = 0; i < protectedTopCount; i++) {
+        compareLines(starterLines[i], userLines[i], i + 1);
+      }
+
+      for (let i = 0; i < protectedBottomCount; i++) {
+        const starterIndex = starterLines.length - protectedBottomCount + i;
+        const userIndex = userLines.length - protectedBottomCount + i;
+        compareLines(
+          starterLines[starterIndex],
+          userLines[userIndex],
+          starterIndex + 1
+        );
+      }
+    } catch (error) {
+      return res.status(400).json({
+        error: `You modified protected line ${error.message}.`
+      });
     }
   }
   // -----------------------------
@@ -139,7 +175,13 @@ router.get("/submissions/:id", async (req, res) => {
       return res.status(404).json({ error: "Submission not found" });
     }
 
-    res.json({ submission: result.rows[0] });
+    const submission = result.rows[0];
+    const sanitizedSubmission = {
+      ...submission,
+      compilation_error: null,
+    };
+
+    res.json({ submission: sanitizedSubmission });
   } catch (error) {
     console.error("Error fetching submission:", error);
     res.status(500).json({ error: "Failed to fetch submission" });

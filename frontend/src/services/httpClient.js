@@ -66,7 +66,10 @@ async function request(path, options = {}) {
         }
       }
     }
-    const message = data?.message || `Request failed with ${res.status}`;
+    const message =
+      data?.message ||
+      data?.error ||
+      `Request failed with ${res.status}`;
     throw new Error(message);
   }
   return data;
