@@ -17,86 +17,6 @@ router.post("/submit", async (req, res) => {
   const { code, exerciseId = 'exercise1' } = req.body;
   const userId = req.userId;
 
-    // -----------------------------
-  // 🔒 Read-Only Code Protection
-  // -----------------------------
-  const exercisePath = path.join(__dirname, '..', '..', 'exercises', exerciseId);
-
-  const configPath = path.join(exercisePath, "config.json");
-  if (!fs.existsSync(configPath)) {
-    return res.status(400).json({ error: "Exercise config.json not found." });
-  }
-
-  const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-
-  if (config.starterCode) {
-    const starterPath = path.join(exercisePath, config.starterCode);
-    const starterCode = fs.readFileSync(starterPath, "utf8");
-
-    const starterLines = starterCode.split("\n");
-    const userLines = code.split("\n");
-
-    const rawEditableStart =
-      Number.isInteger(config.editable_start) && config.editable_start > 0
-        ? config.editable_start
-        : 1;
-    const rawEditableEnd =
-      Number.isInteger(config.editable_end) && config.editable_end > 0
-        ? config.editable_end
-        : starterLines.length;
-
-    const editable_start = Math.max(
-      0,
-      Math.min(rawEditableStart - 1, starterLines.length - 1)
-    );
-    const editable_end = Math.max(
-      editable_start,
-      Math.min(rawEditableEnd - 1, starterLines.length - 1)
-    );
-
-    const protectedTopCount = editable_start;
-    const protectedBottomCount = Math.max(
-      starterLines.length - (editable_end + 1),
-      0
-    );
-
-    if (userLines.length < protectedTopCount + protectedBottomCount) {
-      return res.status(400).json({
-        error: "You removed protected starter code."
-      });
-    }
-
-    const compareLines = (starterLine, userLine, lineNumber) => {
-      if (starterLine.trim() !== (userLine ?? "").trim()) {
-        throw new Error(lineNumber.toString());
-      }
-    };
-
-    try {
-      for (let i = 0; i < protectedTopCount; i++) {
-        compareLines(starterLines[i], userLines[i], i + 1);
-      }
-
-      for (let i = 0; i < protectedBottomCount; i++) {
-        const starterIndex = starterLines.length - protectedBottomCount + i;
-        const userIndex = userLines.length - protectedBottomCount + i;
-        compareLines(
-          starterLines[starterIndex],
-          userLines[userIndex],
-          starterIndex + 1
-        );
-      }
-    } catch (error) {
-      return res.status(400).json({
-        error: `You modified protected line ${error.message}.`
-      });
-    }
-  }
-  // -----------------------------
-  // END READ ONLY PROTECTION
-  // -----------------------------
-
-
   // -----------------------------
   // 🔒 Read-Only Code Protection
   // -----------------------------
@@ -187,7 +107,7 @@ router.post("/submit", async (req, res) => {
        (user_id, exercise_id, code, language, status)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
-      [userId, exerciseId, code, null, 'queued']   //  CHANGED: language = null (auto-detect in judge.js)
+      [userId, exerciseId, code, null, 'queued']   // ⬅ CHANGED: language = null (auto-detect in judge.js)
     );
 
     const submissionId = result.rows[0].id;
@@ -198,7 +118,7 @@ router.post("/submit", async (req, res) => {
       userId,
       exerciseId,
       code,
-      language: "auto"   //  CHANGED: previously "cpp"
+      language: "auto"   // ⬅ CHANGED: previously "cpp"
     });
 
     res.json({
@@ -254,13 +174,6 @@ router.get("/submissions/:id", async (req, res) => {
       return res.status(404).json({ error: "Submission not found" });
     }
 
-    const submission = result.rows[0];
-    const sanitizedSubmission = {
-      ...submission,
-      compilation_error: null,
-    };
-
-    res.json({ submission: sanitizedSubmission });
     const submission = result.rows[0];
     const sanitizedSubmission = {
       ...submission,
@@ -337,13 +250,6 @@ router.get("/exercises/:id", async (req, res) => {
     if (!fs.existsSync(problemPath) || !fs.existsSync(configPath)) {
       return res.status(404).json({ error: "Failed!" });
     }
-    
-    const exerciseDir = path.join(__dirname, "..", "..", "exercises", exerciseId);
-    const configPath = path.join(exerciseDir, "config.json");
-
-    if (!fs.existsSync(problemPath) || !fs.existsSync(configPath)) {
-      return res.status(404).json({ error: "Failed!" });
-    }
 
     const problemContent = await fs.promises.readFile(problemPath, 'utf8');
 
@@ -355,24 +261,8 @@ router.get("/exercises/:id", async (req, res) => {
         starterCode = fs.readFileSync(starterPath, "utf8");
     }
 
-    const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-
-    let starterCode = "";
-    if (config.starterCode) {
-        const starterPath = path.join(exerciseDir, config.starterCode);
-        starterCode = fs.readFileSync(starterPath, "utf8");
-    }
-
     res.json({
       id: exerciseId,
-      content: problemContent,
-      difficulty: config.difficulty,
-      tags: config.tags,
-      timeLimit: config.timeLimit,
-      memoryLimit: config.memoryLimit,
-      editable_start: config.editable_start,
-      editable_end: config.editable_end,
-      starterCode
       content: problemContent,
       difficulty: config.difficulty,
       tags: config.tags,
