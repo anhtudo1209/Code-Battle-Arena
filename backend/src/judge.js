@@ -12,8 +12,23 @@ const __dirname = path.dirname(__filename);
 class CodeJudge {
   constructor() {
     this.dockerImage = 'cpp-judge';
-    // backend root directory
-    this.backendRoot = path.join(__dirname, '..'); // D:/project/Code-Battle-Arena/backend
+    this.backendRoot = path.join(__dirname, '..');
+  }
+
+
+  // Auto detect C vs C++
+  detectLanguage(code) {
+    const hasCppFeatures =
+      code.includes('#include <iostream>') ||
+      code.includes('std::') ||
+      code.includes('using namespace std') ||
+      code.includes('cout') ||
+      code.includes('cin') ||
+      code.includes('class ') ||
+      code.includes('new ') ||
+      code.includes('delete ');
+
+    return hasCppFeatures ? 'cpp' : 'c';
   }
 
   async judgeSubmission(code, exerciseId = 'exercise1') {
@@ -22,10 +37,20 @@ class CodeJudge {
 
     try {
       await fs.promises.mkdir(tempDir, { recursive: true });
-      const codeFile = path.join(tempDir, 'solution.cpp');
+
+    
+      // detect language
+    
+      const lang = this.detectLanguage(code);
+      const fileName = lang === 'c' ? 'solution.c' : 'solution.cpp';
+      const codeFile = path.join(tempDir, fileName);
+
       await fs.promises.writeFile(codeFile, code);
 
-      const compileResult = await this.compileCode(tempDir);
+    
+      const compileResult = await this.compileCode(tempDir, lang);
+    
+
       if (!compileResult.success) {
         return {
           success: false,
@@ -51,7 +76,6 @@ class CodeJudge {
         testResults: [],
       };
     } finally {
-      // cleanup
       try {
         await fs.promises.rm(tempDir, { recursive: true, force: true });
       } catch (cleanupError) {
@@ -60,10 +84,16 @@ class CodeJudge {
     }
   }
 
-  async compileCode(tempDir) {
+  // compile command chosen by detected language 
+  async compileCode(tempDir, lang) {
     try {
       const dockerPath = tempDir.replace(/\\/g, '/');
-      const compileCmd = `docker run --rm -v "${dockerPath}:/judge/temp" -w /judge/temp ${this.dockerImage} g++ -o solution solution.cpp 2>&1`;
+
+      const compiler = lang === 'c' ? 'gcc' : 'g++';
+      const sourceFile = lang === 'c' ? 'solution.c' : 'solution.cpp';
+
+      const compileCmd = `docker run --rm -v "${dockerPath}:/judge/temp" -w /judge/temp ${this.dockerImage} ${compiler} -o solution ${sourceFile} 2>&1`;
+
       await execAsync(compileCmd, { timeout: 30000 });
       return { success: true };
     } catch (error) {
@@ -71,6 +101,7 @@ class CodeJudge {
       return { success: false, error: errorMessage };
     }
   }
+
 
   async runTestCases(tempDir, exerciseId) {
     const exerciseDir = path.join(this.backendRoot, 'exercises', exerciseId);
