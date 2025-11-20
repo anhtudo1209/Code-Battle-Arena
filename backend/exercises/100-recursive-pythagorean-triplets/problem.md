@@ -1,12 +1,12 @@
-# Rotate Image
+# Recursive pythagorean triplets 
 
-Given an array of integers, write pseudo-code using Recursion to find all Pythagorean triplets (a, b, c) where a^2 + b^2 = c^2. Then, write a program in C/C++ to complete your proposed algorithm.
+Given an array of integers, write code using Recursion to find all Pythagorean triplets (a, b, c) where a^2 + b^2 = c^2. 
 
 ## Input
-An N x N 2D matrix
+An array of integers
 
 ## Output
-Rotates the image by 90 degrees clockwise in-place
+Find all Pythagorean triplets (a, b, c) where a^2 + b^2 = c^2. 
 
 ## Sample Input
 12

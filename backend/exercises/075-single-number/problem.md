@@ -9,6 +9,7 @@ An array
 Find that single, non-duplicated element.
 
 ## Sample Input
+5
 5 2 2 1 1
 
 ## Sample Output

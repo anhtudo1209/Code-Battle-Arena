@@ -9,6 +9,7 @@ An array of size n
 Find all elements that appear more than n/3 times.
 
 ## Sample Input
+3
 3 2 3
 
 ## Sample Output

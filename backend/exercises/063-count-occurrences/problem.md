@@ -3,7 +3,7 @@
 Given a sorted array and a target value, return the number of times the target appears in the array.
 
 ## Input
-An array
+A target value and an array 
 
 ## Output
 Return the number of times the target appears in the array.

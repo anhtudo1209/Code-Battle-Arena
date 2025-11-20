@@ -9,6 +9,7 @@ An array
 Reorder the array.
 
 ## Sample Input
+6
 3 5 2 1 6 4
 
 ## Sample Output

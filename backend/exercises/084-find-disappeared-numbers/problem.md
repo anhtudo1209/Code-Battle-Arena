@@ -8,7 +8,8 @@ An array of n integers
 Return an array of all the integers in the range [1, n] that do not appear in the input array.
 
 ## Sample Input
-8 4 3 2 7 8 2 3 1
+8 
+4 3 2 7 8 2 3 1
 
 ## Sample Output
 5 6

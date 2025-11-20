@@ -119,6 +119,7 @@
   display: flex;
   justify-content: center;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .difficulty-buttons button {
@@ -169,6 +170,10 @@
   white-space: pre-wrap;
   font-family: "Courier New", monospace;
   line-height: 1.5;
+
+  word-break: break-word;      /* ngắt từ quá dài */
+   overflow-x: hidden;          /* ẩn scroll ngang */
+  overflow-y: auto;            /* scroll dọc */
 }
 
 .practice-main {
@@ -234,4 +239,15 @@
 
 .error {
   color: #f87171;
+}
+
+.locked-code {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+  pointer-events: none;
+}
+
+.guard-message {
+  margin-top: 8px;
+  color: #fbbf24;
+  font-size: 0.9rem;
 }

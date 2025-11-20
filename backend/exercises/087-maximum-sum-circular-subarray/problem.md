@@ -9,6 +9,7 @@ A circular array
 Find the maximum possible sum of a non-empty subarray.
 
 ## Sample Input
+4
 1 -2 3 -2
 
 ## Sample Output

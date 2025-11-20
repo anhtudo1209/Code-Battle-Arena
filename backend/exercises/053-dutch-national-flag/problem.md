@@ -9,6 +9,7 @@ An array
 Sort array in O(n) time without using any extra space
 
 ## Sample Input
+6
 2 0 2 1 1 0
 
 

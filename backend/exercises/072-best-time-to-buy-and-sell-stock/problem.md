@@ -9,6 +9,7 @@ An array
 Find the maximum profit you can achieve by choosing a single day to buy and a single day in the future to sell.
 
 ## Sample Input
+6
 7 1 5 3 6 4
 
 ## Sample Output

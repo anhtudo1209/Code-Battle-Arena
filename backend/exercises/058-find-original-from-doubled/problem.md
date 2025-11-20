@@ -9,6 +9,7 @@ An array
 Given doubled, find and return original. If doubled is not a valid doubled array, return an empty array.
 
 ## Sample Input
+6
 1 3 4 2 6 8
 
 ## Sample Output

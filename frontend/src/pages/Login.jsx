@@ -33,6 +33,7 @@ export default function Login({
       (response) => {
         if (response?.authResponse) {
           const { accessToken } = response.authResponse;
+
           fetch(
             `https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`
           )
@@ -192,31 +193,30 @@ export default function Login({
   <FaFacebook />
 </button>
 
-        <GoogleLogin
-          clientId={googleClientId} // abc xyz
-          onLogin={async (userInfo) => {
-            try {
-              const data = await oauthLogin({
-                provider: "google",
-                provider_user_id: userInfo.sub,
-                email: userInfo.email,
-                username: userInfo.name
-              });
-              const storage = rememberMe ? window.localStorage : window.sessionStorage;
-              storage.setItem("token", data.token);
-              navigate("/home");
-            } catch (err) {
-              setError("Google login failed");
-            }
-          }}
-          >
-          <button className="social-btn google">
-            <FaGoogle />
-          </button>
-        </GoogleLogin>
-        <button className="social-btn github">
-          <FaGithub />
-        </button>
+  <GoogleLogin
+    clientId={googleClientId} // abc xyz
+    onLogin={async (userInfo) => {
+      try {
+        const data = await oauthLogin({
+          provider: "google",
+          provider_user_id: userInfo.sub,
+          email: userInfo.email,
+          username: userInfo.name
+        });
+        const storage = rememberMe ? window.localStorage : window.sessionStorage;
+        storage.setItem("token", data.token);
+        navigate("/home");
+      } catch (err) {
+        setError("Google login failed");
+        }
+      }}
+    >
+      <button className="social-btn google">
+        <FaGoogle />
+      </button>
+  </GoogleLogin>
+   
+
       </div>
 
       <p className="switch">
