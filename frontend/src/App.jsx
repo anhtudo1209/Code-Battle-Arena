@@ -3,8 +3,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import Home from "./pages/Home";
 import Practice from "./pages/Practice";
+import Admin from "./pages/Admin";
 import ThemeSwitch from "./components/ThemeToggle";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 export default function App() {
   return (
@@ -28,6 +30,14 @@ export default function App() {
             <ProtectedRoute>
               <Practice />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminProtectedRoute>
+              <Admin />
+            </AdminProtectedRoute>
           }
         />
       </Routes>

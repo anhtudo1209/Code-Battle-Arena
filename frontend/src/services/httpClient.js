@@ -87,6 +87,18 @@ export function get(path, options = {}) {
   return request(path, { method: "GET", ...options });
 }
 
-export default { get, post };
+export function put(path, body, options = {}) {
+  return request(path, {
+    method: "PUT",
+    body: JSON.stringify(body),
+    ...options,
+  });
+}
+
+export function del(path, options = {}) {
+  return request(path, { method: "DELETE", ...options });
+}
+
+export default { get, post, put, del };
 
 

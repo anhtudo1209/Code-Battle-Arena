@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { query } from "../database/db-postgres.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const generateAccessToken = (userId) => jwt.sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 const generateRefreshToken = (userId) => jwt.sign({ id: userId, type: 'refresh' }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
@@ -197,6 +198,25 @@ router.post("/logout", async (req, res) => {
     } catch (err) {
         console.error("Logout error:", err);
         return res.status(503).json({ error: "Logout failed" });
+    }
+});
+
+// Get current user info (requires auth middleware)
+router.get("/me", authMiddleware, async (req, res) => {
+    try {
+        const result = await query(
+            "SELECT id, username, email, role, created_at FROM users WHERE id = $1",
+            [req.userId]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        
+        res.json({ user: result.rows[0] });
+    } catch (err) {
+        console.error("Get user error:", err);
+        return res.status(500).json({ error: "Failed to get user info" });
     }
 });
 
