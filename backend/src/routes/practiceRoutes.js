@@ -17,7 +17,7 @@ router.post("/submit", async (req, res) => {
   const { code, exerciseId = 'exercise1' } = req.body;
   const userId = req.userId;
 
-    // -----------------------------
+  // -----------------------------
   // 🔒 Read-Only Code Protection
   // -----------------------------
   const exercisePath = path.join(__dirname, '..', '..', 'exercises', exerciseId);
@@ -96,7 +96,6 @@ router.post("/submit", async (req, res) => {
   // END READ ONLY PROTECTION
   // -----------------------------
 
-
   if (!code || typeof code !== "string") {
     return res.status(400).json({ error: "Code is required and must be a string" });
   }
@@ -108,7 +107,7 @@ router.post("/submit", async (req, res) => {
        (user_id, exercise_id, code, language, status)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
-      [userId, exerciseId, code, 'cpp', 'queued']
+      [userId, exerciseId, code, null, 'queued']   // ⬅ CHANGED: language = null (auto-detect in judge.js)
     );
 
     const submissionId = result.rows[0].id;
@@ -119,7 +118,7 @@ router.post("/submit", async (req, res) => {
       userId,
       exerciseId,
       code,
-      language: "cpp"
+      language: "auto"   // ⬅ CHANGED: previously "cpp"
     });
 
     res.json({
