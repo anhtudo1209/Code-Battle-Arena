@@ -40,3 +40,13 @@
   background: linear-gradient(135deg, rgba(248,113,113,0.75), rgba(239,68,68,0.6));
   box-shadow: 0 10px 25px rgba(239,68,68,0.35);
 }
+
+.menu-item.admin {
+  background: rgba(139, 92, 246, 0.4);
+  border: 1px solid rgba(139, 92, 246, 0.6);
+}
+
+.menu-item.admin:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.75), rgba(124, 58, 237, 0.6));
+  box-shadow: 0 10px 25px rgba(139, 92, 246, 0.35);
+}

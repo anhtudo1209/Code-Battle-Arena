@@ -1,11 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/authService";
+import { get } from "../services/httpClient";
 import "./Menu.css";
 
 export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Check if user is admin when menu opens
+    if (isOpen) {
+      const checkAdmin = async () => {
+        try {
+          const data = await get("/auth/me");
+          setIsAdmin(data.user?.role === "admin");
+        } catch (error) {
+          setIsAdmin(false);
+        }
+      };
+      checkAdmin();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -39,6 +56,13 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
     navigate("/home");
   };
 
+  const handleAdmin = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenu();
+    navigate("/admin");
+  };
+
   const menu = (
     <div
       ref={menuPopupRef}
@@ -48,6 +72,11 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
       <button className="menu-item" onClick={handleHome}>
         Home
       </button>
+      {isAdmin && (
+        <button className="menu-item admin" onClick={handleAdmin}>
+          Admin
+        </button>
+      )}
       <button className="menu-item">Friends</button>
       <button className="menu-item">Confession</button>
       <button className="menu-item">Support</button>
