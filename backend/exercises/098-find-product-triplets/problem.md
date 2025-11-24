@@ -1,4 +1,4 @@
-# Rotate Image
+# Find product triplets
 
 Given an array of natural numbers, find all triplets (a, b, c) where one number is the product of the two other numbers (i.e., a = b x c, b = a x c, or c = a x b). Implement the code to solve this problem using Iteration.
 

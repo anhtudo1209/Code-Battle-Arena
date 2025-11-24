@@ -2,6 +2,11 @@
   "timeLimit": 2,
   "memoryLimit": "256m",
   "difficulty": "medium",
-  "tags": ["Sorting", "Array", "Recursion", "Selection Sort"]
+  "tags": ["Sorting", "Array", "Recursion", "Selection Sort"],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 10,
+  "editable_end": 16
 }
 
