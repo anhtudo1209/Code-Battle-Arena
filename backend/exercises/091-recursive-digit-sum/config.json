@@ -2,6 +2,11 @@
   "timeLimit": 2,
   "memoryLimit": "256m",
   "difficulty": "easy",
-  "tags": ["Recursion", "Math", "Digits","Iteration"]
+  "tags": ["Recursion", "Math", "Digits","Iteration"],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 10,
+  "editable_end": 12
 }
 

@@ -1,6 +1,6 @@
 # Transpose Matrix
 
-Write a function int** transpose(int matrix[M][N]) that takes an M \times N matrix and returns its transpose (an N \times M matrix).
+Write a function int** transpose(int matrix[M][N]) that takes an M \times N matrix and returns its transpose (an N x M matrix).
 
 ## Input
 A matrix

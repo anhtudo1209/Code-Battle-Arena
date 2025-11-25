@@ -1,6 +1,6 @@
-# Rotate Image
+# Recursive digit sum
 
-Write a function int digitSum(int n) that recursively calculates and returns the sum of the digits of a given natural number n. ( using iteration if necessary )
+Write a function int digitSum(int n) that recursively calculates and returns the sum of the digits of a given natural number n.
 
 ## Input
 A digit

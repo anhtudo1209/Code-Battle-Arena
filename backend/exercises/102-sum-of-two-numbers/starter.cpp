@@ -6,10 +6,10 @@ using namespace std;
 int main() {
     int a,b;
     cin >> a >> b;
-    // Editable region starts here (editable_start = line 7)
+    // Editable region starts here
     int result; 
     // TODO: compute sum of a + b
-    // Editable region ends here (editable_end = line 10)
+    // Editable region ends here
 
     cout << result << endl;
 

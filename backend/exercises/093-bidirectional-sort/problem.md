@@ -1,4 +1,4 @@
-# Rotate Image
+# Bidirectional sort
 
 Implement a bidirectional (Cocktail Shaker) sort. In each pass, you first do a forward pass (like insertion/bubble sort) from 1 to n, and then a backward pass from n to 1, repeating until the array is sorted.
 

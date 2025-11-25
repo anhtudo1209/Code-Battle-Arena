@@ -2,6 +2,11 @@
   "timeLimit": 3,
   "memoryLimit": "256m",
   "difficulty": "hard",
-  "tags": ["sorting", "algorithms"]
+  "tags": ["sorting", "algorithms"],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 9,
+  "editable_end": 11
 }
 

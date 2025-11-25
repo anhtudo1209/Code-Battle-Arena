@@ -2,6 +2,11 @@
   "timeLimit": 2,
   "memoryLimit": "256m",
   "difficulty": "easy",
-  "tags": ["algorithms"]
+  "tags": ["algorithms"],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 18,
+  "editable_end": 20
 }
 

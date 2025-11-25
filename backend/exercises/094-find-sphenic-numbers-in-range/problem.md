@@ -1,4 +1,4 @@
-# Rotate Image
+# Find sphenic numbers in range
 
 Write a program to enter a natural number n and find all sphenic numbers from 1 to n using Recursion (combined with iteration if necessary)
 

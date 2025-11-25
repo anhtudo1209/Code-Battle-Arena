@@ -1,6 +1,6 @@
 # Median of Two Sorted Arrays
 
-Given two sorted arrays, arr1 and arr2, of size m and n, return the median of the two sorted arrays. The overall run time complexity should be O(\log(m+n)).
+Given two sorted arrays, arr1 and arr2, of size m and n, return the median of the two sorted arrays.
 
 ## Input
 

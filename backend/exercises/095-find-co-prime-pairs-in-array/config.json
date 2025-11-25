@@ -2,6 +2,11 @@
   "timeLimit": 2,
   "memoryLimit": "256m",
   "difficulty": "medium",
-  "tags": ["Array", "Math", "Number Theory", "GCD", "Iteration", "Nested Loops"]
+  "tags": ["Array", "Math", "Number Theory", "GCD", "Iteration", "Nested Loops"],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 11,
+  "editable_end": 17
 }
 

@@ -1,4 +1,4 @@
-# Rotate Image
+# Recursive selection sort
 
 Propose a recursive algorithm for Selection Sort (combined with iteration if necessary).
 
