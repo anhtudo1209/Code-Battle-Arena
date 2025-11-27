@@ -1,8 +1,10 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { query } from "../database/db-postgres.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import { sendPasswordResetEmail } from "../utils/email.js";
 
 const generateAccessToken = (userId) => jwt.sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 const generateRefreshToken = (userId) => jwt.sign({ id: userId, type: 'refresh' }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
@@ -208,15 +210,109 @@ router.get("/me", authMiddleware, async (req, res) => {
             "SELECT id, username, email, role, created_at FROM users WHERE id = $1",
             [req.userId]
         );
-        
+
         if (result.rows.length === 0) {
             return res.status(404).json({ error: "User not found" });
         }
-        
+
         res.json({ user: result.rows[0] });
     } catch (err) {
         console.error("Get user error:", err);
         return res.status(500).json({ error: "Failed to get user info" });
+    }
+});
+
+// Forgot password - send reset email
+router.post("/forgot-password", async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+    }
+
+    try {
+        // Check if user exists
+        const userResult = await query("SELECT id FROM users WHERE email = $1", [email]);
+        if (userResult.rows.length === 0) {
+            // Don't reveal if email exists or not for security
+            return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+        }
+
+        const userId = userResult.rows[0].id;
+
+        // Delete any existing reset tokens for this user
+        await query("DELETE FROM password_reset_tokens WHERE user_id = $1", [userId]);
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        // Save reset token
+        await query(
+            "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)",
+            [userId, resetToken, expiresAt]
+        );
+
+        // Send reset email
+        const emailSent = await sendPasswordResetEmail(email, resetToken);
+        if (!emailSent) {
+            return res.status(500).json({ error: "Failed to send reset email" });
+        }
+
+        res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+    } catch (err) {
+        console.error("Forgot password error:", err);
+        return res.status(500).json({ error: "Failed to process password reset request" });
+    }
+});
+
+// Reset password using token
+router.post("/reset-password", async (req, res) => {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+        return res.status(400).json({ error: "Token and new password are required" });
+    }
+
+    // Password validation: minimum 8 characters, at least 1 letter and 1 number
+    if (newPassword.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least 1 letter and 1 number" });
+    }
+
+    try {
+        // Find and validate reset token
+        const tokenResult = await query(
+            "SELECT * FROM password_reset_tokens WHERE token = $1",
+            [token]
+        );
+
+        if (tokenResult.rows.length === 0) {
+            return res.status(400).json({ error: "Invalid or expired reset token" });
+        }
+
+        const tokenRecord = tokenResult.rows[0];
+        if (new Date() > new Date(tokenRecord.expires_at)) {
+            return res.status(400).json({ error: "Reset token has expired" });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user password
+        await query("UPDATE users SET password = $1 WHERE id = $2", [hashedPassword, tokenRecord.user_id]);
+
+        // Delete used reset token
+        await query("DELETE FROM password_reset_tokens WHERE id = $1", [tokenRecord.id]);
+
+        res.json({ message: "Password reset successfully" });
+    } catch (err) {
+        console.error("Reset password error:", err);
+        return res.status(500).json({ error: "Failed to reset password" });
     }
 });
 
