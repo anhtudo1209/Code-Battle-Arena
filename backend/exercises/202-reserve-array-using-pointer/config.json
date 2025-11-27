@@ -1,0 +1,11 @@
+{
+  "timeLimit": 3,
+  "memoryLimit": "256m",
+  "difficulty": "medium",
+  "tags": ["Pointers", "Memory", "Arrays"],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 10,
+  "editable_end": 12
+}
