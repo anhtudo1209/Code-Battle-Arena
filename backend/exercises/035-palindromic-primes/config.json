@@ -1,7 +1,7 @@
 {
-  "timeLimit": 4,
+  "timeLimit": 3,
   "memoryLimit": "256m",
-  "difficulty": "very-hard",
+  "difficulty": "medium",
   "tags": ["loops", "math", "primes"]
 }
 

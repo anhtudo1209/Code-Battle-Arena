@@ -1,7 +1,7 @@
 {
-  "timeLimit": 3,
+  "timeLimit": 4,
   "memoryLimit": "256m",
   "difficulty": "hard",
-  "tags": ["algorithms"]
+  "tags": ["Binary Search", "Divide and Conquer"]
 }
 

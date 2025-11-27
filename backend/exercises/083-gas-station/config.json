@@ -1,5 +1,5 @@
 {
-  "timeLimit": 2,
+  "timeLimit": 3,
   "memoryLimit": "256m",
   "difficulty": "medium",
   "tags": ["algorithms"],

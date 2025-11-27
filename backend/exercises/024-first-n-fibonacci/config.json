@@ -1,7 +1,7 @@
 {
-  "timeLimit": 3,
+  "timeLimit": 2,
   "memoryLimit": "256m",
-  "difficulty": "hard",
+  "difficulty": "easy",
   "tags": ["loops", "math", "sequences"]
 }
 

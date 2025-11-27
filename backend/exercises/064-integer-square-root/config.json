@@ -1,8 +1,8 @@
 {
   "timeLimit": 2,
   "memoryLimit": "256m",
-  "difficulty": "medium",
-  "tags": ["algorithms"],
+  "difficulty": "easy",
+  "tags": ["Binary Search", "Math"],
 
   "starterCode": "starter.cpp",
 
