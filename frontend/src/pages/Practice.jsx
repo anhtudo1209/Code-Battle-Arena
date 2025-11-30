@@ -14,6 +14,7 @@ export default function Practice() {
   const [submissionId, setSubmissionId] = useState(null);
   const [lockedLines, setLockedLines] = useState([]);
   const [guardMessage, setGuardMessage] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("cpp");
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const decorationsRef = useRef([]);
@@ -49,9 +50,13 @@ export default function Practice() {
     fetchExercises(difficulty);
   };
 
-  const loadExercise = async (exerciseId) => {
+  const loadExercise = async (exerciseId, language = null) => {
     try {
-      const data = await get(`/practice/exercises/${exerciseId}`);
+      // If it's a new exercise (different ID), reset to cpp; otherwise use provided language or current
+      const isNewExercise = selectedExercise !== exerciseId;
+      const langToUse = language || (isNewExercise ? "cpp" : selectedLanguage);
+      
+      const data = await get(`/practice/exercises/${exerciseId}?lang=${langToUse}`);
       setSelectedExercise(exerciseId);
       setProblemContent(data.content);
       if (
@@ -67,11 +72,18 @@ export default function Practice() {
       lastValidCodeRef.current = template;
       setGuardMessage("");
       setResults(null);
+      setSelectedLanguage(langToUse);
     } catch (error) {
       console.error("Error loading exercise:", error);
       setLockedLines([]);
       setGuardMessage("");
     }
+  };
+
+  const handleLanguageToggle = () => {
+    if (!selectedExercise) return;
+    const newLanguage = selectedLanguage === "cpp" ? "c" : "cpp";
+    loadExercise(selectedExercise, newLanguage);
   };
 
   const isWithinEditableRegion = (changes = []) => {
@@ -284,10 +296,34 @@ export default function Practice() {
 
             <main className="practice-main">
               <section className="code-section">
-                <h3>Your Code:</h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                  <h3>Your Code:</h3>
+                  {lockedLines.length === 2 && (
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#ccc" }}>Language:</span>
+                      <button
+                        onClick={handleLanguageToggle}
+                        style={{
+                          padding: "8px 16px",
+                          backgroundColor: selectedLanguage === "cpp" ? "#4CAF50" : "#2196F3",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          fontWeight: "500"
+                        }}
+                        onMouseOver={(e) => e.target.style.opacity = "0.9"}
+                        onMouseOut={(e) => e.target.style.opacity = "1"}
+                      >
+                        {selectedLanguage === "cpp" ? "C++" : "C"}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <Editor
                   height="60vh"
-                  language="cpp"
+                  language={selectedLanguage}
                   theme="vs-dark"
                   value={code}
                   onMount={handleEditorMount}

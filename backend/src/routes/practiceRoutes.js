@@ -239,6 +239,7 @@ router.get("/exercises", async (req, res) => {
 // Get single exercise details
 router.get("/exercises/:id", async (req, res) => {
   const exerciseId = req.params.id;
+  const language = req.query.lang || 'cpp'; // Default to cpp, accept 'c' or 'cpp'
 
   try {
     const exercisesDir = path.join(__dirname, '..', '..', 'exercises');
@@ -257,8 +258,21 @@ router.get("/exercises/:id", async (req, res) => {
 
     let starterCode = "";
     if (config.starterCode) {
-        const starterPath = path.join(exerciseDir, config.starterCode);
-        starterCode = fs.readFileSync(starterPath, "utf8");
+        // Try to load language-specific starter code
+        const baseStarterName = config.starterCode.replace(/\.(c|cpp)$/, '');
+        const languageExt = language === 'c' ? '.c' : '.cpp';
+        const languageSpecificPath = path.join(exerciseDir, baseStarterName + languageExt);
+        
+        // If language-specific file exists, use it; otherwise fall back to original
+        if (fs.existsSync(languageSpecificPath)) {
+          starterCode = fs.readFileSync(languageSpecificPath, "utf8");
+        } else {
+          // Fall back to original starter code file
+          const starterPath = path.join(exerciseDir, config.starterCode);
+          if (fs.existsSync(starterPath)) {
+            starterCode = fs.readFileSync(starterPath, "utf8");
+          }
+        }
     }
 
     res.json({
