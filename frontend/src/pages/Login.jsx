@@ -1,8 +1,8 @@
 import React, { useState,useEffect } from "react";
-import { FaFacebook, FaGoogle, FaGithub, FaUser, FaLock } from "react-icons/fa";
+import { FaFacebook, FaGoogle, FaGithub, FaUser, FaLock, FaEnvelope } from "react-icons/fa";
 import "./Login.css";
 import GoogleLogin from "../components/GoogleLogin";
-import { login as loginService, oauthLogin } from "../services/authService";
+import { login as loginService, oauthLogin, forgotPassword } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 
 const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
@@ -19,6 +19,10 @@ export default function Login({
   const [error, setError] = useState("");
   const [fbLoading, setFbLoading] = useState(false);
   const [fbReady, setFbReady] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState("");
 
   const handleFacebookLogin = () => {
     setError("");
@@ -111,6 +115,28 @@ export default function Login({
     setRememberMe(!rememberMe);
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (forgotPasswordLoading) return;
+    setForgotPasswordMessage("");
+
+    if (!forgotPasswordEmail) {
+      setForgotPasswordMessage("Please enter your email address");
+      return;
+    }
+
+    setForgotPasswordLoading(true);
+    try {
+      await forgotPassword(forgotPasswordEmail);
+      setForgotPasswordMessage("If an account with that email exists, a password reset link has been sent.");
+      setForgotPasswordEmail("");
+    } catch (err) {
+      setForgotPasswordMessage("Failed to send reset email. Please try again.");
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID; // abc xyz 
 
   const handleSubmit = async (e) => {
@@ -177,7 +203,7 @@ export default function Login({
             />
             <span>Remember Me</span>
           </label>
-          <a href="#" className="forgot-password">
+          <a href="#" className="forgot-password" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }}>
             Forgot Password?
           </a>
         </div>
@@ -223,6 +249,38 @@ export default function Login({
         Don’t have an account?{" "}
         <span onClick={onSwitchToRegister}>Register</span>
       </p>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="modal-overlay" onClick={() => setShowForgotPassword(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Forgot Password</h3>
+            <form onSubmit={handleForgotPassword}>
+              <div className="input-container">
+                <FaEnvelope className="input-icon" />
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {forgotPasswordMessage && (
+                <div className="message" style={{ color: forgotPasswordMessage.includes("sent") ? "#10b981" : "#f87171", marginBottom: 8 }}>
+                  {forgotPasswordMessage}
+                </div>
+              )}
+              <button type="submit" className="btn" disabled={forgotPasswordLoading}>
+                {forgotPasswordLoading ? "Sending..." : "Send Reset Link"}
+              </button>
+              <button type="button" className="btn secondary" onClick={() => setShowForgotPassword(false)}>
+                Cancel
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

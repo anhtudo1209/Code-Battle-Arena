@@ -43,6 +43,14 @@ export function logout(refreshToken) {
   return post("/auth/logout", { refreshToken });
 }
 
-export default { login, register, refreshToken, logout };
+export function forgotPassword(email) {
+  return post("/auth/forgot-password", { email });
+}
+
+export function resetPassword(token, newPassword) {
+  return post("/auth/reset-password", { token, newPassword });
+}
+
+export default { login, register, refreshToken, logout, forgotPassword, resetPassword };
 
 
