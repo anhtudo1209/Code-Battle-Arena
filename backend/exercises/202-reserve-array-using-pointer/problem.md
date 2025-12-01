@@ -1,12 +1,11 @@
-# Reserve array using pointer
-
+# Reverse Array using Pointers
 Write a function that reverses an array of integers in-place. You are given a pointer to the start of the array and a pointer to the end of the array.
 
 ## Input
-An array
+An array of integers
 
 ## Output
-Reverses an array
+Reverses an array of integers in-place
 
 ## Sample Input
 5

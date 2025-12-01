@@ -1,7 +1,7 @@
 {
   "timeLimit": 3,
   "memoryLimit": "256m",
-  "difficulty": "medium",
+  "difficulty": "Medium",
   "tags": ["Pointers", "Memory", "Arrays"],
 
   "starterCode": "starter.cpp",
