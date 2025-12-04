@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'user',
+    rating INTEGER NOT NULL DEFAULT 400,
+    win_streak INTEGER NOT NULL DEFAULT 0,
+    loss_streak INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -55,9 +58,43 @@ CREATE TABLE IF NOT EXISTS submissions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Battles table (for tracking player vs player battles)
+CREATE TABLE IF NOT EXISTS battles (
+    id SERIAL PRIMARY KEY,
+    player1_id INTEGER NOT NULL,
+    player2_id INTEGER NOT NULL,
+    exercise_id VARCHAR(100) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'waiting', -- 'waiting', 'active', 'completed', 'cancelled'
+    winner_id INTEGER,
+    player1_submission_id INTEGER,
+    player2_submission_id INTEGER,
+    started_at TIMESTAMP,
+    ended_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (player1_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (player2_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (player1_submission_id) REFERENCES submissions(id) ON DELETE SET NULL,
+    FOREIGN KEY (player2_submission_id) REFERENCES submissions(id) ON DELETE SET NULL
+);
+
+-- Match queue table (for tracking players waiting for matches)
+CREATE TABLE IF NOT EXISTS match_queue (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL UNIQUE,
+    queued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50) NOT NULL DEFAULT 'waiting', -- 'waiting', 'matched', 'cancelled'
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_oauth_provider ON oauth_accounts(provider, provider_user_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_user ON submissions(user_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_exercise ON submissions(exercise_id);
+CREATE INDEX IF NOT EXISTS idx_battles_status ON battles(status);
+CREATE INDEX IF NOT EXISTS idx_battles_players ON battles(player1_id, player2_id);
+CREATE INDEX IF NOT EXISTS idx_battles_active ON battles(player1_id, player2_id, status) WHERE status IN ('waiting', 'active');
+CREATE INDEX IF NOT EXISTS idx_match_queue_user ON match_queue(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_match_queue_status ON match_queue(status, queued_at);

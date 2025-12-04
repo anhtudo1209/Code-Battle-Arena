@@ -207,7 +207,7 @@ router.post("/logout", async (req, res) => {
 router.get("/me", authMiddleware, async (req, res) => {
     try {
         const result = await query(
-            "SELECT id, username, email, role, created_at FROM users WHERE id = $1",
+            "SELECT id, username, email, role, rating, win_streak, loss_streak, created_at FROM users WHERE id = $1",
             [req.userId]
         );
 
