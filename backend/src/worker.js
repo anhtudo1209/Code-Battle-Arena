@@ -127,7 +127,7 @@ async function processBattleIfReady(battleId) {
         [battle.player1_id, 'draw'],
         [battle.player2_id, 'draw'],
       ]),
-    };
+    }; 
 
     await finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2);
     return;
