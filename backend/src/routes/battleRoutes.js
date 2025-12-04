@@ -253,7 +253,8 @@ router.get("/active", async (req, res) => {
         status: battle.status,
         exerciseId: battle.exercise_id,
         startedAt: battle.started_at,
-        isPlayer1
+        isPlayer1,
+        winnerId: battle.winner_id
       },
       opponent: opponentResult.rows[0],
       exercise,

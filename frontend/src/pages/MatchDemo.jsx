@@ -12,6 +12,8 @@ export default function MatchDemo() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [preBattleRating, setPreBattleRating] = useState(null);
+  const [lastResult, setLastResult] = useState(null);
 
   const loadUser = async () => {
     try {
@@ -63,6 +65,10 @@ export default function MatchDemo() {
         queuedAt: new Date().toISOString(),
       });
       setInfo("Joined queue. Wait for opponent or open another browser to join.");
+      if (user?.rating != null) {
+        setPreBattleRating(user.rating);
+      }
+      setLastResult(null);
     });
 
   const handleLeave = () =>
@@ -71,6 +77,8 @@ export default function MatchDemo() {
       setQueue({ status: "none" });
       setBattle(null);
       setInfo("Left queue.");
+      setPreBattleRating(null);
+      setLastResult(null);
     });
 
   const handleRefresh = () => withBusy(loadStatus);
@@ -98,19 +106,37 @@ export default function MatchDemo() {
       // Poll battle until it completes
       let attempts = 0;
       const maxAttempts = 40;
+      let finalBattle = null;
       while (attempts < maxAttempts) {
         await new Promise((r) => setTimeout(r, 2000));
         attempts += 1;
         const b = await get("/battle/active");
         setBattle(b);
+        finalBattle = b;
         if (b.battle?.status === "completed") {
           setInfo("Battle completed.");
           break;
         }
       }
 
-      // Reload user to see rating change
-      await loadUser();
+      if (!finalBattle?.battle || !user) {
+        await loadUser();
+        return;
+      }
+
+      // Reload user and compute Elo delta
+      const me = await get("/auth/me");
+      setUser(me.user);
+
+      if (preBattleRating != null && me.user?.rating != null) {
+        const delta = me.user.rating - preBattleRating;
+        const winnerId = finalBattle.battle.winnerId;
+        let outcome = "draw";
+        if (winnerId) {
+          outcome = winnerId === me.user.id ? "win" : "loss";
+        }
+        setLastResult({ outcome, delta });
+      }
     } catch (e) {
       console.error("submit", e);
       setError(e.message || String(e));
@@ -171,6 +197,25 @@ export default function MatchDemo() {
                 <p>
                   Streaks: {user.win_streak}W / {user.loss_streak}L
                 </p>
+                {lastResult && (
+                  <p>
+                    Result:&nbsp;
+                    <strong>
+                      {lastResult.outcome === "win"
+                        ? "You won"
+                        : lastResult.outcome === "loss"
+                        ? "You lost"
+                        : "Draw"}
+                    </strong>
+                    {typeof lastResult.delta === "number" && (
+                      <span>
+                        {" "}
+                        ({lastResult.delta >= 0 ? "+" : ""}
+                        {lastResult.delta} Elo)
+                      </span>
+                    )}
+                  </p>
+                )}
               </>
             ) : (
               <p>Loading user...</p>
