@@ -1,0 +1,58 @@
+ELO SYSTEM OVERVIEW
+-------------------
+- Default rating (R0): 400.
+- Ratings are updated after each ranked battle using:
+  R’A = RA + KA * (SA − EA)
+  R’B = RB + KB * (SB − EB)
+
+Performance score (S)
+---------------------
+- For each player we compute a blended performance score:
+  Perf = α · (cases_passed / total_cases) + β · (1 − (elapsed / max_elapsed))
+- α = 0.8 (correctness weight), β = 0.2 (speed weight).
+- `elapsed` = submission time − battle start time (ms).
+- `max_elapsed` = max(elapsedA, elapsedB, 1) so faster player is rewarded.
+- Clamp Perf into [0,1].
+- Normalize to get relative shares:
+  SA = PerfA / (PerfA + PerfB)   (both 0 ⇒ SA = SB = 0.5)
+  SB = 1 − SA
+
+Expected outcome (E)
+--------------------
+- EA = 1 / (1 + 10^((RB − RA) / 400))
+- EB = 1 − EA
+
+Dynamic K factor
+----------------
+- Base = 40, Min = 20, Max = 50.
+- Loss penalty: −5 per 2 consecutive loss.
+- Win streak bonus: +10 for every 4 consecutive wins.
+- Difficulty bonus (applied only when the player actually solves the problem):
+  * Rating < 350 and solves medium → +5
+  * Rating < 350 and solves hard → +10
+  * Rating > 550 and solves easy → −5
+  * Rating > 550 and solves medium → −2
+- K is clamped to [20, 50].
+
+Rounding & rating floor
+-----------------------
+- Rating changes are rounded to the nearest integer.
+- If a player wins and |Δ| < 1 ⇒ force +1. If they lose and |Δ| < 1 ⇒ force −1.
+- Draws can yield 0 change.
+- Ratings never drop below 200.
+
+Matchmaking rules
+-----------------
+- Players can no longer choose difficulty; it is derived from current rating.
+- Difficulty buckets (based on per-player or average rating when matched):
+  * < 350: 100% Easy
+  * 350 – 450: 50% Easy / 50% Medium
+  * 450 – 550: 50% Medium / 50% Hard
+  * > 550: 100% Hard
+- When a bucket mixes difficulties (50/50), the exercise difficulty is sampled according to those weights. If a bucket has no available exercises for the preferred difficulty, we fall back to adjacent pools.
+- Match range: players start with a ±100 rating window; the window expands by +100 every full minute spent waiting, capped at ±400.
+
+Queuing & streak tracking
+-------------------------
+- `match_queue` stores one row per user; re-joining simply resets the status & timestamp.
+- Each user has `rating`, `win_streak`, `loss_streak`. Win streak increments on win, loss streak on loss, either reset to 0 after the opposite result, and both reset on draws.

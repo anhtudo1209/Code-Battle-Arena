@@ -9,13 +9,14 @@ A matrix
 Returns its transpose
 
 ## Sample Input
-[[1, 2, 3],
-[4, 5, 6]]
+2 3
+1 2 3
+4 5 6
 
 
 ## Sample Output
-[[1, 4],
-[2, 5],
-[3, 6]]
+1 4
+2 5
+3 6
 
 

@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import authRoutes from "./routes/authRoutes.js";
 import practiceRoutes from "./routes/practiceRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import battleRoutes from "./routes/battleRoutes.js";
 import authMiddleware from "./middleware/authMiddleware.js";
 import adminMiddleware from "./middleware/adminMiddleware.js";
 
@@ -28,6 +29,7 @@ app.use(express.json());
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/practice", authMiddleware, practiceRoutes);
+app.use("/api/battle", authMiddleware, battleRoutes);
 app.use("/api/admin", adminMiddleware, adminRoutes);
 
 // Serve frontend (static build) - only after API routes

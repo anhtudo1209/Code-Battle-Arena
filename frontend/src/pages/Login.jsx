@@ -203,7 +203,7 @@ export default function Login({
             />
             <span>Remember Me</span>
           </label>
-          <a href="#" className="forgot-password" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }}>
+          <a href="#" className="forgot-password" onClick={(e) => { e.preventDefault(); navigate('/reset-password'); }}>
             Forgot Password?
           </a>
         </div>
