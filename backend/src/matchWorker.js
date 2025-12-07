@@ -14,6 +14,7 @@ import { Worker, Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { query } from './database/db-postgres.js';
 import { pickDifficultyForRating, getDifficultyBucket, getMaxRatingDifference } from './utils/matchmaking.js';
+import { battleTimeoutQueue } from './queue.js';
 
 const connection = new IORedis({
     host: '127.0.0.1',
@@ -21,6 +22,8 @@ const connection = new IORedis({
     maxRetriesPerRequest: null,   
     enableReadyCheck: false,
 });
+
+const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
 
 // Matching worker that processes match requests and pairs players
 const matchWorker = new Worker('matchQueue', async (job) => {
@@ -94,6 +97,18 @@ const matchWorker = new Worker('matchQueue', async (job) => {
     );
 
     const battleId = battleResult.rows[0].id;
+
+    // Schedule timeout job for this battle
+    await battleTimeoutQueue.add(
+      'timeout',
+      { battleId },
+      { 
+        delay: MAX_BATTLE_DURATION_MS,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 }
+      }
+    );
+    console.log(`📅 Battle ${battleId} timeout scheduled for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
 
     // Update both players' queue status to 'matched'
     await query(

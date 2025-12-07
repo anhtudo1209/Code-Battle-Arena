@@ -16,6 +16,7 @@ import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import CodeJudge from './judge.js';
 import { query } from './database/db-postgres.js';
+import { battleTimeoutQueue } from './queue.js';
 
 
 const connection = new IORedis({
@@ -26,6 +27,8 @@ const connection = new IORedis({
 });
 
 const judge = new CodeJudge();
+
+const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
 
 const worker = new Worker('judgeQueue', async (job) => {
   const { submissionId, userId, exerciseId, code, language, battleId } = job.data;
@@ -72,6 +75,40 @@ const worker = new Worker('judgeQueue', async (job) => {
 worker.on('failed', (job, err) => {
   console.error(`❌ Job ${job.id} failed:`, err);
 });
+
+// Battle timeout worker - handles timeout jobs
+const timeoutWorker = new Worker('battleTimeoutQueue', async (job) => {
+  const { battleId } = job.data;
+  console.log(`⏱️ Battle ${battleId} timeout job triggered. Processing...`);
+  
+  try {
+    await processBattleIfReady(battleId);
+  } catch (error) {
+    console.error(`❌ Error processing timeout for battle ${battleId}:`, error);
+    throw error;
+  }
+}, { connection, concurrency: 10 });
+
+timeoutWorker.on('failed', (job, err) => {
+  console.error(`❌ Battle timeout job ${job.id} failed:`, err);
+});
+
+async function scheduleBattleTimeout(battleId) {
+  try {
+    await battleTimeoutQueue.add(
+      'timeout',
+      { battleId },
+      { 
+        delay: MAX_BATTLE_DURATION_MS,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 }
+      }
+    );
+    console.log(`📅 Battle ${battleId} timeout scheduled for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
+  } catch (error) {
+    console.error(`Failed to schedule timeout for battle ${battleId}:`, error);
+  }
+}
 
 async function processBattleIfReady(battleId) {
   const battleResult = await query(
@@ -415,8 +452,6 @@ function buildSubmissionStats(submission, battleStart) {
   };
 }
 
-const MAX_BATTLE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
-
 function finalizePerformance(stats, maxDuration) {
   // Cap the effective duration so everything beyond 15 minutes is treated equally
   const cappedMax = Math.max(1, Math.min(maxDuration, MAX_BATTLE_DURATION_MS));
@@ -501,13 +536,13 @@ async function updatePlayerRatings({ battle, perf1, perf2, outcome }) {
   const streaks2 = nextStreaks(player2.win_streak, player2.loss_streak, outcome.playerResults.get(player2.id));
 
   await query(
-    `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3 WHERE id = $4`,
-    [newRating1, streaks1.winStreak, streaks1.lossStreak, player1.id]
+    `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3, k_factor = $4 WHERE id = $5`,
+    [newRating1, streaks1.winStreak, streaks1.lossStreak, Math.round(k1), player1.id]
   );
 
   await query(
-    `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3 WHERE id = $4`,
-    [newRating2, streaks2.winStreak, streaks2.lossStreak, player2.id]
+    `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3, k_factor = $4 WHERE id = $5`,
+    [newRating2, streaks2.winStreak, streaks2.lossStreak, Math.round(k2), player2.id]
   );
 
   console.log(
@@ -526,7 +561,8 @@ function computeKFactor(winStreak, lossStreak, difficultyBonus = 0) {
   const MIN = 20;
   const MAX = 50;
   const streakBonus = Math.min(Math.floor(winStreak / 4) * 10, 20);
-  const lossPenalty = Math.min(lossStreak, 2) * 5;
+  // Loss penalty: -5 for every 2 consecutive losses (per spec)
+  const lossPenalty = Math.floor(lossStreak / 2) * 5;
   const raw = BASE + streakBonus - lossPenalty + difficultyBonus;
   return clamp(raw, MIN, MAX);
 }
@@ -546,6 +582,9 @@ function getDifficultyBonus(rating, difficulty, solved) {
 }
 
 function finalizeDelta(deltaFloat, result = 'draw') {
+  // Draws should not change ratings according to the rules.
+  if (result === 'draw') return 0;
+
   let delta = Math.round(deltaFloat);
   if (result === 'win' && delta < 1) delta = 1;
   if (result === 'loss' && delta > -1) delta = -1;
