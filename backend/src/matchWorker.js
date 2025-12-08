@@ -98,17 +98,19 @@ const matchWorker = new Worker('matchQueue', async (job) => {
 
     const battleId = battleResult.rows[0].id;
 
-    // Schedule timeout job for this battle
+    // Schedule timeout job for this battle with a deterministic job ID
+    const timeoutJobId = `battle-timeout:${battleId}`;
     await battleTimeoutQueue.add(
       'timeout',
       { battleId },
       { 
+        jobId: timeoutJobId,
         delay: MAX_BATTLE_DURATION_MS,
         attempts: 3,
         backoff: { type: 'exponential', delay: 2000 }
       }
     );
-    console.log(`📅 Battle ${battleId} timeout scheduled for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
+    console.log(`📅 Battle ${battleId} timeout scheduled (job ${timeoutJobId}) for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
 
     // Update both players' queue status to 'matched'
     await query(
