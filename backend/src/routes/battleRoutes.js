@@ -67,7 +67,7 @@ router.post("/join-queue", async (req, res) => {
     await matchQueue.add('match', {
       userId
     }, {
-      attempts: 20, // Try up to 20 times (about 100 seconds total)
+      attempts: 0, // Retry indefinitely
       backoff: {
         type: 'fixed',
         delay: 5000 // 5 seconds between retries
