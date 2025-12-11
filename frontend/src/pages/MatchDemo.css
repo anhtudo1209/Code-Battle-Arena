@@ -82,6 +82,17 @@
   overflow: auto;
 }
 
+.accept-box {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.18);
+  color: #bbf7d0;
+}
+.accept-box p { margin: 6px 0; }
+.accept-box .btn.primary { background: linear-gradient(135deg,#059669,#047857); }
+
 .match-demo-info {
   font-size: 0.8rem;
   color: #a5b4fc;

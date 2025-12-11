@@ -66,12 +66,15 @@ CREATE TABLE IF NOT EXISTS battles (
     player1_id INTEGER NOT NULL,
     player2_id INTEGER NOT NULL,
     exercise_id VARCHAR(100) NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'waiting', -- 'waiting', 'active', 'completed', 'cancelled'
+        -- status: 'pending' (waiting for accept), 'active', 'completed', 'cancelled'
+        status VARCHAR(50) NOT NULL DEFAULT 'pending',
     winner_id INTEGER,
     player1_submission_id INTEGER,
     player2_submission_id INTEGER,
     started_at TIMESTAMP,
     ended_at TIMESTAMP,
+        player1_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+        player2_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (player1_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (player2_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -97,6 +100,6 @@ CREATE INDEX IF NOT EXISTS idx_submissions_user ON submissions(user_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_exercise ON submissions(exercise_id);
 CREATE INDEX IF NOT EXISTS idx_battles_status ON battles(status);
 CREATE INDEX IF NOT EXISTS idx_battles_players ON battles(player1_id, player2_id);
-CREATE INDEX IF NOT EXISTS idx_battles_active ON battles(player1_id, player2_id, status) WHERE status IN ('waiting', 'active');
+CREATE INDEX IF NOT EXISTS idx_battles_active ON battles(player1_id, player2_id, status) WHERE status IN ('pending', 'waiting', 'active');
 CREATE INDEX IF NOT EXISTS idx_match_queue_user ON match_queue(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_match_queue_status ON match_queue(status, queued_at);

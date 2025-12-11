@@ -16,7 +16,7 @@ import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import CodeJudge from './judge.js';
 import { query } from './database/db-postgres.js';
-import { battleTimeoutQueue } from './queue.js';
+import { battleTimeoutQueue, matchQueue } from './queue.js';
 
 
 const connection = new IORedis({
@@ -76,15 +76,23 @@ worker.on('failed', (job, err) => {
   console.error(`❌ Job ${job.id} failed:`, err);
 });
 
-// Battle timeout worker - handles timeout jobs
+// Battle timeout worker - handles both acceptance timeouts and battle duration timeouts
 const timeoutWorker = new Worker('battleTimeoutQueue', async (job) => {
   const { battleId } = job.data;
-  console.log(`⏱️ Battle ${battleId} timeout job triggered. Processing...`);
-  
+  console.log(`⏱️ Battle job '${job.name}' triggered for ${battleId}`);
+
   try {
-    await processBattleIfReady(battleId);
+    if (job.name === 'timeout') {
+      // battle duration timeout
+      await processBattleIfReady(battleId);
+    } else if (job.name === 'accept') {
+      // acceptance window expired
+      await handleAcceptTimeout(battleId);
+    } else {
+      console.warn(`⚠️ Unknown battleTimeout job name: ${job.name}`);
+    }
   } catch (error) {
-    console.error(`❌ Error processing timeout for battle ${battleId}:`, error);
+    console.error(`❌ Error processing battle job ${job.id} (${job.name}) for ${battleId}:`, error);
     throw error;
   }
 }, { connection, concurrency: 10 });
@@ -107,6 +115,42 @@ async function scheduleBattleTimeout(battleId) {
     console.log(`📅 Battle ${battleId} timeout scheduled for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
   } catch (error) {
     console.error(`Failed to schedule timeout for battle ${battleId}:`, error);
+  }
+}
+
+// Handle acceptance timeout: if battle still pending and not both accepted, cancel and requeue players
+async function handleAcceptTimeout(battleId) {
+  try {
+    const br = await query('SELECT * FROM battles WHERE id = $1', [battleId]);
+    if (br.rowCount === 0) return;
+    const battle = br.rows[0];
+    if (battle.status !== 'pending') return; // already accepted/cancelled
+
+    if (battle.player1_accepted && battle.player2_accepted) {
+      // both accepted in the meantime
+      return;
+    }
+
+    // Cancel the battle
+    await query(`UPDATE battles SET status = $1 WHERE id = $2 AND status = 'pending'`, ['cancelled', battleId]);
+
+    // Set players back to waiting in match_queue (best-effort)
+    await query(
+      `UPDATE match_queue SET status = 'waiting' WHERE user_id = ANY($1)`,
+      [[battle.player1_id, battle.player2_id]]
+    );
+
+    // Re-add match jobs for both players so they re-enter matching loop
+    try {
+      await matchQueue.add('match', { userId: battle.player1_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
+    } catch (e) {}
+    try {
+      await matchQueue.add('match', { userId: battle.player2_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
+    } catch (e) {}
+
+    console.log(`⚠️ Battle ${battleId} cancelled due to accept timeout; players requeued`);
+  } catch (err) {
+    console.error(`❌ Error handling accept timeout for battle ${battleId}:`, err);
   }
 }
 

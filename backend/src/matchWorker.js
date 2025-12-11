@@ -88,29 +88,28 @@ const matchWorker = new Worker('matchQueue', async (job) => {
       return;
     }
 
-    // Create battle record
+    // Create battle record in 'pending' state while we wait for acceptances
     const battleResult = await query(
-      `INSERT INTO battles (player1_id, player2_id, exercise_id, status, started_at)
-       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+      `INSERT INTO battles (player1_id, player2_id, exercise_id, status)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [userId, opponentId, exerciseId, 'active']
+      [userId, opponentId, exerciseId, 'pending']
     );
 
     const battleId = battleResult.rows[0].id;
 
-    // Schedule timeout job for this battle with a deterministic job ID
-    const timeoutJobId = `battle-timeout:${battleId}`;
+    // Schedule accept timeout job (20s) so pending match expires if not accepted
+    const acceptJobId = `battle-accept:${battleId}`;
     await battleTimeoutQueue.add(
-      'timeout',
+      'accept',
       { battleId },
-      { 
-        jobId: timeoutJobId,
-        delay: MAX_BATTLE_DURATION_MS,
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 2000 }
+      {
+        jobId: acceptJobId,
+        delay: 20 * 1000, // 20 seconds to accept
+        attempts: 1
       }
     );
-    console.log(`📅 Battle ${battleId} timeout scheduled (job ${timeoutJobId}) for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
+    console.log(`📅 Battle ${battleId} accept window scheduled (job ${acceptJobId}) for 20 seconds`);
 
     // Update both players' queue status to 'matched'
     await query(
