@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Code Battle Arena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      html,
+      body {
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+        background-color: #101014;
+        background-image: repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.04) 0,
+            rgba(255, 255, 255, 0.04) 1px,
+            transparent 1px,
+            transparent 40px
+          ),
+          repeating-linear-gradient(
+            45deg,
+            rgba(0, 255, 128, 0.09) 0,
+            rgba(0, 255, 128, 0.09) 1px,
+            transparent 1px,
+            transparent 20px
+          ),
+          repeating-linear-gradient(
+            -45deg,
+            rgba(255, 0, 128, 0.1) 0,
+            rgba(255, 0, 128, 0.1) 1px,
+            transparent 1px,
+            transparent 30px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.03) 0,
+            rgba(255, 255, 255, 0.03) 1px,
+            transparent 1px,
+            transparent 80px
+          ),
+          radial-gradient(
+            circle at 60% 40%,
+            rgba(0, 255, 128, 0.05) 0,
+            transparent 60%
+          );
+        background-size: 80px 80px, 40px 40px, 60px 60px, 80px 80px, 100% 100%;
+        background-position: 0 0, 0 0, 0 0, 40px 40px, center;
+        color: white;
+        min-height: 100vh;
+      }
+
+      /* sidebar */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 0 20px 20px 0;
+        padding: 26px 18px;
+        backdrop-filter: blur(15px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4),
+          0 0 25px rgba(52, 211, 153, 0.2);
+      }
+      .avatar {
+        text-align: center;
+        margin-bottom: 26px;
+      }
+      .avatar-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(120deg, #7af2b2, #34d399, #06b6d4);
+        border-radius: 50%;
+        margin: 0 auto;
+        border: 6px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+      }
+      .name {
+        font-weight: 600;
+        color: white;
+      }
+      .elo {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      .sidebar-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 20px;
+      }
+      .btn {
+        padding: 12px 18px;
+        border-radius: 26px;
+        border: none;
+        cursor: pointer;
+        background: linear-gradient(120deg, #34d399, #06b6d4);
+        font-weight: 600;
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+      .btn:hover {
+        background: linear-gradient(120deg, #06b6d4, #34d399);
+        box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+      }
+      .btn.primary {
+        background: linear-gradient(120deg, #7af2b2, #34d399);
+      }
+      .btn.big {
+        width: 100%;
+      }
+      .logout {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        margin-top: 20px;
+        border-radius: 18px;
+        padding: 10px 16px;
+        backdrop-filter: blur(10px);
+        color: white;
+      }
+
+      /* main layout */
+      .main-area {
+        margin-left: 240px;
+        padding: 18px 28px 40px;
+        min-height: 100vh;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 12px;
+      }
+      .logo {
+        font-weight: 700;
+        background: linear-gradient(120deg, #7af2b2, #34d399, #06b6d4);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+      }
+      .search {
+        width: 260px;
+        padding: 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        color: white;
+        outline: none;
+      }
+      .search:focus {
+        border-color: rgba(6, 182, 212, 0.5);
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+      }
+
+      /* glass panel */
+      .center-stage {
+        display: flex;
+        justify-content: center;
+      }
+      .panel {
+        width: 82%;
+        min-height: 520px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(15px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4),
+          0 0 25px rgba(52, 211, 153, 0.2);
+        padding: 34px;
+        position: relative;
+      }
+
+      /* Buttons layout */
+      .tree-area {
+        text-align: center;
+        padding-top: 20px;
+      }
+
+      .node-create {
+        padding: 18px 36px;
+        border-radius: 28px;
+        font-weight: 700;
+        background: linear-gradient(120deg, #34d399, #06b6d4);
+        width: 260px;
+        margin: 10px auto 40px auto;
+        cursor: pointer;
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+      }
+      .node-create:hover {
+        background: linear-gradient(120deg, #06b6d4, #34d399);
+        box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+      }
+
+      .node-row {
+        display: flex;
+        justify-content: center;
+        gap: 260px;
+        margin-top: 20px;
+      }
+
+      .node {
+        padding: 18px 36px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 28px;
+        font-weight: 700;
+        cursor: pointer;
+        color: white;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+      }
+      .node:hover {
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+      }
+
+      /* floating boxes */
+      .floating-box {
+        position: absolute;
+        width: 70%;
+        max-width: 850px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 36px;
+        padding: 18px;
+        backdrop-filter: blur(15px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4),
+          0 0 25px rgba(52, 211, 153, 0.2);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-10px) scale(0.98);
+        transition: all 0.3s ease;
+      }
+      .floating-box.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(10px) scale(1);
+      }
+
+      .table-wrap {
+        max-height: 240px;
+        overflow: auto;
+        margin-top: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .rooms-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .rooms-table th {
+        background: linear-gradient(120deg, #34d399, #06b6d4);
+        color: white;
+        padding: 10px;
+      }
+      .rooms-table td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        margin-right: 6px;
+        color: white;
+        backdrop-filter: blur(10px);
+      }
+      .create-btn {
+        margin-top: 14px;
+        padding: 10px 30px;
+        border: none;
+        border-radius: 20px;
+        font-weight: 700;
+        background: linear-gradient(120deg, #34d399, #06b6d4);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .create-btn:hover {
+        background: linear-gradient(120deg, #06b6d4, #34d399);
+        box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="avatar">
+        <div class="avatar-circle"></div>
+        <div class="name">Player</div>
+        <div class="elo">Elo 1500</div>
+      </div>
+      <nav class="sidebar-buttons">
+        <button class="btn big">Find match</button>
+        <button class="btn big primary">Create room</button>
+        <button class="btn big">Join</button>
+      </nav>
+      <button class="btn logout">Log out</button>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-area">
+      <header class="topbar">
+        <div class="logo">CODE BATTLE ARENA</div>
+        <input class="search" placeholder="Search..." />
+      </header>
+
+      <section class="center-stage">
+        <div class="panel">
+          <div class="tree-area">
+            <div class="node node-create">Create room</div>
+
+            <div class="node-row">
+              <div class="node node-practice">Practice</div>
+              <div class="node node-custom">Custom</div>
+            </div>
+          </div>
+
+          <!-- Practice floating -->
+          <div id="practice-box" class="floating-box">
+            <input
+              placeholder="Search room..."
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 14px;
+                border: 1px solid #bcd7fb;
+              "
+            />
+
+            <div class="table-wrap">
+              <table class="rooms-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Diff</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>101</td>
+                    <td>Basic Strings</td>
+                    <td>Easy</td>
+                    <td>Practice</td>
+                  </tr>
+                  <tr>
+                    <td>102</td>
+                    <td>Arrays</td>
+                    <td>Medium</td>
+                    <td>Practice</td>
+                  </tr>
+                  <tr>
+                    <td>103</td>
+                    <td>Graph</td>
+                    <td>Hard</td>
+                    <td>Practice</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Custom floating -->
+          <div id="custom-box" class="floating-box">
+            <label>Difficulty</label><br />
+            <span class="pill">Easy</span>
+            <span class="pill">Medium</span>
+            <span class="pill">Hard</span>
+            <br />
+
+            <label style="margin-top: 14px">Room Name:</label>
+            <input
+              style="
+                width: 80%;
+                padding: 10px;
+                border-radius: 12px;
+                border: 1px solid #bcd7fb;
+              "
+            />
+
+            <div style="text-align: center">
+              <button class="create-btn">CREATE</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const practiceBtn = document.querySelector(".node-practice");
+      const customBtn = document.querySelector(".node-custom");
+      const practiceBox = document.getElementById("practice-box");
+      const customBox = document.getElementById("custom-box");
+
+      practiceBtn.addEventListener("click", () => {
+        customBox.classList.remove("active");
+        practiceBox.classList.toggle("active");
+      });
+
+      customBtn.addEventListener("click", () => {
+        practiceBox.classList.remove("active");
+        customBox.classList.toggle("active");
+      });
+    </script>
+  </body>
+</html>

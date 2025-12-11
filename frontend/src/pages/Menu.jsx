@@ -100,6 +100,7 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
       <button className="menu-item">Friends</button>
       <button className="menu-item">Confession</button>
       <button className="menu-item">Support</button>
+      <button className="menu-item">Settings</button>
       <button className="menu-item logout" onClick={handleLogout}>
         Log out
       </button>
