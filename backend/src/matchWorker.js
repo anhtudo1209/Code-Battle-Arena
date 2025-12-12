@@ -14,6 +14,7 @@ import { Worker, Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { query } from './database/db-postgres.js';
 import { pickDifficultyForRating, getDifficultyBucket, getMaxRatingDifference } from './utils/matchmaking.js';
+import { battleTimeoutQueue } from './queue.js';
 
 const connection = new IORedis({
     host: '127.0.0.1',
@@ -21,6 +22,8 @@ const connection = new IORedis({
     maxRetriesPerRequest: null,   
     enableReadyCheck: false,
 });
+
+const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
 
 // Matching worker that processes match requests and pairs players
 const matchWorker = new Worker('matchQueue', async (job) => {
@@ -85,15 +88,28 @@ const matchWorker = new Worker('matchQueue', async (job) => {
       return;
     }
 
-    // Create battle record
+    // Create battle record in 'pending' state while we wait for acceptances
     const battleResult = await query(
-      `INSERT INTO battles (player1_id, player2_id, exercise_id, status, started_at)
-       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+      `INSERT INTO battles (player1_id, player2_id, exercise_id, status)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [userId, opponentId, exerciseId, 'active']
+      [userId, opponentId, exerciseId, 'pending']
     );
 
     const battleId = battleResult.rows[0].id;
+
+    // Schedule accept timeout job (20s) so pending match expires if not accepted
+    const acceptJobId = `battle-accept:${battleId}`;
+    await battleTimeoutQueue.add(
+      'accept',
+      { battleId },
+      {
+        jobId: acceptJobId,
+        delay: 20 * 1000, // 20 seconds to accept
+        attempts: 1
+      }
+    );
+    console.log(`📅 Battle ${battleId} accept window scheduled (job ${acceptJobId}) for 20 seconds`);
 
     // Update both players' queue status to 'matched'
     await query(

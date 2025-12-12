@@ -15,7 +15,7 @@ const router = express.Router();
 router.get("/users", async (req, res) => {
   try {
     const result = await query(
-      `SELECT id, username, email, role, created_at, updated_at 
+      `SELECT id, username, email, role, rating, win_streak, loss_streak, k_win, k_lose, created_at, updated_at 
        FROM users 
        ORDER BY created_at DESC`
     );
@@ -28,7 +28,7 @@ router.get("/users", async (req, res) => {
 
 // Update user (role, email, etc.)
 router.put("/users/:id", async (req, res) => {
-  const { role, email, username } = req.body;
+  const { role, email, username, rating, win_streak, loss_streak, k_win, k_lose } = req.body;
   const userId = req.params.id;
 
   try {
@@ -48,6 +48,26 @@ router.put("/users/:id", async (req, res) => {
       updates.push(`username = $${paramCount++}`);
       values.push(username);
     }
+    if (rating !== undefined) {
+      updates.push(`rating = $${paramCount++}`);
+      values.push(Number(rating));
+    }
+    if (win_streak !== undefined) {
+      updates.push(`win_streak = $${paramCount++}`);
+      values.push(Number(win_streak));
+    }
+    if (loss_streak !== undefined) {
+      updates.push(`loss_streak = $${paramCount++}`);
+      values.push(Number(loss_streak));
+    }
+    if (k_win !== undefined) {
+      updates.push(`k_win = $${paramCount++}`);
+      values.push(Number(k_win));
+    }
+    if (k_lose !== undefined) {
+      updates.push(`k_lose = $${paramCount++}`);
+      values.push(Number(k_lose));
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({ error: "No fields to update" });
@@ -60,7 +80,7 @@ router.put("/users/:id", async (req, res) => {
       `UPDATE users 
        SET ${updates.join(", ")} 
        WHERE id = $${paramCount} 
-       RETURNING id, username, email, role, created_at, updated_at`,
+       RETURNING id, username, email, role, rating, win_streak, loss_streak, k_win, k_lose, created_at, updated_at`,
       values
     );
 

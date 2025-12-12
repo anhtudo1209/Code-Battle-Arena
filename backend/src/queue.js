@@ -9,3 +9,4 @@ const connection = new IORedis({
 }); // connects to localhost:6379 by default
 export const judgeQueue = new Queue('judgeQueue', { connection });
 export const matchQueue = new Queue('matchQueue', { connection });
+export const battleTimeoutQueue = new Queue('battleTimeoutQueue', { connection });

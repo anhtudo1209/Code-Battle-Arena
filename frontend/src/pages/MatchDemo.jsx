@@ -12,6 +12,7 @@ export default function MatchDemo() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [acceptCountdown, setAcceptCountdown] = useState(null);
   const [preBattleRating, setPreBattleRating] = useState(null);
   const [lastResult, setLastResult] = useState(null);
 
@@ -33,6 +34,12 @@ export default function MatchDemo() {
       if (b.exercise?.starterCode && !code) {
         setCode(b.exercise.starterCode);
       }
+      // Start accept countdown if pending
+      if (b.battle?.status === 'pending') {
+        setAcceptCountdown(20);
+      } else {
+        setAcceptCountdown(null);
+      }
     }
   };
 
@@ -40,6 +47,34 @@ export default function MatchDemo() {
     loadUser();
     loadStatus().catch(() => {});
   }, []);
+
+  // Accept countdown effect
+  useEffect(() => {
+    if (acceptCountdown == null) return;
+    if (acceptCountdown <= 0) {
+      setAcceptCountdown(null);
+      return;
+    }
+    const t = setTimeout(() => setAcceptCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [acceptCountdown]);
+
+  // Poll active battle while pending to pick up opponent accept/activation
+  useEffect(() => {
+    let intervalId = null;
+    if (battle?.battle?.status === 'pending') {
+      intervalId = setInterval(async () => {
+        try {
+          const b = await get('/battle/active');
+          setBattle(b);
+          if (b.battle?.status !== 'pending') setAcceptCountdown(null);
+        } catch (e) {
+          // ignore
+        }
+      }, 1500);
+    }
+    return () => { if (intervalId) clearInterval(intervalId); };
+  }, [battle?.battle?.status]);
 
   const withBusy = async (fn) => {
     setError("");
@@ -145,6 +180,20 @@ export default function MatchDemo() {
     }
   };
 
+  const handleAccept = async () => {
+    if (!battle?.battle?.id) return;
+    try {
+      await post(`/battle/${battle.battle.id}/accept`, {});
+      // refresh status/battle
+      const b = await get('/battle/active');
+      setBattle(b);
+      if (b.battle?.status !== 'pending') setAcceptCountdown(null);
+    } catch (e) {
+      console.error('accept', e);
+      setError(e.message || String(e));
+    }
+  };
+
   const renderBattleSummary = () => {
     if (!battle?.battle) return <p>No active battle.</p>;
     const b = battle.battle;
@@ -157,6 +206,13 @@ export default function MatchDemo() {
         <p>
           <strong>Battle ID:</strong> {b.id} ({b.status})
         </p>
+        {b.status === 'pending' && (
+          <div className="accept-box">
+            <p>Match found — accept to start the battle.</p>
+            <p>Time left: <strong>{acceptCountdown ?? 0}s</strong></p>
+            <button className="btn primary" onClick={handleAccept} disabled={!acceptCountdown}>Accept</button>
+          </div>
+        )}
         <p>
           <strong>Opponent:</strong> {opp?.username} (id {opp?.id})
         </p>

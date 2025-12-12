@@ -25,8 +25,8 @@ Expected outcome (E)
 Dynamic K factor
 ----------------
 - Base = 40, Min = 20, Max = 50.
-- Loss penalty: −5 per consecutive loss (max −10).
-- Win streak bonus: +10 for every 4 consecutive wins (max +20).
+- Loss penalty: −5 per 2 consecutive loss.
+- Win streak bonus: +10 for every 4 consecutive wins.
 - Difficulty bonus (applied only when the player actually solves the problem):
   * Rating < 350 and solves medium → +5
   * Rating < 350 and solves hard → +10

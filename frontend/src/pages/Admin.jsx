@@ -19,7 +19,7 @@ export default function Admin() {
 
   // User management
   const [editingUser, setEditingUser] = useState(null);
-  const [userForm, setUserForm] = useState({ role: "user", email: "", username: "" });
+  const [userForm, setUserForm] = useState({ role: "user", email: "", username: "", rating: 400, win_streak: 0, loss_streak: 0, k_win: 40, k_lose: 30 });
 
   // Exercise management
   const [exerciseForm, setExerciseForm] = useState({
@@ -244,6 +244,11 @@ export default function Admin() {
                       <th>Username</th>
                       <th>Email</th>
                       <th>Role</th>
+                      <th>Rating</th>
+                      <th>W-Streak</th>
+                      <th>L-Streak</th>
+                      <th>K Win</th>
+                      <th>K Lose</th>
                       <th>Created</th>
                       <th>Actions</th>
                     </tr>
@@ -269,6 +274,66 @@ export default function Admin() {
                               user.role || "user"
                             )}
                           </td>
+                          <td>
+                            {editingUser === user.id ? (
+                              <input
+                                type="number"
+                                value={userForm.rating}
+                                onChange={(e) => setUserForm({ ...userForm, rating: Number(e.target.value) })}
+                                style={{ width: 80 }}
+                              />
+                            ) : (
+                              user.rating ?? 400
+                            )}
+                          </td>
+                          <td>
+                            {editingUser === user.id ? (
+                              <input
+                                type="number"
+                                value={userForm.win_streak}
+                                onChange={(e) => setUserForm({ ...userForm, win_streak: Number(e.target.value) })}
+                                style={{ width: 60 }}
+                              />
+                            ) : (
+                              user.win_streak ?? 0
+                            )}
+                          </td>
+                          <td>
+                            {editingUser === user.id ? (
+                              <input
+                                type="number"
+                                value={userForm.loss_streak}
+                                onChange={(e) => setUserForm({ ...userForm, loss_streak: Number(e.target.value) })}
+                                style={{ width: 60 }}
+                              />
+                            ) : (
+                              user.loss_streak ?? 0
+                            )}
+                          </td>
+                          <td>
+                            {editingUser === user.id ? (
+                              <input
+                                type="number"
+                                value={userForm.k_win}
+                                onChange={(e) => setUserForm({ ...userForm, k_win: Number(e.target.value) })}
+                                style={{ width: 60 }}
+                              />
+                            ) : (
+                              user.k_win ?? 40
+                            )}
+                          </td>
+                          <td>
+                            {editingUser === user.id ? (
+                              <input
+                                type="number"
+                                value={userForm.k_lose}
+                                onChange={(e) => setUserForm({ ...userForm, k_lose: Number(e.target.value) })}
+                                style={{ width: 60 }}
+                              />
+                            ) : (
+                              user.k_lose ?? 30
+                            )}
+                          </td>
                           <td>{new Date(user.created_at).toLocaleDateString()}</td>
                           <td>
                             {editingUser === user.id ? (
@@ -280,7 +345,16 @@ export default function Admin() {
                               <>
                                 <button onClick={() => {
                                   setEditingUser(user.id);
-                                  setUserForm({ role: user.role || "user", email: user.email, username: user.username });
+                                  setUserForm({ 
+                                    role: user.role || "user", 
+                                    email: user.email, 
+                                    username: user.username,
+                                    rating: user.rating ?? 400,
+                                    win_streak: user.win_streak ?? 0,
+                                    loss_streak: user.loss_streak ?? 0,
+                                    k_win: user.k_win ?? 40,
+                                    k_lose: user.k_lose ?? 30
+                                  });
                                 }}>
                                   Edit
                                 </button>

@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { query } from "../database/db-postgres.js";
-import { matchQueue } from "../queue.js";
+import { matchQueue, battleTimeoutQueue } from "../queue.js";
 import { judgeQueue } from "../queue.js";
 import CodeJudge from "../judge.js";
 import { getDifficultyLabel } from "../utils/matchmaking.js";
@@ -67,7 +67,7 @@ router.post("/join-queue", async (req, res) => {
     await matchQueue.add('match', {
       userId
     }, {
-      attempts: 20, // Try up to 20 times (about 100 seconds total)
+      attempts: 0, // Retry indefinitely
       backoff: {
         type: 'fixed',
         delay: 5000 // 5 seconds between retries
@@ -120,32 +120,11 @@ router.get("/status", async (req, res) => {
   const userId = req.userId;
 
   try {
-    // Check if in queue
-    const queueStatus = await query(
-      'SELECT * FROM match_queue WHERE user_id = $1 AND status = $2',
-      [userId, 'waiting']
-    );
-
-    if (queueStatus.rows.length > 0) {
-      const ratingResult = await query(
-        'SELECT rating FROM users WHERE id = $1',
-        [userId]
-      );
-      const rating = ratingResult.rows[0]?.rating ?? 400;
-
-      return res.json({
-        status: 'queued',
-        queuedAt: queueStatus.rows[0].queued_at,
-        rating,
-        searchDifficulty: getDifficultyLabel(rating)
-      });
-    }
-
-    // Check for active battle
+    // Check for active/pending battle first (takes priority over queued status)
     const battle = await query(
       `SELECT * FROM battles 
        WHERE (player1_id = $1 OR player2_id = $1) 
-       AND status IN ('waiting', 'active')
+       AND status IN ('pending', 'waiting', 'active')
        ORDER BY created_at DESC
        LIMIT 1`,
       [userId]
@@ -167,7 +146,30 @@ router.get("/status", async (req, res) => {
         battleId: battleData.id,
         opponent: opponentResult.rows[0],
         exerciseId: battleData.exercise_id,
-        startedAt: battleData.started_at
+        startedAt: battleData.started_at,
+        player1Accepted: battleData.player1_accepted,
+        player2Accepted: battleData.player2_accepted
+      });
+    }
+
+    // Check if in queue
+    const queueStatus = await query(
+      'SELECT * FROM match_queue WHERE user_id = $1 AND status = $2',
+      [userId, 'waiting']
+    );
+
+    if (queueStatus.rows.length > 0) {
+      const ratingResult = await query(
+        'SELECT rating FROM users WHERE id = $1',
+        [userId]
+      );
+      const rating = ratingResult.rows[0]?.rating ?? 400;
+
+      return res.json({
+        status: 'queued',
+        queuedAt: queueStatus.rows[0].queued_at,
+        rating,
+        searchDifficulty: getDifficultyLabel(rating)
       });
     }
 
@@ -186,7 +188,7 @@ router.get("/active", async (req, res) => {
     const battleResult = await query(
       `SELECT * FROM battles 
        WHERE (player1_id = $1 OR player2_id = $1) 
-       AND status IN ('waiting', 'active')
+       AND status IN ('pending', 'waiting', 'active')
        ORDER BY created_at DESC
        LIMIT 1`,
       [userId]
@@ -255,6 +257,8 @@ router.get("/active", async (req, res) => {
         startedAt: battle.started_at,
         isPlayer1,
         winnerId: battle.winner_id
+        ,player1Accepted: battle.player1_accepted,
+        player2Accepted: battle.player2_accepted
       },
       opponent: opponentResult.rows[0],
       exercise,
@@ -263,6 +267,51 @@ router.get("/active", async (req, res) => {
   } catch (error) {
     console.error("Error getting active battle:", error);
     res.status(500).json({ error: "Failed to get active battle" });
+  }
+});
+
+// Accept match (player clicks Accept within the acceptance window)
+router.post('/:id/accept', async (req, res) => {
+  const userId = req.userId;
+  const battleId = req.params.id;
+  const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000;
+
+  try {
+    const br = await query('SELECT * FROM battles WHERE id = $1', [battleId]);
+    if (br.rowCount === 0) return res.status(404).json({ error: 'Battle not found' });
+    const battle = br.rows[0];
+
+    if (battle.status !== 'pending') {
+      return res.status(400).json({ error: 'Battle is not pending acceptance' });
+    }
+
+    if (userId !== battle.player1_id && userId !== battle.player2_id) {
+      return res.status(403).json({ error: 'Not a participant of this battle' });
+    }
+
+    const col = userId === battle.player1_id ? 'player1_accepted' : 'player2_accepted';
+    await query(`UPDATE battles SET ${col} = TRUE WHERE id = $1`, [battleId]);
+
+    const updated = await query('SELECT player1_accepted, player2_accepted FROM battles WHERE id = $1', [battleId]);
+    const { player1_accepted, player2_accepted } = updated.rows[0];
+
+    // If both accepted, activate the battle
+    if (player1_accepted && player2_accepted) {
+      await query(`UPDATE battles SET status = $1, started_at = CURRENT_TIMESTAMP WHERE id = $2`, ['active', battleId]);
+
+      // Remove accept timeout job if present
+      try { await battleTimeoutQueue.remove(`battle-accept:${battleId}`); } catch (e) { }
+
+      // Schedule battle duration timeout
+      try {
+        await battleTimeoutQueue.add('timeout', { battleId }, { jobId: `battle-timeout:${battleId}`, delay: MAX_BATTLE_DURATION_MS, attempts: 3, backoff: { type: 'exponential', delay: 2000 } });
+      } catch (e) { console.warn('Could not schedule battle duration timeout:', e.message || e); }
+    }
+
+    res.json({ success: true, bothAccepted: !!(player1_accepted && player2_accepted) });
+  } catch (err) {
+    console.error('Error accepting battle:', err);
+    res.status(500).json({ error: 'Failed to accept battle' });
   }
 });
 

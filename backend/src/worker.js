@@ -16,6 +16,7 @@ import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import CodeJudge from './judge.js';
 import { query } from './database/db-postgres.js';
+import { battleTimeoutQueue, matchQueue } from './queue.js';
 
 
 const connection = new IORedis({
@@ -26,6 +27,8 @@ const connection = new IORedis({
 });
 
 const judge = new CodeJudge();
+
+const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
 
 const worker = new Worker('judgeQueue', async (job) => {
   const { submissionId, userId, exerciseId, code, language, battleId } = job.data;
@@ -72,6 +75,84 @@ const worker = new Worker('judgeQueue', async (job) => {
 worker.on('failed', (job, err) => {
   console.error(`❌ Job ${job.id} failed:`, err);
 });
+
+// Battle timeout worker - handles both acceptance timeouts and battle duration timeouts
+const timeoutWorker = new Worker('battleTimeoutQueue', async (job) => {
+  const { battleId } = job.data;
+  console.log(`⏱️ Battle job '${job.name}' triggered for ${battleId}`);
+
+  try {
+    if (job.name === 'timeout') {
+      // battle duration timeout
+      await processBattleIfReady(battleId);
+    } else if (job.name === 'accept') {
+      // acceptance window expired
+      await handleAcceptTimeout(battleId);
+    } else {
+      console.warn(`⚠️ Unknown battleTimeout job name: ${job.name}`);
+    }
+  } catch (error) {
+    console.error(`❌ Error processing battle job ${job.id} (${job.name}) for ${battleId}:`, error);
+    throw error;
+  }
+}, { connection, concurrency: 10 });
+
+timeoutWorker.on('failed', (job, err) => {
+  console.error(`❌ Battle timeout job ${job.id} failed:`, err);
+});
+
+async function scheduleBattleTimeout(battleId) {
+  try {
+    await battleTimeoutQueue.add(
+      'timeout',
+      { battleId },
+      { 
+        delay: MAX_BATTLE_DURATION_MS,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 }
+      }
+    );
+    console.log(`📅 Battle ${battleId} timeout scheduled for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
+  } catch (error) {
+    console.error(`Failed to schedule timeout for battle ${battleId}:`, error);
+  }
+}
+
+// Handle acceptance timeout: if battle still pending and not both accepted, cancel and requeue players
+async function handleAcceptTimeout(battleId) {
+  try {
+    const br = await query('SELECT * FROM battles WHERE id = $1', [battleId]);
+    if (br.rowCount === 0) return;
+    const battle = br.rows[0];
+    if (battle.status !== 'pending') return; // already accepted/cancelled
+
+    if (battle.player1_accepted && battle.player2_accepted) {
+      // both accepted in the meantime
+      return;
+    }
+
+    // Cancel the battle
+    await query(`UPDATE battles SET status = $1 WHERE id = $2 AND status = 'pending'`, ['cancelled', battleId]);
+
+    // Set players back to waiting in match_queue (best-effort)
+    await query(
+      `UPDATE match_queue SET status = 'waiting' WHERE user_id = ANY($1)`,
+      [[battle.player1_id, battle.player2_id]]
+    );
+
+    // Re-add match jobs for both players so they re-enter matching loop
+    try {
+      await matchQueue.add('match', { userId: battle.player1_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
+    } catch (e) {}
+    try {
+      await matchQueue.add('match', { userId: battle.player2_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
+    } catch (e) {}
+
+    console.log(`⚠️ Battle ${battleId} cancelled due to accept timeout; players requeued`);
+  } catch (err) {
+    console.error(`❌ Error handling accept timeout for battle ${battleId}:`, err);
+  }
+}
 
 async function processBattleIfReady(battleId) {
   const battleResult = await query(
@@ -354,12 +435,27 @@ async function processBattleIfReady(battleId) {
 }
 
 async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2) {
-  await query(
+  // Idempotent finalize: only transition if still active
+  const res = await query(
     `UPDATE battles 
      SET status = $1, winner_id = $2, ended_at = CURRENT_TIMESTAMP 
-     WHERE id = $3`,
+     WHERE id = $3 AND status = 'active'
+     RETURNING id`,
     [outcome.status, outcome.winnerId, battleId]
   );
+
+  if (res.rowCount === 0) {
+    console.log(`⚠️ Battle ${battleId} already finalized or not active, skipping finalization`);
+    // Best-effort: remove scheduled timeout job if present
+    try {
+      const timeoutJobId = `battle-timeout:${battleId}`;
+      await battleTimeoutQueue.remove(timeoutJobId);
+      console.log(`🧹 Removed timeout job ${timeoutJobId} (if it existed)`);
+    } catch (err) {
+      // ignore removal errors
+    }
+    return;
+  }
 
   // Mark both players' queue entries as completed (if they exist)
   await query(
@@ -371,12 +467,16 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
 
   console.log(`🏆 Battle ${battleId} completed. Winner: ${outcome.winnerId || 'Draw'}`);
 
-  await updatePlayerRatings({
-    battle,
-    perf1,
-    perf2,
-    outcome,
-  });
+  // Remove the scheduled timeout job now that the battle is finishing
+  try {
+    const timeoutJobId = `battle-timeout:${battleId}`;
+    await battleTimeoutQueue.remove(timeoutJobId);
+    console.log(`🧹 Removed timeout job ${timeoutJobId}`);
+  } catch (err) {
+    console.warn(`⚠️ Could not remove timeout job for battle ${battleId}:`, err.message || err);
+  }
+
+  await updatePlayerRatings({ battle, perf1, perf2, outcome });
 }
 
 function buildSubmissionStats(submission, battleStart) {
@@ -414,8 +514,6 @@ function buildSubmissionStats(submission, battleStart) {
     durationMs,
   };
 }
-
-const MAX_BATTLE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
 function finalizePerformance(stats, maxDuration) {
   // Cap the effective duration so everything beyond 15 minutes is treated equally
@@ -460,60 +558,82 @@ function determineBattleOutcome(battle, submission1, submission2) {
 }
 
 async function updatePlayerRatings({ battle, perf1, perf2, outcome }) {
-  const playersResult = await query(
-    'SELECT id, rating, win_streak, loss_streak FROM users WHERE id = ANY($1)',
-    [[battle.player1_id, battle.player2_id]]
-  );
+  // Perform rating updates inside a transaction and lock both user rows to avoid races
+  const userIds = [battle.player1_id, battle.player2_id].sort((a, b) => a - b);
 
-  if (playersResult.rowCount < 2) {
-    console.error(`⚠️ Unable to load player ratings for battle ${battle.id}`);
-    return;
+  try {
+    await query('BEGIN');
+
+    const playersResult = await query(
+      `SELECT id, rating, win_streak, loss_streak, k_win, k_lose FROM users WHERE id = ANY($1) ORDER BY id FOR UPDATE`,
+      [userIds]
+    );
+
+    if (playersResult.rowCount < 2) {
+      console.error(`⚠️ Unable to load player ratings for battle ${battle.id}`);
+      await query('ROLLBACK');
+      return;
+    }
+
+    const playerMap = new Map(playersResult.rows.map((row) => [row.id, row]));
+    const player1 = playerMap.get(battle.player1_id);
+    const player2 = playerMap.get(battle.player2_id);
+    if (!player1 || !player2) {
+      await query('ROLLBACK');
+      return;
+    }
+
+    const exerciseDifficulty = await getExerciseDifficulty(battle.exercise_id);
+
+    const perfSum = perf1.performance + perf2.performance;
+    const share1 = perfSum <= 0 ? 0.5 : perf1.performance / perfSum;
+    const share2 = 1 - share1;
+
+    const expected1 = getExpectedScore(player1.rating, player2.rating);
+    const expected2 = 1 - expected1;
+
+    const difficultyBonus1 = getDifficultyBonus(player1.rating, exerciseDifficulty, perf1.passed);
+    const difficultyBonus2 = getDifficultyBonus(player2.rating, exerciseDifficulty, perf2.passed);
+
+    const kFactors1 = computeKFactor(player1.win_streak, player1.loss_streak, difficultyBonus1);
+    const kFactors2 = computeKFactor(player2.win_streak, player2.loss_streak, difficultyBonus2);
+
+    // Use k_win on win, k_lose on loss
+    const result1 = outcome.playerResults.get(player1.id);
+    const result2 = outcome.playerResults.get(player2.id);
+    const k1 = result1 === 'win' ? kFactors1.k_win : (result1 === 'loss' ? kFactors1.k_lose : (kFactors1.k_win + kFactors1.k_lose) / 2);
+    const k2 = result2 === 'win' ? kFactors2.k_win : (result2 === 'loss' ? kFactors2.k_lose : (kFactors2.k_win + kFactors2.k_lose) / 2);
+
+    const delta1 = finalizeDelta(k1 * (share1 - expected1), result1);
+    const delta2 = finalizeDelta(k2 * (share2 - expected2), result2);
+
+    const ratingFloor = 200;
+    const newRating1 = Math.max(ratingFloor, player1.rating + delta1);
+    const newRating2 = Math.max(ratingFloor, player2.rating + delta2);
+
+    const streaks1 = nextStreaks(player1.win_streak, player1.loss_streak, result1);
+    const streaks2 = nextStreaks(player2.win_streak, player2.loss_streak, result2);
+
+    await query(
+      `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3, k_win = $4, k_lose = $5 WHERE id = $6`,
+      [newRating1, streaks1.winStreak, streaks1.lossStreak, Math.round(kFactors1.k_win), Math.round(kFactors1.k_lose), player1.id]
+    );
+
+    await query(
+      `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3, k_win = $4, k_lose = $5 WHERE id = $6`,
+      [newRating2, streaks2.winStreak, streaks2.lossStreak, Math.round(kFactors2.k_win), Math.round(kFactors2.k_lose), player2.id]
+    );
+
+    await query('COMMIT');
+
+    console.log(
+      `📈 Ratings updated: Player ${player1.id} ${player1.rating}→${newRating1} (${delta1 >= 0 ? '+' : ''}${delta1}), ` +
+      `Player ${player2.id} ${player2.rating}→${newRating2} (${delta2 >= 0 ? '+' : ''}${delta2})`
+    );
+  } catch (err) {
+    console.error(`❌ Error updating ratings for battle ${battle.id}:`, err);
+    try { await query('ROLLBACK'); } catch (e) { }
   }
-
-  const playerMap = new Map(playersResult.rows.map((row) => [row.id, row]));
-  const player1 = playerMap.get(battle.player1_id);
-  const player2 = playerMap.get(battle.player2_id);
-  if (!player1 || !player2) return;
-
-  const exerciseDifficulty = await getExerciseDifficulty(battle.exercise_id);
-
-  const perfSum = perf1.performance + perf2.performance;
-  const share1 = perfSum <= 0 ? 0.5 : perf1.performance / perfSum;
-  const share2 = 1 - share1;
-
-  const expected1 = getExpectedScore(player1.rating, player2.rating);
-  const expected2 = 1 - expected1;
-
-  const difficultyBonus1 = getDifficultyBonus(player1.rating, exerciseDifficulty, perf1.passed);
-  const difficultyBonus2 = getDifficultyBonus(player2.rating, exerciseDifficulty, perf2.passed);
-
-  const k1 = computeKFactor(player1.win_streak, player1.loss_streak, difficultyBonus1);
-  const k2 = computeKFactor(player2.win_streak, player2.loss_streak, difficultyBonus2);
-
-  const delta1 = finalizeDelta(k1 * (share1 - expected1), outcome.playerResults.get(player1.id));
-  const delta2 = finalizeDelta(k2 * (share2 - expected2), outcome.playerResults.get(player2.id));
-
-  const ratingFloor = 200;
-  const newRating1 = Math.max(ratingFloor, player1.rating + delta1);
-  const newRating2 = Math.max(ratingFloor, player2.rating + delta2);
-
-  const streaks1 = nextStreaks(player1.win_streak, player1.loss_streak, outcome.playerResults.get(player1.id));
-  const streaks2 = nextStreaks(player2.win_streak, player2.loss_streak, outcome.playerResults.get(player2.id));
-
-  await query(
-    `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3 WHERE id = $4`,
-    [newRating1, streaks1.winStreak, streaks1.lossStreak, player1.id]
-  );
-
-  await query(
-    `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3 WHERE id = $4`,
-    [newRating2, streaks2.winStreak, streaks2.lossStreak, player2.id]
-  );
-
-  console.log(
-    `📈 Ratings updated: Player ${player1.id} ${player1.rating}→${newRating1} (${delta1 >= 0 ? '+' : ''}${delta1}), ` +
-    `Player ${player2.id} ${player2.rating}→${newRating2} (${delta2 >= 0 ? '+' : ''}${delta2})`
-  );
 }
 
 function getExpectedScore(ratingA, ratingB) {
@@ -522,13 +642,22 @@ function getExpectedScore(ratingA, ratingB) {
 }
 
 function computeKFactor(winStreak, lossStreak, difficultyBonus = 0) {
-  const BASE = 40;
+  const BASE_WIN = 40;
+  const BASE_LOSE = 30;
   const MIN = 20;
   const MAX = 50;
-  const streakBonus = Math.min(Math.floor(winStreak / 4) * 10, 20);
-  const lossPenalty = Math.min(lossStreak, 2) * 5;
-  const raw = BASE + streakBonus - lossPenalty + difficultyBonus;
-  return clamp(raw, MIN, MAX);
+
+  // k_win: increases with win streak, decreases with loss streak
+  const winStreakBonus = Math.min(Math.floor(winStreak / 4) * 10, 20);
+  const lossStreakPenalty = Math.floor(lossStreak / 2) * 5;
+  const k_win = clamp(BASE_WIN + winStreakBonus - lossStreakPenalty + difficultyBonus, MIN, MAX);
+
+  // k_lose: increases with loss streak, decreases with win streak
+  const lossStreakBonus = Math.min(Math.floor(lossStreak / 2) * 5, 20); // loss streak increases k_lose
+  const winStreakPenalty = Math.min(Math.floor(winStreak / 4) * 5, 10); // win streak decreases k_lose
+  const k_lose = clamp(BASE_LOSE + lossStreakBonus - winStreakPenalty + difficultyBonus, MIN, MAX);
+
+  return { k_win, k_lose };
 }
 
 function getDifficultyBonus(rating, difficulty, solved) {
@@ -546,6 +675,9 @@ function getDifficultyBonus(rating, difficulty, solved) {
 }
 
 function finalizeDelta(deltaFloat, result = 'draw') {
+  // Draws should not change ratings according to the rules.
+  if (result === 'draw') return 0;
+
   let delta = Math.round(deltaFloat);
   if (result === 'win' && delta < 1) delta = 1;
   if (result === 'loss' && delta > -1) delta = -1;
