@@ -52,7 +52,10 @@ export default function Header() {
       </h1>
       <div className="header-right">
         <input type="text" placeholder="Search..." className="search-bar" />
-        <button className="icon-btn" onClick={() => window.location.href = '/createroom.htm'}>
+        <button
+          className="icon-btn"
+          onClick={() => (window.location.href = "/createroom.html")}
+        >
           Create Room
         </button>
         <button
