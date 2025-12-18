@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Menu from '../pages/Menu';
-import './Header.css';
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Menu from "../pages/Menu";
+import "./Header.css";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,24 +12,24 @@ export default function Header() {
   useEffect(() => {
     const onDocClick = (e) => {
       if (!isMenuOpen) return;
-      
+
       const btn = menuButtonRef.current;
       const isClickOnButton = btn && btn.contains(e.target);
-      
+
       // Check if the click target is inside the menu popup
       if (menuPopupRef.current && menuPopupRef.current.contains(e.target)) {
         // Click is inside menu - let the menu item handlers deal with it
         return;
       }
-      
+
       // Click is outside button and outside menu - close it
       if (!isClickOnButton) {
         setIsMenuOpen(false);
       }
     };
-    
-    document.addEventListener('click', onDocClick, true);
-    return () => document.removeEventListener('click', onDocClick, true);
+
+    document.addEventListener("click", onDocClick, true);
+    return () => document.removeEventListener("click", onDocClick, true);
   }, [isMenuOpen]);
 
   const toggleMenu = (e) => {
@@ -43,14 +43,21 @@ export default function Header() {
         className="logo"
         role="button"
         tabIndex={0}
-        onClick={() => navigate('/home')}
-        onKeyDown={(e) => { if (e.key === 'Enter') navigate('/home'); }}
+        onClick={() => navigate("/home")}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") navigate("/home");
+        }}
       >
         CODE BATTLE ARENA
       </h1>
       <div className="header-right">
         <input type="text" placeholder="Search..." className="search-bar" />
-        <div className="icon-btn">⚙️</div>
+        <button
+          className="icon-btn"
+          onClick={() => (window.location.href = "/createroom.html")}
+        >
+          Create Room
+        </button>
         <button
           ref={menuButtonRef}
           className="icon-btn menu-btn"
@@ -60,7 +67,11 @@ export default function Header() {
           ☰
         </button>
       </div>
-      <Menu isOpen={isMenuOpen} menuPopupRef={menuPopupRef} onItemClick={() => setIsMenuOpen(false)} />
+      <Menu
+        isOpen={isMenuOpen}
+        menuPopupRef={menuPopupRef}
+        onItemClick={() => setIsMenuOpen(false)}
+      />
     </header>
   );
 }

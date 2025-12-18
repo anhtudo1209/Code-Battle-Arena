@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaPlay,
   FaTrophy,
@@ -7,36 +8,15 @@ import {
   FaMedal,
 } from "react-icons/fa";
 import Stepper, { Step } from "../components/Stepper";
+import Header from "../components/Header";
 import "./Home.css";
-import Menu from "./Menu";
 
 export default function Home() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuContainerRef = useRef(null);
-  const menuPopupRef = useRef(null);
+  const navigate = useNavigate();
 
-  const toggleMenu = (e) => {
-    e.stopPropagation();
-    setIsMenuOpen((prev) => !prev);
+  const handleGetStarted = () => {
+    navigate('/findmatch');
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const menuTrigger = menuContainerRef.current;
-      const menuPopup = menuPopupRef.current;
-
-      if (
-        menuTrigger &&
-        !menuTrigger.contains(event.target) &&
-        (!menuPopup || !menuPopup.contains(event.target))
-      ) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   return (
     <div className="home-page">
@@ -57,22 +37,7 @@ export default function Home() {
         }}
       />
 
-      <header className="header home-header">
-        <h1 className="logo">CODE BATTLE ARENA</h1>
-        <div className="header-right">
-          <input type="text" placeholder="Search..." className="search-bar" />
-          <div className="home-menu-container" ref={menuContainerRef}>
-            <button className="icon-btn menu-trigger" onClick={toggleMenu}>
-              ☰
-            </button>
-            <Menu
-              isOpen={isMenuOpen}
-              menuPopupRef={menuPopupRef}
-              onItemClick={() => setIsMenuOpen(false)}
-            />
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="content">
         <aside className="sidebar">
@@ -251,7 +216,7 @@ export default function Home() {
             </div>
           </div>
 
-          <button className="btn start-btn">GET STARTED</button>
+          <button className="btn start-btn" onClick={handleGetStarted}>GET STARTED</button>
 
           <div
             className="tutorial-section"
