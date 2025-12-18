@@ -10,7 +10,8 @@ const __dirname = path.dirname(__filename);
 // Load .env from project root
 dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true });
 
-import { Worker, Queue } from 'bullmq';
+import BullMQPkg from 'bullmq';
+const { Worker, Queue } = BullMQPkg;
 import IORedis from 'ioredis';
 import { query } from './database/db-postgres.js';
 import { pickDifficultyForRating, getDifficultyBucket, getMaxRatingDifference } from './utils/matchmaking.js';
@@ -74,6 +75,18 @@ const matchWorker = new Worker('matchQueue', async (job) => {
     const opponentId = opponent.user_id;
     const opponentRating = opponent.rating ?? 400;
 
+    // Double-check both players are still waiting (prevent race condition)
+    const bothStillWaiting = await query(
+      `SELECT COUNT(*) as count FROM match_queue 
+       WHERE user_id IN ($1, $2) AND status = 'waiting'`,
+      [userId, opponentId]
+    );
+    
+    if (bothStillWaiting.rows[0].count !== '2') {
+      console.log(`⚠️ User ${userId} or ${opponentId} already matched by another worker, skipping`);
+      return; // Other worker handled it, just exit cleanly
+    }
+
     const averageRating = (playerRating + opponentRating) / 2;
     const primaryDifficulty = pickDifficultyForRating(averageRating);
 
@@ -83,54 +96,91 @@ const matchWorker = new Worker('matchQueue', async (job) => {
 
     if (!exerciseId) {
       console.error(`❌ No exercises available for selected difficulty mix (avg rating ${averageRating})`);
-      await query('UPDATE match_queue SET status = $1 WHERE user_id IN ($2, $3)', 
-        ['cancelled', userId, opponentId]);
+      await query('UPDATE match_queue SET status = $1 WHERE user_id IN ($2, $3) AND status = $4', 
+        ['cancelled', userId, opponentId, 'waiting']);
       return;
     }
 
-    // Create battle record in 'pending' state while we wait for acceptances
-    const battleResult = await query(
-      `INSERT INTO battles (player1_id, player2_id, exercise_id, status)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id`,
-      [userId, opponentId, exerciseId, 'pending']
-    );
+    // Use a transaction to atomically create battle and update queue statuses
+    await query('BEGIN');
+    try {
+      // Create battle record in 'pending' state while we wait for acceptances
+      const battleResult = await query(
+        `INSERT INTO battles (player1_id, player2_id, exercise_id, status)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id`,
+        [userId, opponentId, exerciseId, 'pending']
+      );
 
-    const battleId = battleResult.rows[0].id;
+      const battleId = battleResult.rows[0].id;
 
-    // Schedule accept timeout job (20s) so pending match expires if not accepted
-    const acceptJobId = `battle-accept:${battleId}`;
-    await battleTimeoutQueue.add(
-      'accept',
-      { battleId },
-      {
-        jobId: acceptJobId,
-        delay: 20 * 1000, // 20 seconds to accept
-        attempts: 1
+      // Update both players' queue status to 'matched' (atomically)
+      const updateResult = await query(
+        `UPDATE match_queue SET status = $1 
+         WHERE user_id IN ($2, $3) AND status = $4
+         RETURNING user_id`,
+        ['matched', userId, opponentId, 'waiting']
+      );
+
+      // Verify both were updated
+      if (updateResult.rows.length !== 2) {
+        await query('ROLLBACK');
+        console.log(`⚠️ Race condition: only ${updateResult.rows.length}/2 players updated, another worker may have matched them`);
+        return;
       }
-    );
-    console.log(`📅 Battle ${battleId} accept window scheduled (job ${acceptJobId}) for 20 seconds`);
 
-    // Update both players' queue status to 'matched'
-    await query(
-      'UPDATE match_queue SET status = $1 WHERE user_id IN ($2, $3)',
-      ['matched', userId, opponentId]
-    );
+      await query('COMMIT');
 
-    const bucketLabel = getDifficultyBucket(averageRating).label;
-    console.log(`✅ Matched user ${userId} (rating ${playerRating}) with ${opponentId} (rating ${opponentRating}) in battle ${battleId} (${bucketLabel}) → exercise ${exerciseId}`);
+      // Schedule accept timeout job (20s) so pending match expires if not accepted
+      // Do this AFTER commit so battle definitely exists
+      const acceptJobId = `battle-accept-${battleId}`;
+      try {
+        await battleTimeoutQueue.add(
+          'accept',
+          { battleId },
+          {
+            jobId: acceptJobId,
+            delay: 20 * 1000, // 20 seconds to accept
+            attempts: 1
+          }
+        );
+        console.log(`📅 Battle ${battleId} accept window scheduled (job ${acceptJobId}) for 20 seconds`);
+      } catch (queueError) {
+        // If queue add fails, log but don't fail the match (battle is already created)
+        console.error(`⚠️ Failed to schedule accept timeout for battle ${battleId}:`, queueError.message || queueError);
+        // Battle still exists, players can accept manually, but timeout won't work
+      }
+
+      const bucketLabel = getDifficultyBucket(averageRating).label;
+      console.log(`✅ Matched user ${userId} (rating ${playerRating}) with ${opponentId} (rating ${opponentRating}) in battle ${battleId} (${bucketLabel}) → exercise ${exerciseId}`);
+    } catch (dbError) {
+      await query('ROLLBACK');
+      throw dbError; // Re-throw to be caught by outer catch
+    }
 
   } catch (error) {
     // If it's a "no opponent" error, we'll retry
     if (error.message === 'No opponent found') {
       throw error; // This will trigger BullMQ retry
     }
+    
+    // Check if user was already matched by another worker (race condition)
+    const currentStatus = await query(
+      'SELECT status FROM match_queue WHERE user_id = $1',
+      [userId]
+    );
+    
+    if (currentStatus.rows.length > 0 && currentStatus.rows[0].status === 'matched') {
+      console.log(`ℹ️ User ${userId} was already matched by another worker, ignoring error`);
+      return; // Don't cancel, they're already matched
+    }
+    
     console.error(`❌ Error matching user ${userId}:`, error);
     
-    // Remove user from queue on error
+    // Only cancel if user is still waiting (not already matched/cancelled)
     await query(
-      'UPDATE match_queue SET status = $1 WHERE user_id = $2',
-      ['cancelled', userId]
+      'UPDATE match_queue SET status = $1 WHERE user_id = $2 AND status = $3',
+      ['cancelled', userId, 'waiting']
     );
   }
 }, { 

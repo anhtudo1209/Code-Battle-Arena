@@ -300,11 +300,11 @@ router.post('/:id/accept', async (req, res) => {
       await query(`UPDATE battles SET status = $1, started_at = CURRENT_TIMESTAMP WHERE id = $2`, ['active', battleId]);
 
       // Remove accept timeout job if present
-      try { await battleTimeoutQueue.remove(`battle-accept:${battleId}`); } catch (e) { }
+      try { await battleTimeoutQueue.remove(`battle-accept-${battleId}`); } catch (e) { }
 
       // Schedule battle duration timeout
       try {
-        await battleTimeoutQueue.add('timeout', { battleId }, { jobId: `battle-timeout:${battleId}`, delay: MAX_BATTLE_DURATION_MS, attempts: 3, backoff: { type: 'exponential', delay: 2000 } });
+        await battleTimeoutQueue.add('timeout', { battleId }, { jobId: `battle-timeout-${battleId}`, delay: MAX_BATTLE_DURATION_MS, attempts: 3, backoff: { type: 'exponential', delay: 2000 } });
       } catch (e) { console.warn('Could not schedule battle duration timeout:', e.message || e); }
     }
 

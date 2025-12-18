@@ -12,7 +12,8 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true });
 
 
-import { Worker } from 'bullmq';
+import BullMQPkg from 'bullmq';
+const { Worker } = BullMQPkg;
 import IORedis from 'ioredis';
 import CodeJudge from './judge.js';
 import { query } from './database/db-postgres.js';
@@ -165,12 +166,14 @@ async function processBattleIfReady(battleId) {
   const battle = battleResult.rows[0];
   if (battle.status !== 'active') return;
 
-  const startedAtMs = battle.started_at
-    ? new Date(battle.started_at).getTime()
-    : Date.now();
-  const nowMs = Date.now();
-  const elapsedMs = nowMs - startedAtMs;
-  const timedOut = elapsedMs >= MAX_BATTLE_DURATION_MS;
+  // Use DB-side time arithmetic to avoid timezone/clock skew issues
+  const timeoutCheck = await query(
+    `SELECT (CURRENT_TIMESTAMP >= started_at + INTERVAL '2 minutes') AS timed_out, started_at AT TIME ZONE 'UTC' AS started_at_utc FROM battles WHERE id = $1`,
+    [battleId]
+  );
+  const timedOut = timeoutCheck.rows[0]?.timed_out === true;
+  const startedAtUtc = timeoutCheck.rows[0]?.started_at_utc || battle.started_at;
+  console.log(`⏱️ Battle ${battleId} timing (DB): started_at_utc=${startedAtUtc}, timedOut=${timedOut}`);
 
   const ids = [];
   if (battle.player1_submission_id) ids.push(battle.player1_submission_id);
@@ -226,6 +229,14 @@ async function processBattleIfReady(battleId) {
   const submission2 = battle.player2_submission_id
     ? submissionsMap.get(battle.player2_submission_id)
     : null;
+
+  // Diagnostic snapshot
+  try {
+    const subsSummary = [...submissionsMap.entries()].map(([id, s]) => ({ id, status: s.status }));
+    console.log(`🔎 Evaluating battle ${battleId}: status=${battle.status}, created_at=${battle.created_at}, started_at=${battle.started_at}, submissions=${JSON.stringify(subsSummary)}, now=${new Date().toISOString()}`);
+  } catch (err) {
+    console.warn('⚠️ Could not log battle/submission snapshot:', err.message || err);
+  }
 
   // Case 1: both players have submitted
   if (submission1 && submission2) {
@@ -323,7 +334,6 @@ async function processBattleIfReady(battleId) {
     const singleIsPlayer1 = !!submission1;
 
     const realStats = buildSubmissionStats(singleSubmission, battle.started_at);
-
     const fakeStatsBase = {
       submissionId: 0,
       userId: singleIsPlayer1 ? battle.player2_id : battle.player1_id,
@@ -435,6 +445,94 @@ async function processBattleIfReady(battleId) {
 }
 
 async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2) {
+  console.log(`🔔 finalizeBattleAndRatings called for battle ${battleId} with outcomeWinner=${outcome.winnerId}, battleStatus=${battle.status}`);
+  // Sanity-check current battle state to avoid premature finalization
+  const latestBattle = await query('SELECT player1_submission_id, player2_submission_id, started_at, status FROM battles WHERE id = $1', [battleId]);
+  if (latestBattle.rowCount === 0) {
+    console.log(`⚠️ Battle ${battleId} not found during finalization check, skipping`);
+    return;
+  }
+
+  const latest = latestBattle.rows[0];
+  if (latest.status !== 'active') {
+    console.log(`⚠️ Battle ${battleId} not active during finalization check (status: ${latest.status}), skipping`);
+    return;
+  }
+
+  // Use DB-side determination to avoid timezone mismatches
+  const timeoutCheck = await query(`SELECT (CURRENT_TIMESTAMP >= started_at + INTERVAL '2 minutes') AS timed_out FROM battles WHERE id = $1`, [battleId]);
+  const timedOut = timeoutCheck.rows[0]?.timed_out === true;
+
+  // If there are NO recorded submissions and the battle hasn't timed out, do NOT finalize as it would be premature
+  if (!latest.player1_submission_id && !latest.player2_submission_id && !timedOut) {
+    console.log(`⚠️ Skipping premature finalization for battle ${battleId}: no submissions and not timed out`);
+    return;
+  }
+
+  // If only one submission exists and it's not a passing result, and it's not timed out, do not finalize yet
+  if ((latest.player1_submission_id && !latest.player2_submission_id) || (latest.player2_submission_id && !latest.player1_submission_id)) {
+    const singleSubmissionId = latest.player1_submission_id || latest.player2_submission_id;
+    try {
+      const subRes = await query('SELECT status FROM submissions WHERE id = $1', [singleSubmissionId]);
+      const subStatus = subRes.rowCount > 0 ? subRes.rows[0].status : null;
+      if (subStatus !== 'passed' && !timedOut) {
+        console.log(`⚠️ Skipping premature finalization for battle ${battleId}: single submission ${singleSubmissionId} status='${subStatus}' and not timed out`);
+        return;
+      }
+    } catch (err) {
+      console.warn(`⚠️ Could not read submission ${singleSubmissionId} status during finalization check:`, err.message || err);
+      // If we can't read submission status, err on the side of not finalizing
+      return;
+    }
+  }
+
+  // Additional safety: ensure we only finalize when a legit condition is met
+  // Fetch submission IDs and statuses to validate finalize preconditions
+  const subIds = [];
+  if (battle.player1_submission_id) subIds.push(battle.player1_submission_id);
+  if (battle.player2_submission_id) subIds.push(battle.player2_submission_id);
+
+  try {
+    const subs = subIds.length > 0 ? await query('SELECT id, status FROM submissions WHERE id = ANY($1)', [subIds]) : { rows: [] };
+    const subMap = new Map(subs.rows.map((s) => [s.id, s.status]));
+
+    const hasPassed = [...subMap.values()].some((s) => s === 'passed');
+    const bothSubmitted = battle.player1_submission_id && battle.player2_submission_id;
+
+    const latestStartedAt = battle.started_at ? new Date(battle.started_at).getTime() : Date.now();
+    const isTimedOut = (Date.now() - latestStartedAt) >= MAX_BATTLE_DURATION_MS;
+
+    if (!hasPassed && !bothSubmitted && !isTimedOut) {
+      console.log(`⚠️ Finalization blocked for battle ${battleId}: no pass, not both submitted, not timed out (subStatuses=${JSON.stringify([...subMap.entries()])})`);
+      return;
+    }
+
+    // If DB says timed_out but there was a recent submission (within last 60s), treat as suspicious and do not finalize
+    if (isTimedOut && subIds.length > 0) {
+      try {
+        const recent = await query('SELECT submitted_at FROM submissions WHERE id = ANY($1) ORDER BY submitted_at DESC LIMIT 1', [subIds]);
+        if (recent.rowCount > 0) {
+          const recentMs = new Date(recent.rows[0].submitted_at).getTime();
+          const ageMs = Date.now() - recentMs;
+          if (ageMs < 60 * 1000) {
+            console.log(`⚠️ Blocking finalization for battle ${battleId}: DB timed_out=true but a recent submission was received ${ageMs}ms ago`);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn(`⚠️ Could not check recent submissions for battle ${battleId}:`, err.message || err);
+        // If we can't validate recent submission, abort finalization conservatively
+        return;
+      }
+    }
+
+    console.log(`✅ Finalization allowed for battle ${battleId}: hasPassed=${hasPassed}, bothSubmitted=${bothSubmitted}, isTimedOut=${isTimedOut}, subStatuses=${JSON.stringify([...subMap.entries()])}`);
+  } catch (err) {
+    console.warn(`⚠️ Could not validate submissions before finalizing battle ${battleId}:`, err.message || err);
+    // conservative approach: abort finalization if we can't validate
+    return;
+  }
+
   // Idempotent finalize: only transition if still active
   const res = await query(
     `UPDATE battles 
@@ -448,7 +546,7 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
     console.log(`⚠️ Battle ${battleId} already finalized or not active, skipping finalization`);
     // Best-effort: remove scheduled timeout job if present
     try {
-      const timeoutJobId = `battle-timeout:${battleId}`;
+      const timeoutJobId = `battle-timeout-${battleId}`;
       await battleTimeoutQueue.remove(timeoutJobId);
       console.log(`🧹 Removed timeout job ${timeoutJobId} (if it existed)`);
     } catch (err) {
@@ -469,7 +567,7 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
 
   // Remove the scheduled timeout job now that the battle is finishing
   try {
-    const timeoutJobId = `battle-timeout:${battleId}`;
+    const timeoutJobId = `battle-timeout-${battleId}`;
     await battleTimeoutQueue.remove(timeoutJobId);
     console.log(`🧹 Removed timeout job ${timeoutJobId}`);
   } catch (err) {
