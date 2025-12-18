@@ -1,0 +1,16 @@
+{
+  "timeLimit": 2,
+  "memoryLimit": "256m",
+  "difficulty": "medium",
+  "tags": [
+    "Divide and Conquer",
+    "Binary Recursion",
+    "Prime Factorization",
+    "Number Theory"
+  ],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 36,
+  "editable_end": 38
+}
