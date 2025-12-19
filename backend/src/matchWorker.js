@@ -104,15 +104,16 @@ const matchWorker = new Worker('matchQueue', async (job) => {
     // Use a transaction to atomically create battle and update queue statuses
     await query('BEGIN');
     try {
-      // Create battle record in 'pending' state while we wait for acceptances
-      const battleResult = await query(
-        `INSERT INTO battles (player1_id, player2_id, exercise_id, status)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id`,
-        [userId, opponentId, exerciseId, 'pending']
-      );
+    // Create battle record in 'pending' state while we wait for acceptances
+    // Explicitly set created_at to UTC to avoid timezone issues
+    const battleResult = await query(
+      `INSERT INTO battles (player1_id, player2_id, exercise_id, status, created_at)
+       VALUES ($1, $2, $3, $4, NOW() AT TIME ZONE 'UTC')
+       RETURNING id, created_at`,
+      [userId, opponentId, exerciseId, 'pending']
+    );
 
-      const battleId = battleResult.rows[0].id;
+    const battleId = battleResult.rows[0].id;
 
       // Update both players' queue status to 'matched' (atomically)
       const updateResult = await query(
@@ -131,28 +132,28 @@ const matchWorker = new Worker('matchQueue', async (job) => {
 
       await query('COMMIT');
 
-      // Schedule accept timeout job (20s) so pending match expires if not accepted
+    // Schedule accept timeout job (20s) so pending match expires if not accepted
       // Do this AFTER commit so battle definitely exists
       const acceptJobId = `battle-accept-${battleId}`;
       try {
-        await battleTimeoutQueue.add(
-          'accept',
-          { battleId },
-          {
-            jobId: acceptJobId,
-            delay: 20 * 1000, // 20 seconds to accept
-            attempts: 1
-          }
-        );
-        console.log(`📅 Battle ${battleId} accept window scheduled (job ${acceptJobId}) for 20 seconds`);
+    await battleTimeoutQueue.add(
+      'accept',
+      { battleId },
+      {
+        jobId: acceptJobId,
+        delay: 20 * 1000, // 20 seconds to accept
+        attempts: 1
+      }
+    );
+    console.log(`📅 Battle ${battleId} accept window scheduled (job ${acceptJobId}) for 20 seconds`);
       } catch (queueError) {
         // If queue add fails, log but don't fail the match (battle is already created)
         console.error(`⚠️ Failed to schedule accept timeout for battle ${battleId}:`, queueError.message || queueError);
         // Battle still exists, players can accept manually, but timeout won't work
       }
 
-      const bucketLabel = getDifficultyBucket(averageRating).label;
-      console.log(`✅ Matched user ${userId} (rating ${playerRating}) with ${opponentId} (rating ${opponentRating}) in battle ${battleId} (${bucketLabel}) → exercise ${exerciseId}`);
+    const bucketLabel = getDifficultyBucket(averageRating).label;
+    console.log(`✅ Matched user ${userId} (rating ${playerRating}) with ${opponentId} (rating ${opponentRating}) in battle ${battleId} (${bucketLabel}) → exercise ${exerciseId}`);
     } catch (dbError) {
       await query('ROLLBACK');
       throw dbError; // Re-throw to be caught by outer catch
