@@ -97,9 +97,18 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
           Admin
         </button>
       )}
-      <button className="menu-item">Friends</button>
-      <button className="menu-item">Confession</button>
-      <button className="menu-item">Support</button>
+      <a href="/Friends.html" className="menu-item">
+        Friends
+      </a>
+      <a href="/Confession.html" className="menu-item">
+        Confession
+      </a>
+      <a href="/Support.html" className="menu-item">
+        Support
+      </a>
+      <a href="/Settings.html" className="menu-item">
+        Settings
+      </a>
       <button className="menu-item logout" onClick={handleLogout}>
         Log out
       </button>

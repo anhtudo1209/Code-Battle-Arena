@@ -12,11 +12,12 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true });
 
 
-import { Worker } from 'bullmq';
+import BullMQPkg from 'bullmq';
+const { Worker } = BullMQPkg;
 import IORedis from 'ioredis';
 import CodeJudge from './judge.js';
 import { query } from './database/db-postgres.js';
-import { battleTimeoutQueue } from './queue.js';
+import { battleTimeoutQueue, matchQueue } from './queue.js';
 
 
 const connection = new IORedis({
@@ -76,15 +77,23 @@ worker.on('failed', (job, err) => {
   console.error(`❌ Job ${job.id} failed:`, err);
 });
 
-// Battle timeout worker - handles timeout jobs
+// Battle timeout worker - handles both acceptance timeouts and battle duration timeouts
 const timeoutWorker = new Worker('battleTimeoutQueue', async (job) => {
   const { battleId } = job.data;
-  console.log(`⏱️ Battle ${battleId} timeout job triggered. Processing...`);
-  
+  console.log(`⏱️ Battle job '${job.name}' triggered for ${battleId}`);
+
   try {
-    await processBattleIfReady(battleId);
+    if (job.name === 'timeout') {
+      // battle duration timeout
+      await processBattleIfReady(battleId);
+    } else if (job.name === 'accept') {
+      // acceptance window expired
+      await handleAcceptTimeout(battleId);
+    } else {
+      console.warn(`⚠️ Unknown battleTimeout job name: ${job.name}`);
+    }
   } catch (error) {
-    console.error(`❌ Error processing timeout for battle ${battleId}:`, error);
+    console.error(`❌ Error processing battle job ${job.id} (${job.name}) for ${battleId}:`, error);
     throw error;
   }
 }, { connection, concurrency: 10 });
@@ -110,6 +119,42 @@ async function scheduleBattleTimeout(battleId) {
   }
 }
 
+// Handle acceptance timeout: if battle still pending and not both accepted, cancel and requeue players
+async function handleAcceptTimeout(battleId) {
+  try {
+    const br = await query('SELECT * FROM battles WHERE id = $1', [battleId]);
+    if (br.rowCount === 0) return;
+    const battle = br.rows[0];
+    if (battle.status !== 'pending') return; // already accepted/cancelled
+
+    if (battle.player1_accepted && battle.player2_accepted) {
+      // both accepted in the meantime
+      return;
+    }
+
+    // Cancel the battle
+    await query(`UPDATE battles SET status = $1 WHERE id = $2 AND status = 'pending'`, ['cancelled', battleId]);
+
+    // Set players back to waiting in match_queue (best-effort)
+    await query(
+      `UPDATE match_queue SET status = 'waiting' WHERE user_id = ANY($1)`,
+      [[battle.player1_id, battle.player2_id]]
+    );
+
+    // Re-add match jobs for both players so they re-enter matching loop
+    try {
+      await matchQueue.add('match', { userId: battle.player1_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
+    } catch (e) {}
+    try {
+      await matchQueue.add('match', { userId: battle.player2_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
+    } catch (e) {}
+
+    console.log(`⚠️ Battle ${battleId} cancelled due to accept timeout; players requeued`);
+  } catch (err) {
+    console.error(`❌ Error handling accept timeout for battle ${battleId}:`, err);
+  }
+}
+
 async function processBattleIfReady(battleId) {
   const battleResult = await query(
     'SELECT * FROM battles WHERE id = $1',
@@ -121,12 +166,14 @@ async function processBattleIfReady(battleId) {
   const battle = battleResult.rows[0];
   if (battle.status !== 'active') return;
 
-  const startedAtMs = battle.started_at
-    ? new Date(battle.started_at).getTime()
-    : Date.now();
-  const nowMs = Date.now();
-  const elapsedMs = nowMs - startedAtMs;
-  const timedOut = elapsedMs >= MAX_BATTLE_DURATION_MS;
+  // Use DB-side time arithmetic to avoid timezone/clock skew issues
+  const timeoutCheck = await query(
+    `SELECT (CURRENT_TIMESTAMP >= started_at + INTERVAL '2 minutes') AS timed_out, started_at AT TIME ZONE 'UTC' AS started_at_utc FROM battles WHERE id = $1`,
+    [battleId]
+  );
+  const timedOut = timeoutCheck.rows[0]?.timed_out === true;
+  const startedAtUtc = timeoutCheck.rows[0]?.started_at_utc || battle.started_at;
+  console.log(`⏱️ Battle ${battleId} timing (DB): started_at_utc=${startedAtUtc}, timedOut=${timedOut}`);
 
   const ids = [];
   if (battle.player1_submission_id) ids.push(battle.player1_submission_id);
@@ -182,6 +229,14 @@ async function processBattleIfReady(battleId) {
   const submission2 = battle.player2_submission_id
     ? submissionsMap.get(battle.player2_submission_id)
     : null;
+
+  // Diagnostic snapshot
+  try {
+    const subsSummary = [...submissionsMap.entries()].map(([id, s]) => ({ id, status: s.status }));
+    console.log(`🔎 Evaluating battle ${battleId}: status=${battle.status}, created_at=${battle.created_at}, started_at=${battle.started_at}, submissions=${JSON.stringify(subsSummary)}, now=${new Date().toISOString()}`);
+  } catch (err) {
+    console.warn('⚠️ Could not log battle/submission snapshot:', err.message || err);
+  }
 
   // Case 1: both players have submitted
   if (submission1 && submission2) {
@@ -279,7 +334,6 @@ async function processBattleIfReady(battleId) {
     const singleIsPlayer1 = !!submission1;
 
     const realStats = buildSubmissionStats(singleSubmission, battle.started_at);
-
     const fakeStatsBase = {
       submissionId: 0,
       userId: singleIsPlayer1 ? battle.player2_id : battle.player1_id,
@@ -391,12 +445,115 @@ async function processBattleIfReady(battleId) {
 }
 
 async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2) {
-  await query(
+  console.log(`🔔 finalizeBattleAndRatings called for battle ${battleId} with outcomeWinner=${outcome.winnerId}, battleStatus=${battle.status}`);
+  // Sanity-check current battle state to avoid premature finalization
+  const latestBattle = await query('SELECT player1_submission_id, player2_submission_id, started_at, status FROM battles WHERE id = $1', [battleId]);
+  if (latestBattle.rowCount === 0) {
+    console.log(`⚠️ Battle ${battleId} not found during finalization check, skipping`);
+    return;
+  }
+
+  const latest = latestBattle.rows[0];
+  if (latest.status !== 'active') {
+    console.log(`⚠️ Battle ${battleId} not active during finalization check (status: ${latest.status}), skipping`);
+    return;
+  }
+
+  // Use DB-side determination to avoid timezone mismatches
+  const timeoutCheck = await query(`SELECT (CURRENT_TIMESTAMP >= started_at + INTERVAL '2 minutes') AS timed_out FROM battles WHERE id = $1`, [battleId]);
+  const timedOut = timeoutCheck.rows[0]?.timed_out === true;
+
+  // If there are NO recorded submissions and the battle hasn't timed out, do NOT finalize as it would be premature
+  if (!latest.player1_submission_id && !latest.player2_submission_id && !timedOut) {
+    console.log(`⚠️ Skipping premature finalization for battle ${battleId}: no submissions and not timed out`);
+    return;
+  }
+
+  // If only one submission exists and it's not a passing result, and it's not timed out, do not finalize yet
+  if ((latest.player1_submission_id && !latest.player2_submission_id) || (latest.player2_submission_id && !latest.player1_submission_id)) {
+    const singleSubmissionId = latest.player1_submission_id || latest.player2_submission_id;
+    try {
+      const subRes = await query('SELECT status FROM submissions WHERE id = $1', [singleSubmissionId]);
+      const subStatus = subRes.rowCount > 0 ? subRes.rows[0].status : null;
+      if (subStatus !== 'passed' && !timedOut) {
+        console.log(`⚠️ Skipping premature finalization for battle ${battleId}: single submission ${singleSubmissionId} status='${subStatus}' and not timed out`);
+        return;
+      }
+    } catch (err) {
+      console.warn(`⚠️ Could not read submission ${singleSubmissionId} status during finalization check:`, err.message || err);
+      // If we can't read submission status, err on the side of not finalizing
+      return;
+    }
+  }
+
+  // Additional safety: ensure we only finalize when a legit condition is met
+  // Fetch submission IDs and statuses to validate finalize preconditions
+  const subIds = [];
+  if (battle.player1_submission_id) subIds.push(battle.player1_submission_id);
+  if (battle.player2_submission_id) subIds.push(battle.player2_submission_id);
+
+  try {
+    const subs = subIds.length > 0 ? await query('SELECT id, status FROM submissions WHERE id = ANY($1)', [subIds]) : { rows: [] };
+    const subMap = new Map(subs.rows.map((s) => [s.id, s.status]));
+
+    const hasPassed = [...subMap.values()].some((s) => s === 'passed');
+    const bothSubmitted = battle.player1_submission_id && battle.player2_submission_id;
+
+    const latestStartedAt = battle.started_at ? new Date(battle.started_at).getTime() : Date.now();
+    const isTimedOut = (Date.now() - latestStartedAt) >= MAX_BATTLE_DURATION_MS;
+
+    if (!hasPassed && !bothSubmitted && !isTimedOut) {
+      console.log(`⚠️ Finalization blocked for battle ${battleId}: no pass, not both submitted, not timed out (subStatuses=${JSON.stringify([...subMap.entries()])})`);
+      return;
+    }
+
+    // If DB says timed_out but there was a recent submission (within last 60s), treat as suspicious and do not finalize
+    if (isTimedOut && subIds.length > 0) {
+      try {
+        const recent = await query('SELECT submitted_at FROM submissions WHERE id = ANY($1) ORDER BY submitted_at DESC LIMIT 1', [subIds]);
+        if (recent.rowCount > 0) {
+          const recentMs = new Date(recent.rows[0].submitted_at).getTime();
+          const ageMs = Date.now() - recentMs;
+          if (ageMs < 60 * 1000) {
+            console.log(`⚠️ Blocking finalization for battle ${battleId}: DB timed_out=true but a recent submission was received ${ageMs}ms ago`);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn(`⚠️ Could not check recent submissions for battle ${battleId}:`, err.message || err);
+        // If we can't validate recent submission, abort finalization conservatively
+        return;
+      }
+    }
+
+    console.log(`✅ Finalization allowed for battle ${battleId}: hasPassed=${hasPassed}, bothSubmitted=${bothSubmitted}, isTimedOut=${isTimedOut}, subStatuses=${JSON.stringify([...subMap.entries()])}`);
+  } catch (err) {
+    console.warn(`⚠️ Could not validate submissions before finalizing battle ${battleId}:`, err.message || err);
+    // conservative approach: abort finalization if we can't validate
+    return;
+  }
+
+  // Idempotent finalize: only transition if still active
+  const res = await query(
     `UPDATE battles 
      SET status = $1, winner_id = $2, ended_at = CURRENT_TIMESTAMP 
-     WHERE id = $3`,
+     WHERE id = $3 AND status = 'active'
+     RETURNING id`,
     [outcome.status, outcome.winnerId, battleId]
   );
+
+  if (res.rowCount === 0) {
+    console.log(`⚠️ Battle ${battleId} already finalized or not active, skipping finalization`);
+    // Best-effort: remove scheduled timeout job if present
+    try {
+      const timeoutJobId = `battle-timeout-${battleId}`;
+      await battleTimeoutQueue.remove(timeoutJobId);
+      console.log(`🧹 Removed timeout job ${timeoutJobId} (if it existed)`);
+    } catch (err) {
+      // ignore removal errors
+    }
+    return;
+  }
 
   // Mark both players' queue entries as completed (if they exist)
   await query(
@@ -408,12 +565,16 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
 
   console.log(`🏆 Battle ${battleId} completed. Winner: ${outcome.winnerId || 'Draw'}`);
 
-  await updatePlayerRatings({
-    battle,
-    perf1,
-    perf2,
-    outcome,
-  });
+  // Remove the scheduled timeout job now that the battle is finishing
+  try {
+    const timeoutJobId = `battle-timeout-${battleId}`;
+    await battleTimeoutQueue.remove(timeoutJobId);
+    console.log(`🧹 Removed timeout job ${timeoutJobId}`);
+  } catch (err) {
+    console.warn(`⚠️ Could not remove timeout job for battle ${battleId}:`, err.message || err);
+  }
+
+  await updatePlayerRatings({ battle, perf1, perf2, outcome });
 }
 
 function buildSubmissionStats(submission, battleStart) {
@@ -495,60 +656,82 @@ function determineBattleOutcome(battle, submission1, submission2) {
 }
 
 async function updatePlayerRatings({ battle, perf1, perf2, outcome }) {
-  const playersResult = await query(
-    'SELECT id, rating, win_streak, loss_streak FROM users WHERE id = ANY($1)',
-    [[battle.player1_id, battle.player2_id]]
-  );
+  // Perform rating updates inside a transaction and lock both user rows to avoid races
+  const userIds = [battle.player1_id, battle.player2_id].sort((a, b) => a - b);
 
-  if (playersResult.rowCount < 2) {
-    console.error(`⚠️ Unable to load player ratings for battle ${battle.id}`);
-    return;
+  try {
+    await query('BEGIN');
+
+    const playersResult = await query(
+      `SELECT id, rating, win_streak, loss_streak, k_win, k_lose FROM users WHERE id = ANY($1) ORDER BY id FOR UPDATE`,
+      [userIds]
+    );
+
+    if (playersResult.rowCount < 2) {
+      console.error(`⚠️ Unable to load player ratings for battle ${battle.id}`);
+      await query('ROLLBACK');
+      return;
+    }
+
+    const playerMap = new Map(playersResult.rows.map((row) => [row.id, row]));
+    const player1 = playerMap.get(battle.player1_id);
+    const player2 = playerMap.get(battle.player2_id);
+    if (!player1 || !player2) {
+      await query('ROLLBACK');
+      return;
+    }
+
+    const exerciseDifficulty = await getExerciseDifficulty(battle.exercise_id);
+
+    const perfSum = perf1.performance + perf2.performance;
+    const share1 = perfSum <= 0 ? 0.5 : perf1.performance / perfSum;
+    const share2 = 1 - share1;
+
+    const expected1 = getExpectedScore(player1.rating, player2.rating);
+    const expected2 = 1 - expected1;
+
+    const difficultyBonus1 = getDifficultyBonus(player1.rating, exerciseDifficulty, perf1.passed);
+    const difficultyBonus2 = getDifficultyBonus(player2.rating, exerciseDifficulty, perf2.passed);
+
+    const kFactors1 = computeKFactor(player1.win_streak, player1.loss_streak, difficultyBonus1);
+    const kFactors2 = computeKFactor(player2.win_streak, player2.loss_streak, difficultyBonus2);
+
+    // Use k_win on win, k_lose on loss
+    const result1 = outcome.playerResults.get(player1.id);
+    const result2 = outcome.playerResults.get(player2.id);
+    const k1 = result1 === 'win' ? kFactors1.k_win : (result1 === 'loss' ? kFactors1.k_lose : (kFactors1.k_win + kFactors1.k_lose) / 2);
+    const k2 = result2 === 'win' ? kFactors2.k_win : (result2 === 'loss' ? kFactors2.k_lose : (kFactors2.k_win + kFactors2.k_lose) / 2);
+
+    const delta1 = finalizeDelta(k1 * (share1 - expected1), result1);
+    const delta2 = finalizeDelta(k2 * (share2 - expected2), result2);
+
+    const ratingFloor = 200;
+    const newRating1 = Math.max(ratingFloor, player1.rating + delta1);
+    const newRating2 = Math.max(ratingFloor, player2.rating + delta2);
+
+    const streaks1 = nextStreaks(player1.win_streak, player1.loss_streak, result1);
+    const streaks2 = nextStreaks(player2.win_streak, player2.loss_streak, result2);
+
+    await query(
+      `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3, k_win = $4, k_lose = $5 WHERE id = $6`,
+      [newRating1, streaks1.winStreak, streaks1.lossStreak, Math.round(kFactors1.k_win), Math.round(kFactors1.k_lose), player1.id]
+    );
+
+    await query(
+      `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3, k_win = $4, k_lose = $5 WHERE id = $6`,
+      [newRating2, streaks2.winStreak, streaks2.lossStreak, Math.round(kFactors2.k_win), Math.round(kFactors2.k_lose), player2.id]
+    );
+
+    await query('COMMIT');
+
+    console.log(
+      `📈 Ratings updated: Player ${player1.id} ${player1.rating}→${newRating1} (${delta1 >= 0 ? '+' : ''}${delta1}), ` +
+      `Player ${player2.id} ${player2.rating}→${newRating2} (${delta2 >= 0 ? '+' : ''}${delta2})`
+    );
+  } catch (err) {
+    console.error(`❌ Error updating ratings for battle ${battle.id}:`, err);
+    try { await query('ROLLBACK'); } catch (e) { }
   }
-
-  const playerMap = new Map(playersResult.rows.map((row) => [row.id, row]));
-  const player1 = playerMap.get(battle.player1_id);
-  const player2 = playerMap.get(battle.player2_id);
-  if (!player1 || !player2) return;
-
-  const exerciseDifficulty = await getExerciseDifficulty(battle.exercise_id);
-
-  const perfSum = perf1.performance + perf2.performance;
-  const share1 = perfSum <= 0 ? 0.5 : perf1.performance / perfSum;
-  const share2 = 1 - share1;
-
-  const expected1 = getExpectedScore(player1.rating, player2.rating);
-  const expected2 = 1 - expected1;
-
-  const difficultyBonus1 = getDifficultyBonus(player1.rating, exerciseDifficulty, perf1.passed);
-  const difficultyBonus2 = getDifficultyBonus(player2.rating, exerciseDifficulty, perf2.passed);
-
-  const k1 = computeKFactor(player1.win_streak, player1.loss_streak, difficultyBonus1);
-  const k2 = computeKFactor(player2.win_streak, player2.loss_streak, difficultyBonus2);
-
-  const delta1 = finalizeDelta(k1 * (share1 - expected1), outcome.playerResults.get(player1.id));
-  const delta2 = finalizeDelta(k2 * (share2 - expected2), outcome.playerResults.get(player2.id));
-
-  const ratingFloor = 200;
-  const newRating1 = Math.max(ratingFloor, player1.rating + delta1);
-  const newRating2 = Math.max(ratingFloor, player2.rating + delta2);
-
-  const streaks1 = nextStreaks(player1.win_streak, player1.loss_streak, outcome.playerResults.get(player1.id));
-  const streaks2 = nextStreaks(player2.win_streak, player2.loss_streak, outcome.playerResults.get(player2.id));
-
-  await query(
-    `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3, k_factor = $4 WHERE id = $5`,
-    [newRating1, streaks1.winStreak, streaks1.lossStreak, Math.round(k1), player1.id]
-  );
-
-  await query(
-    `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3, k_factor = $4 WHERE id = $5`,
-    [newRating2, streaks2.winStreak, streaks2.lossStreak, Math.round(k2), player2.id]
-  );
-
-  console.log(
-    `📈 Ratings updated: Player ${player1.id} ${player1.rating}→${newRating1} (${delta1 >= 0 ? '+' : ''}${delta1}), ` +
-    `Player ${player2.id} ${player2.rating}→${newRating2} (${delta2 >= 0 ? '+' : ''}${delta2})`
-  );
 }
 
 function getExpectedScore(ratingA, ratingB) {
@@ -557,14 +740,22 @@ function getExpectedScore(ratingA, ratingB) {
 }
 
 function computeKFactor(winStreak, lossStreak, difficultyBonus = 0) {
-  const BASE = 40;
+  const BASE_WIN = 40;
+  const BASE_LOSE = 30;
   const MIN = 20;
   const MAX = 50;
-  const streakBonus = Math.min(Math.floor(winStreak / 4) * 10, 20);
-  // Loss penalty: -5 for every 2 consecutive losses (per spec)
-  const lossPenalty = Math.floor(lossStreak / 2) * 5;
-  const raw = BASE + streakBonus - lossPenalty + difficultyBonus;
-  return clamp(raw, MIN, MAX);
+
+  // k_win: increases with win streak, decreases with loss streak
+  const winStreakBonus = Math.min(Math.floor(winStreak / 4) * 10, 20);
+  const lossStreakPenalty = Math.floor(lossStreak / 2) * 5;
+  const k_win = clamp(BASE_WIN + winStreakBonus - lossStreakPenalty + difficultyBonus, MIN, MAX);
+
+  // k_lose: increases with loss streak, decreases with win streak
+  const lossStreakBonus = Math.min(Math.floor(lossStreak / 2) * 5, 20); // loss streak increases k_lose
+  const winStreakPenalty = Math.min(Math.floor(winStreak / 4) * 5, 10); // win streak decreases k_lose
+  const k_lose = clamp(BASE_LOSE + lossStreakBonus - winStreakPenalty + difficultyBonus, MIN, MAX);
+
+  return { k_win, k_lose };
 }
 
 function getDifficultyBonus(rating, difficulty, solved) {

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Battle Arena</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body
+    class="bg-gray-950 text-gray-100 antialiased overflow-hidden font-sans selection:bg-emerald-500/30"
+  >
+    <div class="flex h-screen w-full">
+      <!-- Sidebar -->
+      <div
+        class="hidden md:flex w-64 h-full bg-slate-900 border-r border-slate-800 flex-col p-6 shadow-xl relative z-10"
+      >
+        <!-- User Profile -->
+        <div class="flex flex-col items-center mb-10 mt-4">
+          <div class="relative group cursor-pointer">
+            <div
+              class="absolute -inset-0.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full blur opacity-50 group-hover:opacity-100 transition duration-300"
+            ></div>
+            <img
+              src="https://picsum.photos/200/200"
+              alt="Avatar"
+              class="relative w-24 h-24 rounded-full border-2 border-slate-800 object-cover"
+            />
+          </div>
+          <h2 class="mt-4 text-xl font-bold text-slate-100">CodeMaster_VN</h2>
+          <p class="text-sm text-slate-400">ID: #8829</p>
+          <div
+            class="mt-2 px-3 py-1 bg-slate-800 rounded-full border border-slate-700"
+          >
+            <span class="text-emerald-400 font-semibold text-sm"
+              >ELO: 1450</span
+            >
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <nav class="flex-1 space-y-4">
+          <button
+            class="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200 group"
+          >
+            <i
+              data-lucide="search"
+              class="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors"
+            ></i>
+            <span class="font-medium">Find match</span>
+          </button>
+
+          <nav class="flex-1 space-y-3">
+            <a
+              href="/createroom.html"
+              class="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200 group"
+            >
+              <i
+                data-lucide="plus-circle"
+                class="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors"
+              ></i>
+              <span class="font-medium">Create room</span>
+            </a>
+          </nav>
+
+          <button
+            class="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-emerald-900/50 to-emerald-800/50 text-emerald-100 border border-emerald-700/50 rounded-xl shadow-lg shadow-emerald-900/20"
+          >
+            <i data-lucide="users" class="w-5 h-5 text-emerald-400"></i>
+            <span class="font-bold">Join Room</span>
+          </button>
+        </nav>
+
+        <!-- Logout -->
+        <div class="mt-auto pt-6 border-t border-slate-800">
+          <button
+            class="w-full flex items-center justify-center gap-2 px-4 py-2 text-slate-400 hover:text-red-400 transition-colors"
+          >
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+            <span>Log out</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <main class="flex-1 flex flex-col min-w-0">
+        <!-- Top Navbar -->
+        <header
+          class="h-16 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm px-8 flex items-center justify-between sticky top-0 z-20"
+        >
+          <div class="flex items-center gap-4">
+            <button class="md:hidden text-slate-400 hover:text-white">
+              <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+            <h1 class="text-xl font-bold tracking-wider text-slate-100">
+              CODE BATTLE <span class="text-emerald-500">ARENA</span>
+            </h1>
+          </div>
+
+          <div class="flex items-center gap-4 text-slate-400">
+            <div
+              class="relative cursor-pointer hover:text-white transition-colors"
+            >
+              <div
+                class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"
+              ></div>
+              <i data-lucide="bell" class="w-5 h-5"></i>
+            </div>
+            <button class="hover:text-white transition-colors">
+              <i data-lucide="message-square" class="w-5 h-5"></i>
+            </button>
+            <button
+              class="hover:text-white transition-colors animate-spin-slow"
+            >
+              <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+            <div class="h-8 w-px bg-slate-700 mx-2"></div>
+            <img
+              src="https://picsum.photos/200/200"
+              alt="Profile"
+              class="w-8 h-8 rounded-full border border-slate-600"
+            />
+          </div>
+        </header>
+
+        <!-- Content Body -->
+        <div
+          class="flex-1 p-6 md:p-8 overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/10 via-slate-950 to-slate-950"
+        >
+          <div class="h-full flex flex-col w-full max-w-6xl mx-auto">
+            <div class="mb-4">
+              <h2 class="text-2xl font-bold text-white mb-1">
+                Available Rooms
+              </h2>
+              <p class="text-slate-400 text-sm">
+                Join a room to start coding battles with others.
+              </p>
+            </div>
+
+            <!-- Room List Container -->
+            <div
+              class="flex-1 min-h-0 bg-slate-900/30 border border-slate-800 rounded-2xl p-1 shadow-2xl backdrop-blur-sm flex flex-col"
+            >
+              <div class="h-full p-4 md:p-6 flex flex-col">
+                <!-- Filters -->
+                <div
+                  class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between"
+                >
+                  <div class="relative flex-1 w-full md:w-auto group">
+                    <div
+                      class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                    >
+                      <i
+                        data-lucide="search"
+                        class="w-5 h-5 text-slate-500 group-focus-within:text-emerald-500 transition-colors"
+                      ></i>
+                    </div>
+                    <input
+                      type="text"
+                      id="searchInput"
+                      placeholder="Search room name or ID"
+                      class="block w-full pl-10 pr-3 py-3 bg-slate-900/80 border border-slate-700 rounded-xl leading-5 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-slate-200 transition-all shadow-sm"
+                    />
+                  </div>
+
+                  <div class="flex gap-2 w-full md:w-auto">
+                    <div class="relative">
+                      <select
+                        id="difficultySelect"
+                        class="appearance-none bg-slate-900/80 text-slate-300 border border-slate-700 py-3 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 cursor-pointer"
+                      >
+                        <option value="All">All Difficulties</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                      </select>
+                      <div
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400"
+                      >
+                        <i data-lucide="filter" class="w-4 h-4"></i>
+                      </div>
+                    </div>
+
+                    <button
+                      class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 transition-all"
+                    >
+                      <i data-lucide="arrow-up-down" class="w-5 h-5"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Table -->
+                <div class="flex-1 overflow-auto pr-2 custom-scrollbar">
+                  <!-- Table Header -->
+                  <div
+                    class="grid grid-cols-12 gap-4 px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"
+                  >
+                    <div class="col-span-1 text-left">ID</div>
+                    <div class="col-span-4 text-left">Room Name</div>
+                    <div class="col-span-2 text-left">Difficulty</div>
+                    <div class="col-span-2 text-left">Type</div>
+                    <div class="col-span-1 text-center">Players</div>
+                    <div class="col-span-2 text-right pr-4">Action</div>
+                  </div>
+
+                  <!-- Table Body -->
+                  <div id="roomTableBody" class="space-y-3">
+                    <!-- Rows will be injected by JS -->
+                  </div>
+
+                  <div
+                    id="noResults"
+                    class="hidden flex flex-col items-center justify-center py-20 text-slate-500"
+                  >
+                    <i
+                      data-lucide="search"
+                      class="w-12 h-12 mb-4 opacity-20"
+                    ></i>
+                    <p>No rooms found matching your criteria.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+      // Data
+      const ROOMS = [
+        {
+          id: "1024",
+          name: "Algorithm Basics: Array & Strings",
+          difficulty: "Easy",
+          type: "Solo",
+          currentPlayers: 1,
+          maxPlayers: 10,
+          isLocked: false,
+        },
+        {
+          id: "1025",
+          name: "DP Challenge - Knapsack Variations",
+          difficulty: "Hard",
+          type: "Ranked",
+          currentPlayers: 4,
+          maxPlayers: 10,
+          isLocked: false,
+        },
+        {
+          id: "1026",
+          name: "Graph Theory: BFS/DFS Race",
+          difficulty: "Medium",
+          type: "Team",
+          currentPlayers: 7,
+          maxPlayers: 20,
+          isLocked: false,
+        },
+        {
+          id: "1027",
+          name: "Weekly Contest 305 Mock",
+          difficulty: "Hard",
+          type: "Ranked",
+          currentPlayers: 10,
+          maxPlayers: 10,
+          isLocked: true,
+        },
+        {
+          id: "1028",
+          name: "Binary Search Trees Practice",
+          difficulty: "Medium",
+          type: "Solo",
+          currentPlayers: 2,
+          maxPlayers: 5,
+          isLocked: false,
+        },
+        {
+          id: "1029",
+          name: "Introduction to Python",
+          difficulty: "Easy",
+          type: "Solo",
+          currentPlayers: 12,
+          maxPlayers: 50,
+          isLocked: false,
+        },
+        {
+          id: "1030",
+          name: "Advanced Dynamic Programming",
+          difficulty: "Hard",
+          type: "Ranked",
+          currentPlayers: 3,
+          maxPlayers: 10,
+          isLocked: true,
+        },
+        {
+          id: "1031",
+          name: "System Design Interview Prep",
+          difficulty: "Medium",
+          type: "Team",
+          currentPlayers: 5,
+          maxPlayers: 8,
+          isLocked: false,
+        },
+      ];
+
+      // Elements
+      const searchInput = document.getElementById("searchInput");
+      const difficultySelect = document.getElementById("difficultySelect");
+      const roomTableBody = document.getElementById("roomTableBody");
+      const noResults = document.getElementById("noResults");
+
+      // Helper to render badge
+      function getDifficultyBadge(difficulty) {
+        let colorClass = "text-gray-400";
+        if (difficulty === "Easy") colorClass = "text-green-400";
+        if (difficulty === "Medium") colorClass = "text-yellow-400";
+        if (difficulty === "Hard") colorClass = "text-red-500 font-semibold";
+
+        return `<span class="${colorClass} text-sm font-medium tracking-wide">${difficulty}</span>`;
+      }
+
+      // Render function
+      function renderRooms() {
+        const searchValue = searchInput.value.toLowerCase();
+        const difficultyValue = difficultySelect.value;
+
+        const filtered = ROOMS.filter((room) => {
+          const matchesSearch =
+            room.name.toLowerCase().includes(searchValue) ||
+            room.id.includes(searchValue);
+          const matchesDifficulty =
+            difficultyValue === "All" || room.difficulty === difficultyValue;
+          return matchesSearch && matchesDifficulty;
+        });
+
+        roomTableBody.innerHTML = "";
+
+        if (filtered.length === 0) {
+          noResults.classList.remove("hidden");
+        } else {
+          noResults.classList.add("hidden");
+          filtered.forEach((room) => {
+            const isFull = room.currentPlayers >= room.maxPlayers;
+            const playerClass = isFull ? "text-red-400" : "text-slate-300";
+            const btnClass = isFull
+              ? "bg-emerald-600/50 cursor-not-allowed opacity-50"
+              : "bg-emerald-600 hover:bg-emerald-500 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-900/50";
+
+            const row = document.createElement("div");
+            row.className =
+              "grid grid-cols-12 gap-4 items-center bg-slate-900/60 border border-slate-800 rounded-xl px-6 py-4 hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg transition-all duration-200 group animate-fadeIn";
+
+            row.innerHTML = `
+              <div class="col-span-1 text-emerald-400 font-mono text-sm group-hover:text-emerald-300">${
+                room.id
+              }</div>
+              <div class="col-span-4 flex items-center gap-2">
+                ${
+                  room.isLocked
+                    ? '<i data-lucide="lock" class="w-3 h-3 text-slate-500"></i>'
+                    : ""
+                }
+                <span class="text-slate-200 font-medium text-base truncate group-hover:text-white transition-colors">${
+                  room.name
+                }</span>
+              </div>
+              <div class="col-span-2">${getDifficultyBadge(
+                room.difficulty
+              )}</div>
+              <div class="col-span-2"><span class="text-slate-400 text-sm">${
+                room.type
+              }</span></div>
+              <div class="col-span-1 flex items-center justify-center gap-1 text-slate-400 text-sm">
+                <span class="${playerClass}">${room.currentPlayers}</span>
+                <span class="text-slate-600">/</span>
+                <span>${room.maxPlayers}</span>
+              </div>
+              <div class="col-span-2 flex justify-end gap-2">
+                <button ${
+                  isFull ? "disabled" : ""
+                } class="px-4 py-1.5 text-white text-sm font-medium rounded-lg transition-all flex items-center gap-1 ${btnClass}">
+                  Join
+                </button>
+                <button class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition-all border border-slate-600 hover:border-slate-500 flex items-center gap-1">
+                   <i data-lucide="eye" class="w-4 h-4"></i>
+                   <span class="hidden xl:inline">View</span>
+                </button>
+              </div>
+            `;
+            roomTableBody.appendChild(row);
+          });
+        }
+
+        // Re-initialize icons for new elements
+        lucide.createIcons();
+      }
+
+      // Event Listeners
+      searchInput.addEventListener("input", renderRooms);
+      difficultySelect.addEventListener("change", renderRooms);
+
+      // Initial Render
+      renderRooms();
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

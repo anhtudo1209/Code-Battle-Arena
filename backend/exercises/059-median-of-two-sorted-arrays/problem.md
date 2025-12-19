@@ -3,10 +3,12 @@
 Given two sorted arrays, arr1 and arr2, of size m and n, return the median of the two sorted arrays.
 
 ## Input
-
+The input consists of two lines:
+Line 1: An integer m, followed by m sorted integers.
+Line 2: An integer n, followed by n sorted integers.
 
 ## Output
-Return the median of the two sorted arrays
+The median of the two sorted arrays
 
 ## Sample Input
 2 1 3

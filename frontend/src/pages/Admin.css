@@ -110,6 +110,15 @@
   border-radius: 4px;
 }
 
+.admin-table input {
+  background: #ffffff;
+  border: 1px solid #ccc;
+  color: #333;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 .exercise-list {
   margin-bottom: 30px;
 }
