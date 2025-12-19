@@ -1,0 +1,16 @@
+{
+  "timeLimit": 3,
+  "memoryLimit": "256m",
+  "difficulty": "medium",
+  "tags": [
+    "recursion",
+    "binary recursion",
+    "sorting algorithms",
+    "selection sort"
+  ],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 22,
+  "editable_end": 37
+}

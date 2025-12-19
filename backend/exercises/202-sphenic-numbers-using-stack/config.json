@@ -1,0 +1,19 @@
+{
+  "timeLimit": 2,
+  "memoryLimit": "256m",
+  "difficulty": "medium",
+  "tags": [
+    "Number Theory",
+    "Prime Numbers",
+    "Sphenic Number",
+    "Linked List",
+    "Stack ADT",
+    "Recursion",
+    "Iteration"
+  ],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 49,
+  "editable_end": 68
+}
