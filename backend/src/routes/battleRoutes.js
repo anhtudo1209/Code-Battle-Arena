@@ -120,11 +120,23 @@ router.get("/status", async (req, res) => {
   const userId = req.userId;
 
   try {
+    // Clean up stale pending battles (older than 30 seconds) - they should have timed out
+    await query(
+      `UPDATE battles 
+       SET status = 'cancelled' 
+       WHERE status = 'pending' 
+       AND created_at < CURRENT_TIMESTAMP - INTERVAL '30 seconds'`
+    );
+
     // Check for active/pending battle first (takes priority over queued status)
+    // Exclude pending battles older than 30 seconds (they should have been cancelled)
     const battle = await query(
-      `SELECT * FROM battles 
+      `SELECT *, 
+              created_at AT TIME ZONE 'UTC' AS created_at_utc
+       FROM battles 
        WHERE (player1_id = $1 OR player2_id = $1) 
        AND status IN ('pending', 'waiting', 'active')
+       AND (status != 'pending' OR created_at > CURRENT_TIMESTAMP - INTERVAL '30 seconds')
        ORDER BY created_at DESC
        LIMIT 1`,
       [userId]
@@ -141,12 +153,16 @@ router.get("/status", async (req, res) => {
         [opponentId]
       );
 
+      // Use created_at_utc if available, otherwise fall back to created_at
+      const createdAt = battleData.created_at_utc || battleData.created_at;
+
       return res.json({
         status: 'matched',
         battleId: battleData.id,
         opponent: opponentResult.rows[0],
         exerciseId: battleData.exercise_id,
         startedAt: battleData.started_at,
+        createdAt: createdAt ? new Date(createdAt).toISOString() : null, // Convert to ISO string (UTC)
         player1Accepted: battleData.player1_accepted,
         player2Accepted: battleData.player2_accepted
       });
@@ -185,10 +201,24 @@ router.get("/active", async (req, res) => {
   const userId = req.userId;
 
   try {
+    // Clean up stale pending battles (older than 30 seconds) - they should have timed out
+    await query(
+      `UPDATE battles 
+       SET status = 'cancelled' 
+       WHERE status = 'pending' 
+       AND created_at < CURRENT_TIMESTAMP - INTERVAL '30 seconds'`
+    );
+
     const battleResult = await query(
-      `SELECT * FROM battles 
+      `SELECT *, 
+              created_at AT TIME ZONE 'UTC' AS created_at_utc
+       FROM battles 
        WHERE (player1_id = $1 OR player2_id = $1) 
-       AND status IN ('pending', 'waiting', 'active')
+       AND (
+         status IN ('pending', 'waiting', 'active')
+         OR (status = 'completed' AND ended_at > CURRENT_TIMESTAMP - INTERVAL '60 seconds')
+       )
+       AND (status != 'pending' OR created_at > CURRENT_TIMESTAMP - INTERVAL '30 seconds')
        ORDER BY created_at DESC
        LIMIT 1`,
       [userId]
@@ -249,15 +279,19 @@ router.get("/active", async (req, res) => {
       if (sub2.rows.length > 0) submissions.push({ ...sub2.rows[0], player: 'player2' });
     }
 
+    // Use created_at_utc if available, otherwise fall back to created_at
+    const createdAt = battle.created_at_utc || battle.created_at;
+
     res.json({
       battle: {
         id: battle.id,
         status: battle.status,
         exerciseId: battle.exercise_id,
         startedAt: battle.started_at,
+        createdAt: createdAt ? new Date(createdAt).toISOString() : null, // Convert to ISO string (UTC)
         isPlayer1,
-        winnerId: battle.winner_id
-        ,player1Accepted: battle.player1_accepted,
+        winnerId: battle.winner_id,
+        player1Accepted: battle.player1_accepted,
         player2Accepted: battle.player2_accepted
       },
       opponent: opponentResult.rows[0],

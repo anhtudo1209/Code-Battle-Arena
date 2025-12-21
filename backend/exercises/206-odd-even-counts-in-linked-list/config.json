@@ -1,0 +1,11 @@
+{
+  "timeLimit": 2,
+  "memoryLimit": "256m",
+  "difficulty": "medium",
+  "tags": ["Linked List", "Data Structures", "Pointers", "Traversal"],
+
+  "starterCode": "starter.cpp",
+
+  "editable_start": 24,
+  "editable_end": 28
+}
