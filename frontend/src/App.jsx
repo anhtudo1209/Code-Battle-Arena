@@ -10,6 +10,9 @@ import MatchDemo from "./pages/MatchDemo";
 import ThemeSwitch from "./components/ThemeToggle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import CreateRoom from "./pages/CreateRoom";
+import Support from "./pages/Support";
+import Challenge from "./pages/Challenge";
 
 export default function App() {
   return (
@@ -45,10 +48,34 @@ export default function App() {
           }
         />
         <Route
+          path="/create-room"
+          element={
+            <ProtectedRoute>
+              <CreateRoom />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/match-test"
           element={
             <ProtectedRoute>
               <MatchTest />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/support"
+          element={
+            <ProtectedRoute>
+              <Support />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/challenge"
+          element={
+            <ProtectedRoute>
+              <Challenge />
             </ProtectedRoute>
           }
         />
@@ -61,6 +88,6 @@ export default function App() {
           }
         />
       </Routes>
-    </BrowserRouter>
+    </BrowserRouter >
   );
 }

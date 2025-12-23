@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Editor } from "@monaco-editor/react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
@@ -19,7 +20,14 @@ export default function Practice() {
   const decorationsRef = useRef([]);
   const lastValidCodeRef = useRef("");
 
+  const location = useLocation();
   const [showModal, setShowModal] = useState(true);
+
+  useEffect(() => {
+    if (location.state?.difficulty) {
+      handleDifficultySelect(location.state.difficulty);
+    }
+  }, [location.state]);
 
   const fetchExercises = async (difficulty) => {
     setLoadingExercises(true);

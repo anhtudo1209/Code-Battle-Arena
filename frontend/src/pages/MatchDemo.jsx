@@ -19,6 +19,8 @@ export default function MatchDemo() {
   const [resultPopupData, setResultPopupData] = useState(null);
   const [queueStartTime, setQueueStartTime] = useState(null);
   const [queueTimer, setQueueTimer] = useState(0);
+  const [battleTimer, setBattleTimer] = useState(0);
+  const battleStartTimeRef = useRef(null);
   const shownResultBattleId = useRef(null);
 
   const loadUser = async () => {
@@ -47,21 +49,21 @@ export default function MatchDemo() {
             const now = Date.now();
             const elapsed = Math.floor((now - createdTime) / 1000);
             const remaining = Math.max(0, 20 - elapsed);
-            
+
             // Safety: if battle is suspiciously old (more than 25 seconds), it's likely stale
             if (elapsed > 25) {
               console.warn('Battle is too old, likely stale. Not setting countdown.');
               setAcceptCountdown(null);
               return;
             }
-            
+
             setAcceptCountdown(remaining);
-            } else {
-              setAcceptCountdown(20); // Fallback to 20 seconds
-            }
           } else {
             setAcceptCountdown(20); // Fallback to 20 seconds
           }
+        } else {
+          setAcceptCountdown(20); // Fallback to 20 seconds
+        }
       } else {
         setAcceptCountdown(null);
       }
@@ -70,7 +72,7 @@ export default function MatchDemo() {
 
   useEffect(() => {
     loadUser();
-    loadStatus().catch(() => {});
+    loadStatus().catch(() => { });
   }, []);
 
   // Queue timer effect
@@ -87,10 +89,37 @@ export default function MatchDemo() {
     return () => { if (intervalId) clearInterval(intervalId); };
   }, [queueStartTime, queue?.status]);
 
+  // Battle timer effect - countdown from 2 minutes
+  useEffect(() => {
+    let intervalId = null;
+    if (battle?.battle?.status === 'active') {
+      const MAX_BATTLE_TIME = 120; // 2 minutes in seconds
+
+      // Set start time when battle first becomes active
+      if (!battleStartTimeRef.current) {
+        battleStartTimeRef.current = Date.now();
+      }
+
+      const updateTimer = () => {
+        const elapsed = Math.floor((Date.now() - battleStartTimeRef.current) / 1000);
+        const remaining = Math.max(0, MAX_BATTLE_TIME - elapsed);
+        setBattleTimer(remaining);
+      };
+
+      updateTimer(); // Initial update
+      intervalId = setInterval(updateTimer, 1000);
+    } else {
+      // Reset when battle is not active
+      battleStartTimeRef.current = null;
+      setBattleTimer(0);
+    }
+    return () => { if (intervalId) clearInterval(intervalId); };
+  }, [battle?.battle?.status]);
+
   // Poll while queued to auto-detect matches
   useEffect(() => {
     if (queue?.status !== 'queued') return;
-    
+
     const intervalId = setInterval(async () => {
       try {
         const s = await get("/battle/status");
@@ -111,13 +140,13 @@ export default function MatchDemo() {
                 const now = Date.now();
                 const elapsed = Math.floor((now - createdTime) / 1000);
                 const remaining = Math.max(0, 20 - elapsed);
-                
+
                 // Safety: if battle is suspiciously old (more than 25 seconds), it's likely stale
                 if (elapsed > 25) {
                   // Don't set countdown, let the effect handle it or refresh
                   return;
                 }
-                
+
                 setAcceptCountdown(remaining);
               } else {
                 setAcceptCountdown(20); // Fallback to 20 seconds
@@ -131,7 +160,7 @@ export default function MatchDemo() {
         // ignore
       }
     }, 2000); // Poll every 2 seconds while queued
-    
+
     return () => clearInterval(intervalId);
   }, [queue?.status, code]);
 
@@ -140,7 +169,7 @@ export default function MatchDemo() {
     if (battle?.battle?.status === 'pending') {
       if (battle.battle?.createdAt) {
         const createdTime = new Date(battle.battle.createdAt).getTime();
-        
+
         // Validate timestamp
         if (isNaN(createdTime) || createdTime <= 0) {
           setAcceptCountdown(20); // Fallback
@@ -155,16 +184,16 @@ export default function MatchDemo() {
           }, 1000);
           return () => clearInterval(fallbackInterval);
         }
-        
+
         const calculateRemaining = () => {
           const now = Date.now();
           const elapsed = Math.floor((now - createdTime) / 1000);
           return Math.max(0, 20 - elapsed);
         };
-        
+
         const initialRemaining = calculateRemaining();
         setAcceptCountdown(initialRemaining);
-        
+
         const intervalId = setInterval(() => {
           const remaining = calculateRemaining();
           setAcceptCountdown(remaining);
@@ -173,7 +202,7 @@ export default function MatchDemo() {
             setAcceptCountdown(null);
           }
         }, 1000);
-        
+
         return () => clearInterval(intervalId);
       } else {
         setAcceptCountdown(20); // Fallback
@@ -201,6 +230,12 @@ export default function MatchDemo() {
         try {
           const b = await get('/battle/active');
           setBattle(b);
+
+          // Set preBattleRating when battle transitions to active
+          if (b.battle?.status === 'active' && preBattleRating === null && user?.rating != null) {
+            setPreBattleRating(user.rating);
+          }
+
           if (b.battle?.status !== 'pending') setAcceptCountdown(null);
         } catch (e) {
           // ignore
@@ -208,7 +243,7 @@ export default function MatchDemo() {
       }, 1500);
     }
     return () => { if (intervalId) clearInterval(intervalId); };
-  }, [battle?.battle?.status]);
+  }, [battle?.battle?.status, preBattleRating, user?.rating]);
 
   // Set preBattleRating when battle becomes active (if not already set)
   // Reset shownResultBattleId when a new battle starts
@@ -228,28 +263,28 @@ export default function MatchDemo() {
   // Helper function to show result popup
   const showBattleResult = async (battleData) => {
     if (!battleData || !user) return;
-    
+
     // Prevent showing popup multiple times for the same battle
     if (shownResultBattleId.current === battleData.id) {
       return;
     }
-    
+
     const me = await get("/auth/me");
     const currentRating = me.user?.rating;
     setUser(me.user);
-    
+
     // Determine outcome
     const winnerId = battleData.winnerId;
     let outcome = "draw";
     if (winnerId) {
       outcome = winnerId === me.user.id ? "win" : "loss";
     }
-    
+
     // Calculate delta if we have preBattleRating, otherwise use 0
-    const delta = (preBattleRating != null && currentRating != null) 
-      ? currentRating - preBattleRating 
+    const delta = (preBattleRating != null && currentRating != null)
+      ? currentRating - preBattleRating
       : 0;
-    
+
     const resultData = { outcome, delta };
     setLastResult(resultData);
     // Show result popup (always show, even for draws)
@@ -267,7 +302,7 @@ export default function MatchDemo() {
           const b = await get('/battle/active');
           const prevStatus = battle?.battle?.status;
           setBattle(b);
-          
+
           // Detect when battle completes
           if (prevStatus === 'active' && b.battle?.status === 'completed') {
             await showBattleResult(b.battle);
@@ -364,31 +399,68 @@ export default function MatchDemo() {
         exerciseId: battle.battle.exerciseId,
         code,
       });
-      setInfo("Submission received. Waiting for results...");
+      const submissionId = res.submissionId;
+      setInfo("Submission received. Running tests...");
 
-      // Poll battle until it completes
+      // Poll for submission result (not battle completion)
       let attempts = 0;
-      const maxAttempts = 40;
-      let finalBattle = null;
+      const maxAttempts = 30; // 30 * 2s = 60 seconds max
+      let submissionResult = null;
+
       while (attempts < maxAttempts) {
         await new Promise((r) => setTimeout(r, 2000));
         attempts += 1;
+
+        // Fetch updated battle to get submission info
         const b = await get("/battle/active");
         setBattle(b);
-        finalBattle = b;
-        if (b.battle?.status === "completed") {
-          setInfo("Battle completed.");
+
+        // Find our submission in the battle's submissions array
+        const mySubmission = b.submissions?.find(sub => sub.id === submissionId);
+
+        if (mySubmission && mySubmission.status !== 'queued' && mySubmission.status !== 'running') {
+          submissionResult = mySubmission;
           break;
         }
       }
 
-      if (!finalBattle?.battle || !user) {
-        await loadUser();
+      // Handle submission result
+      if (!submissionResult) {
+        setError("Submission timed out. Please try again.");
         return;
       }
 
-      // Show result popup using helper function
-      await showBattleResult(finalBattle.battle);
+      if (submissionResult.status === 'passed') {
+        setInfo("✅ Tests passed! Waiting for opponent...");
+        setError("");
+
+        // Now poll for battle completion
+        let battleAttempts = 0;
+        const maxBattleAttempts = 40;
+        while (battleAttempts < maxBattleAttempts) {
+          await new Promise((r) => setTimeout(r, 2000));
+          battleAttempts += 1;
+          const b = await get("/battle/active");
+          setBattle(b);
+          if (b.battle?.status === "completed") {
+            setInfo("Battle completed.");
+            await showBattleResult(b.battle);
+            break;
+          }
+        }
+      } else if (submissionResult.status === 'compilation_error') {
+        setError("❌ Compilation Error: " + (submissionResult.error || "Your code failed to compile."));
+        setInfo("");
+      } else if (submissionResult.status === 'runtime_error') {
+        setError("❌ Runtime Error: " + (submissionResult.error || "Your code crashed during execution."));
+        setInfo("");
+      } else if (submissionResult.status === 'failed') {
+        setError("❌ Tests Failed: Some test cases did not pass. " + (submissionResult.error || ""));
+        setInfo("");
+      } else {
+        setError("❌ Submission failed with status: " + submissionResult.status);
+        setInfo("");
+      }
     } catch (e) {
       console.error("submit", e);
       setError(e.message || String(e));
@@ -407,6 +479,32 @@ export default function MatchDemo() {
       if (b.battle?.status !== 'pending') setAcceptCountdown(null);
     } catch (e) {
       console.error('accept', e);
+      setError(e.message || String(e));
+    }
+  };
+
+  const handleResign = async () => {
+    if (!battle?.battle?.id) return;
+
+    // Confirm resignation
+    if (!window.confirm('Are you sure you want to resign? This will end the battle and you will lose.')) {
+      return;
+    }
+
+    try {
+      await post(`/battle/${battle.battle.id}/resign`, {});
+      setInfo("You have resigned from the battle.");
+
+      // Refresh battle to get updated status
+      const b = await get('/battle/active');
+      setBattle(b);
+
+      // Show result popup
+      if (b.battle?.status === 'completed') {
+        await showBattleResult(b.battle);
+      }
+    } catch (e) {
+      console.error('resign', e);
       setError(e.message || String(e));
     }
   };
@@ -434,6 +532,11 @@ export default function MatchDemo() {
         {b.status === 'active' && exercise && (
           <p>
             <strong>Exercise:</strong> {exercise.difficulty}
+          </p>
+        )}
+        {b.status === 'active' && (
+          <p>
+            <strong>Time Remaining:</strong> {Math.floor(battleTimer / 60)}:{(battleTimer % 60).toString().padStart(2, '0')}
           </p>
         )}
       </>
@@ -470,8 +573,8 @@ export default function MatchDemo() {
                       {lastResult.outcome === "win"
                         ? "You won"
                         : lastResult.outcome === "loss"
-                        ? "You lost"
-                        : "Draw"}
+                          ? "You lost"
+                          : "Draw"}
                     </strong>
                     {typeof lastResult.delta === "number" && (
                       <span>
@@ -522,8 +625,8 @@ export default function MatchDemo() {
         {showResultPopup && resultPopupData && (
           <div className="result-popup-overlay" onClick={() => setShowResultPopup(false)}>
             <div className={`result-popup ${resultPopupData.outcome}`} onClick={(e) => e.stopPropagation()}>
-              <button 
-                className="result-popup-close" 
+              <button
+                className="result-popup-close"
                 onClick={() => setShowResultPopup(false)}
                 aria-label="Close"
               >
@@ -546,8 +649,8 @@ export default function MatchDemo() {
                     {resultPopupData.delta} Elo
                   </p>
                 )}
-                <button 
-                  className="btn primary result-popup-button" 
+                <button
+                  className="btn primary result-popup-button"
                   onClick={() => setShowResultPopup(false)}
                 >
                   Continue
@@ -559,7 +662,7 @@ export default function MatchDemo() {
 
         <section className="match-demo-right">
           <h3>Code Editor</h3>
-          {battle?.exercise ? (
+          {battle?.exercise && battle?.battle?.status === 'active' ? (
             <>
               <div className="match-demo-problem">
                 <h4>{battle.exercise.id}</h4>
@@ -585,6 +688,13 @@ export default function MatchDemo() {
                   disabled={submitting}
                 >
                   {submitting ? "Submitting..." : "Submit Solution"}
+                </button>
+                <button
+                  className="btn secondary"
+                  onClick={handleResign}
+                  style={{ marginLeft: '10px' }}
+                >
+                  Resign
                 </button>
               </div>
             </>

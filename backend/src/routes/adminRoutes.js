@@ -101,7 +101,7 @@ router.delete("/users/:id", async (req, res) => {
 
   try {
     const result = await query("DELETE FROM users WHERE id = $1 RETURNING id", [userId]);
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -199,7 +199,7 @@ router.get("/exercises/:id", async (req, res) => {
     const files = await fs.promises.readdir(exerciseDir);
     const testCases = [];
     const inputFiles = files.filter(f => f.endsWith('.input.txt')).sort();
-    
+
     for (const inputFile of inputFiles) {
       const testCaseNum = inputFile.replace('.input.txt', '');
       const outputFile = `${testCaseNum}.output.txt`;
@@ -235,7 +235,7 @@ router.put("/exercises/:id", async (req, res) => {
 
   try {
     const exerciseDir = path.join(__dirname, '..', '..', 'exercises', exerciseId);
-    
+
     // Ensure directory exists
     await fs.promises.mkdir(exerciseDir, { recursive: true });
 
@@ -262,7 +262,7 @@ router.put("/exercises/:id", async (req, res) => {
       for (const testCase of testCases) {
         const inputPath = path.join(exerciseDir, `${testCase.id}.input.txt`);
         const outputPath = path.join(exerciseDir, `${testCase.id}.output.txt`);
-        
+
         if (testCase.input !== undefined) {
           await fs.promises.writeFile(inputPath, testCase.input, 'utf8');
         }
@@ -289,7 +289,7 @@ router.post("/exercises", async (req, res) => {
 
   try {
     const exerciseDir = path.join(__dirname, '..', '..', 'exercises', id);
-    
+
     // Check if exercise already exists
     if (fs.existsSync(exerciseDir)) {
       return res.status(400).json({ error: "Exercise already exists" });
@@ -337,7 +337,7 @@ router.delete("/exercises/:id", async (req, res) => {
 
   try {
     const exerciseDir = path.join(__dirname, '..', '..', 'exercises', exerciseId);
-    
+
     if (!fs.existsSync(exerciseDir)) {
       return res.status(404).json({ error: "Exercise not found" });
     }
@@ -347,6 +347,69 @@ router.delete("/exercises/:id", async (req, res) => {
   } catch (error) {
     console.error(`Error deleting exercise ${exerciseId}:`, error);
     res.status(500).json({ error: "Failed to delete exercise" });
+  }
+});
+
+// ========== TICKET MANAGEMENT ==========
+
+// Get all tickets
+router.get("/tickets", async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT t.*, u.username, u.email 
+       FROM tickets t
+       JOIN users u ON t.user_id = u.id
+       ORDER BY t.created_at DESC`
+    );
+    res.json({ tickets: result.rows });
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    res.status(500).json({ error: "Failed to fetch tickets" });
+  }
+});
+
+// Reply to ticket
+router.put("/tickets/:id", async (req, res) => {
+  const ticketId = req.params.id;
+  const { admin_response, status } = req.body;
+
+  try {
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (admin_response !== undefined) {
+      updates.push(`admin_response = $${paramCount++}`);
+      values.push(admin_response);
+    }
+    if (status !== undefined) {
+      updates.push(`status = $${paramCount++}`);
+      values.push(status);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(ticketId);
+
+    const result = await query(
+      `UPDATE tickets 
+       SET ${updates.join(", ")} 
+       WHERE id = $${paramCount} 
+       RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    res.json({ ticket: result.rows[0] });
+  } catch (error) {
+    console.error("Error updating ticket:", error);
+    res.status(500).json({ error: "Failed to update ticket" });
   }
 });
 

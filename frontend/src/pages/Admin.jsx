@@ -30,11 +30,17 @@ export default function Admin() {
     testCases: []
   });
 
+  // Ticket management
+  const [tickets, setTickets] = useState([]);
+  const [replyForm, setReplyForm] = useState({ id: null, response: "" });
+
   useEffect(() => {
     if (activeTab === "users") {
       loadUsers();
     } else if (activeTab === "exercises") {
       loadExercises();
+    } else if (activeTab === "tickets") {
+      loadTickets();
     }
   }, [activeTab]);
 
@@ -177,6 +183,34 @@ export default function Admin() {
     }
   };
 
+  const loadTickets = async () => {
+    try {
+      setLoading(true);
+      const data = await get("/admin/tickets");
+      setTickets(data.tickets || []);
+    } catch (err) {
+      setError(err.message || "Failed to load tickets");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReplyTicket = async (ticketId) => {
+    try {
+      setLoading(true);
+      await put(`/admin/tickets/${ticketId}`, {
+        admin_response: replyForm.response,
+        status: 'resolved'
+      });
+      setReplyForm({ id: null, response: "" });
+      await loadTickets();
+    } catch (err) {
+      setError(err.message || "Failed to reply to ticket");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addTestCase = () => {
     setExerciseForm({
       ...exerciseForm,
@@ -200,7 +234,7 @@ export default function Admin() {
       <Header />
       <div className="admin-container">
         <h1>Admin Panel</h1>
-        
+
         {error && <div className="admin-error">{error}</div>}
 
         <div className="admin-tabs">
@@ -215,6 +249,12 @@ export default function Admin() {
             onClick={() => setActiveTab("exercises")}
           >
             Exercises
+          </button>
+          <button
+            className={activeTab === "tickets" ? "active" : ""}
+            onClick={() => setActiveTab("tickets")}
+          >
+            Tickets
           </button>
         </div>
 
@@ -345,9 +385,9 @@ export default function Admin() {
                               <>
                                 <button onClick={() => {
                                   setEditingUser(user.id);
-                                  setUserForm({ 
-                                    role: user.role || "user", 
-                                    email: user.email, 
+                                  setUserForm({
+                                    role: user.role || "user",
+                                    email: user.email,
                                     username: user.username,
                                     rating: user.rating ?? 400,
                                     win_streak: user.win_streak ?? 0,
@@ -574,6 +614,70 @@ export default function Admin() {
             )}
           </div>
         )}
+
+        {activeTab === "tickets" && (
+          <div className="admin-section">
+            <h2>Support Tickets</h2>
+            {loading ? <p>Loading...</p> : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickets.map(ticket => (
+                    <React.Fragment key={ticket.id}>
+                      <tr>
+                        <td>{ticket.id}</td>
+                        <td>{ticket.username} <br /><small>{ticket.email}</small></td>
+                        <td>{ticket.subject}</td>
+                        <td>
+                          <span className={`status-badge ${ticket.status}`}>
+                            {ticket.status}
+                          </span>
+                        </td>
+                        <td>{new Date(ticket.created_at).toLocaleDateString()}</td>
+                        <td>
+                          <button onClick={() => setReplyForm(prev => prev.id === ticket.id ? { id: null, response: "" } : { id: ticket.id, response: ticket.admin_response || "" })}>
+                            {ticket.status === 'resolved' ? 'View/Edit' : 'Reply'}
+                          </button>
+                        </td>
+                      </tr>
+                      {replyForm.id === ticket.id && (
+                        <tr>
+                          <td colSpan="6" className="ticket-detail-row">
+                            <div className="ticket-detail-content">
+                              <p><strong>Content:</strong> {ticket.content}</p>
+                              <div className="reply-box">
+                                <label>Admin Response:</label>
+                                <textarea
+                                  rows="4"
+                                  value={replyForm.response}
+                                  onChange={e => setReplyForm({ ...replyForm, response: e.target.value })}
+                                />
+                                <div className="reply-actions">
+                                  <button onClick={() => handleReplyTicket(ticket.id)}>Send Reply & Resolve</button>
+                                  <button onClick={() => setReplyForm({ id: null, response: "" })}>Cancel</button>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   );

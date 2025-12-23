@@ -103,9 +103,9 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
       <a href="/Confession.html" className="menu-item">
         Confession
       </a>
-      <a href="/Support.html" className="menu-item">
+      <button className="menu-item" onClick={() => { closeMenu(); navigate("/support"); }}>
         Support
-      </a>
+      </button>
       <a href="/Settings.html" className="menu-item">
         Settings
       </a>

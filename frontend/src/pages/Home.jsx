@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaPlay,
@@ -9,10 +9,18 @@ import {
 } from "react-icons/fa";
 import Stepper, { Step } from "../components/Stepper";
 import Header from "../components/Header";
+import { get } from "../services/httpClient";
 import "./Home.css";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [leaderboard, setLeaderboard] = useState([]);
+
+  useEffect(() => {
+    get("/auth/leaderboard")
+      .then(data => setLeaderboard(data.leaderboard || []))
+      .catch(err => console.error("Failed to load leaderboard", err));
+  }, []);
 
   const handleGetStarted = () => {
     navigate('/findmatch');
@@ -63,23 +71,31 @@ export default function Home() {
           <div className="glass-card leaderboard">
             <h2>LEADERBOARD</h2>
             <ul>
-              <li>NO.1 Username1</li>
-              <li>NO.2 Username2</li>
-              <li>NO.3 Username3</li>
-              <li>NO.4 Username4</li>
+              {leaderboard.length > 0 ? (
+                leaderboard.map((player, index) => (
+                  <li key={index} className="flex justify-between items-center py-2 border-b border-gray-700/30 last:border-0">
+                    <span className="font-bold flex items-center gap-2">
+                      <span className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${index === 0 ? 'bg-yellow-500/20 text-yellow-400' : index === 1 ? 'bg-slate-300/20 text-slate-300' : index === 2 ? 'bg-amber-700/20 text-amber-600' : 'bg-slate-800 text-slate-500'}`}>
+                        {index + 1}
+                      </span>
+                      {player.username}
+                    </span>
+                    <span className="text-emerald-400 text-sm font-mono">{player.rating}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-slate-500 text-sm text-center py-2">Loading...</li>
+              )}
             </ul>
           </div>
 
           <div className="glass-card daily">
             <h2>DAILY CHALLENGE</h2>
-            <p>Earn 10 Exp</p>
-            <div className="progress-bar">
-              <div className="progress"></div>
-            </div>
+            <p className="mb-4 text-slate-400 text-sm">Solve a random problem!</p>
 
-            <a href="/practice" className="btn play-btn">
+            <button onClick={() => navigate('/challenge')} className="btn play-btn w-full">
               PLAY
-            </a>
+            </button>
           </div>
         </aside>
 

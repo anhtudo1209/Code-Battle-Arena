@@ -26,8 +26,8 @@ router.post("/join-queue", async (req, res) => {
     );
 
     if (existingQueue.rows.length > 0) {
-      return res.status(400).json({ 
-        error: "You are already in the matchmaking queue" 
+      return res.status(400).json({
+        error: "You are already in the matchmaking queue"
       });
     }
 
@@ -40,8 +40,8 @@ router.post("/join-queue", async (req, res) => {
     );
 
     if (activeBattle.rows.length > 0) {
-      return res.status(400).json({ 
-        error: "You already have an active battle" 
+      return res.status(400).json({
+        error: "You already have an active battle"
       });
     }
 
@@ -349,6 +349,117 @@ router.post('/:id/accept', async (req, res) => {
   }
 });
 
+// Resign from battle
+router.post('/:id/resign', async (req, res) => {
+  const userId = req.userId;
+  const battleId = req.params.id;
+
+  try {
+    const br = await query('SELECT * FROM battles WHERE id = $1', [battleId]);
+    if (br.rowCount === 0) return res.status(404).json({ error: 'Battle not found' });
+    const battle = br.rows[0];
+
+    if (battle.status !== 'active') {
+      return res.status(400).json({ error: 'Battle is not active' });
+    }
+
+    if (userId !== battle.player1_id && userId !== battle.player2_id) {
+      return res.status(403).json({ error: 'Not a participant of this battle' });
+    }
+
+    // Determine winner (opponent) and loser (resigning player)
+    const winnerId = userId === battle.player1_id ? battle.player2_id : battle.player1_id;
+    const loserId = userId;
+
+    // Mark battle as completed with opponent as winner
+    await query(
+      `UPDATE battles SET status = $1, winner_id = $2, ended_at = CURRENT_TIMESTAMP WHERE id = $3`,
+      ['completed', winnerId, battleId]
+    );
+
+    // Update ratings: winner gets points, resigner loses points
+    // Use a simplified rating calculation for resignation
+    try {
+      await query('BEGIN');
+
+      const playersResult = await query(
+        `SELECT id, rating, win_streak, loss_streak, k_win, k_lose FROM users WHERE id = ANY($1) ORDER BY id FOR UPDATE`,
+        [[battle.player1_id, battle.player2_id]]
+      );
+
+      if (playersResult.rowCount >= 2) {
+        const playerMap = new Map(playersResult.rows.map((row) => [row.id, row]));
+        const winner = playerMap.get(winnerId);
+        const loser = playerMap.get(loserId);
+
+        if (winner && loser) {
+          // Calculate expected scores
+          const expectedWinner = 1 / (1 + Math.pow(10, (loser.rating - winner.rating) / 400));
+          const expectedLoser = 1 - expectedWinner;
+
+          // Use k_win for winner, k_lose for loser
+          const kWinner = winner.k_win || 40;
+          const kLoser = loser.k_lose || 30;
+
+          // Winner gets 1.0, loser gets 0.0 for resignation
+          let deltaWinner = Math.round(kWinner * (1.0 - expectedWinner));
+          let deltaLoser = Math.round(kLoser * (0.0 - expectedLoser));
+
+          // Ensure minimum changes
+          if (deltaWinner < 1) deltaWinner = 1;
+          if (deltaLoser > -1) deltaLoser = -1;
+
+          const ratingFloor = 200;
+          const newRatingWinner = Math.max(ratingFloor, winner.rating + deltaWinner);
+          const newRatingLoser = Math.max(ratingFloor, loser.rating + deltaLoser);
+
+          // Update streaks
+          const winnerStreaks = { winStreak: winner.win_streak + 1, lossStreak: 0 };
+          const loserStreaks = { winStreak: 0, lossStreak: loser.loss_streak + 1 };
+
+          // Update winner
+          await query(
+            `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3 WHERE id = $4`,
+            [newRatingWinner, winnerStreaks.winStreak, winnerStreaks.lossStreak, winnerId]
+          );
+
+          // Update loser
+          await query(
+            `UPDATE users SET rating = $1, win_streak = $2, loss_streak = $3 WHERE id = $4`,
+            [newRatingLoser, loserStreaks.winStreak, loserStreaks.lossStreak, loserId]
+          );
+
+          await query('COMMIT');
+
+          console.log(
+            `Battle ${battleId}: Player ${userId} resigned. ` +
+            `Winner ${winnerId}: ${winner.rating}→${newRatingWinner} (+${deltaWinner}), ` +
+            `Loser ${loserId}: ${loser.rating}→${newRatingLoser} (${deltaLoser})`
+          );
+        } else {
+          await query('ROLLBACK');
+        }
+      } else {
+        await query('ROLLBACK');
+      }
+    } catch (err) {
+      console.error('Error updating ratings on resign:', err);
+      try { await query('ROLLBACK'); } catch (e) { }
+    }
+
+    // Mark players' queue entries as completed
+    await query(
+      `UPDATE match_queue SET status = 'completed' WHERE user_id = ANY($1)`,
+      [[battle.player1_id, battle.player2_id]]
+    );
+
+    res.json({ success: true, message: 'You have resigned from the battle' });
+  } catch (err) {
+    console.error('Error resigning from battle:', err);
+    res.status(500).json({ error: 'Failed to resign from battle' });
+  }
+});
+
 // Submit code during battle
 router.post("/submit", async (req, res) => {
   const { battleId, code, exerciseId } = req.body;
@@ -380,7 +491,7 @@ router.post("/submit", async (req, res) => {
     // Read-only code protection (similar to practice)
     const exercisePath = path.join(__dirname, '..', '..', 'exercises', exerciseId);
     const configPath = path.join(exercisePath, "config.json");
-    
+
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 

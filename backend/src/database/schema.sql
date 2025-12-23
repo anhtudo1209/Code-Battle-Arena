@@ -92,6 +92,18 @@ CREATE TABLE IF NOT EXISTS match_queue (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Tickets table (for user support)
+CREATE TABLE IF NOT EXISTS tickets (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    admin_response TEXT,
+    status VARCHAR(50) DEFAULT 'open',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -103,3 +115,5 @@ CREATE INDEX IF NOT EXISTS idx_battles_players ON battles(player1_id, player2_id
 CREATE INDEX IF NOT EXISTS idx_battles_active ON battles(player1_id, player2_id, status) WHERE status IN ('pending', 'waiting', 'active');
 CREATE INDEX IF NOT EXISTS idx_match_queue_user ON match_queue(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_match_queue_status ON match_queue(status, queued_at);
+CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
