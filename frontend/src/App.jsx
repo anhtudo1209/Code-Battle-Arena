@@ -13,6 +13,7 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import CreateRoom from "./pages/CreateRoom";
 import Support from "./pages/Support";
 import Challenge from "./pages/Challenge";
+import Settings from "./pages/Settings";
 
 export default function App() {
   return (
@@ -76,6 +77,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Challenge />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

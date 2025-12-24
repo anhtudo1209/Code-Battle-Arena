@@ -308,7 +308,7 @@ router.get("/active", async (req, res) => {
 router.post('/:id/accept', async (req, res) => {
   const userId = req.userId;
   const battleId = req.params.id;
-  const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000;
+  const MAX_BATTLE_DURATION_MS = 20 * 60 * 1000;
 
   try {
     const br = await query('SELECT * FROM battles WHERE id = $1', [battleId]);

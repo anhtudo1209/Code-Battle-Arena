@@ -93,7 +93,7 @@ export default function CreateRoom() {
   useEffect(() => {
     let intervalId = null;
     if (battle?.battle?.status === 'active') {
-      const MAX_BATTLE_TIME = 120;
+      const MAX_BATTLE_TIME = 1200;
       if (!battleStartTimeRef.current) battleStartTimeRef.current = Date.now();
 
       const updateTimer = () => {
@@ -376,9 +376,7 @@ export default function CreateRoom() {
                         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
                         <h4 className="text-2xl font-black text-emerald-400 mb-2">EASY</h4>
                         <p className="text-slate-400 mb-6">Should be easy</p>
-                        <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full w-1/3 bg-emerald-500"></div>
-                        </div>
+
                       </button>
 
                       {/* MEDIUM */}
@@ -389,9 +387,7 @@ export default function CreateRoom() {
                         <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
                         <h4 className="text-2xl font-black text-yellow-400 mb-2">MEDIUM</h4>
                         <p className="text-slate-400 mb-6">Still easy</p>
-                        <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full w-2/3 bg-yellow-500"></div>
-                        </div>
+
                       </button>
 
                       {/* HARD */}
@@ -402,9 +398,7 @@ export default function CreateRoom() {
                         <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
                         <h4 className="text-2xl font-black text-red-500 mb-2">HARD</h4>
                         <p className="text-slate-400 mb-6">Not that easy</p>
-                        <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full w-full bg-red-500"></div>
-                        </div>
+
                       </button>
 
                     </div>

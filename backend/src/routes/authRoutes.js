@@ -329,4 +329,66 @@ router.post("/reset-password", async (req, res) => {
     }
 });
 
+// Change password
+router.put("/change-password", authMiddleware, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current and new password are required" });
+    }
+
+    // Password validation
+    if (newPassword.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({ message: "Password must contain at least 1 letter and 1 number" });
+    }
+
+    try {
+        const result = await query("SELECT password FROM users WHERE id = $1", [req.userId]);
+        const user = result.rows[0];
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Incorrect current password" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await query("UPDATE users SET password = $1 WHERE id = $2", [hashedPassword, req.userId]);
+
+        res.json({ message: "Password updated successfully" });
+    } catch (err) {
+        console.error("Change password error:", err);
+        return res.status(500).json({ message: "Failed to update password" });
+    }
+});
+
+// Delete account
+router.delete("/delete-account", authMiddleware, async (req, res) => {
+    const userId = req.userId;
+    try {
+        // 1. Confirm user exists
+        const userResult = await query("SELECT id FROM users WHERE id = $1", [userId]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // 2. Delete user
+        // Database is configured with ON DELETE CASCADE for all related tables (battles, submissions, etc.)
+        await query("DELETE FROM users WHERE id = $1", [userId]);
+
+        res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+        console.error("Delete account error:", error);
+        res.status(500).json({ message: "Server error during account deletion" });
+    }
+});
+
 export default router;

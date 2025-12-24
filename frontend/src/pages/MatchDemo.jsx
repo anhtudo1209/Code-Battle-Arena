@@ -93,7 +93,7 @@ export default function MatchDemo() {
   useEffect(() => {
     let intervalId = null;
     if (battle?.battle?.status === 'active') {
-      const MAX_BATTLE_TIME = 120; // 2 minutes in seconds
+      const MAX_BATTLE_TIME = 1200; // 20 minutes in seconds
 
       // Set start time when battle first becomes active
       if (!battleStartTimeRef.current) {

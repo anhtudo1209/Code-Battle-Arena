@@ -106,9 +106,9 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
       <button className="menu-item" onClick={() => { closeMenu(); navigate("/support"); }}>
         Support
       </button>
-      <a href="/Settings.html" className="menu-item">
+      <button className="menu-item" onClick={() => { closeMenu(); navigate("/settings"); }}>
         Settings
-      </a>
+      </button>
       <button className="menu-item logout" onClick={handleLogout}>
         Log out
       </button>
