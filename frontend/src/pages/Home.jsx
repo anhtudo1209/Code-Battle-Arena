@@ -15,11 +15,14 @@ import "./Home.css";
 export default function Home() {
   const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState([]);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
-    get("/auth/leaderboard")
-      .then(data => setLeaderboard(data.leaderboard || []))
-      .catch(err => console.error("Failed to load leaderboard", err));
+    // Parallel fetch
+    Promise.all([
+      get("/auth/leaderboard").then(data => setLeaderboard(data.leaderboard || [])),
+      get("/auth/me").then(data => setStreak(data.user?.daily_streak || 0)).catch(() => { })
+    ]).catch(err => console.error("Failed to load home data", err));
   }, []);
 
   const handleGetStarted = () => {
@@ -50,7 +53,7 @@ export default function Home() {
       <div className="content">
         <aside className="sidebar">
           <div className="glass-card streak">
-            <h2>0 Day Streak</h2>
+            <h2>{streak} Day Streak</h2>
             <p>Take a lesson today to start a new streak!</p>
             <div className="streak-days">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(

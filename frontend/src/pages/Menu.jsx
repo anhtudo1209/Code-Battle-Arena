@@ -3,11 +3,13 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/authService";
 import { get } from "../services/httpClient";
+import { Flame } from "lucide-react";
 import "./Menu.css";
 
 export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     // Check if user is admin when menu opens
@@ -16,6 +18,7 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
         try {
           const data = await get("/auth/me");
           setIsAdmin(data.user?.role === "admin");
+          setStreak(data.user?.daily_streak || 0);
         } catch (error) {
           setIsAdmin(false);
         }
@@ -86,6 +89,7 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
       <button className="menu-item" onClick={handleHome}>
         Home
       </button>
+
       <button className="menu-item" onClick={handleMatchTest}>
         Match Test
       </button>

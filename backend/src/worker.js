@@ -21,10 +21,10 @@ import { battleTimeoutQueue, matchQueue } from './queue.js';
 
 
 const connection = new IORedis({
-    host: '127.0.0.1',
-    port: 6379,
-    maxRetriesPerRequest: null,   
-    enableReadyCheck: false,
+  host: '127.0.0.1',
+  port: 6379,
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
 });
 
 const judge = new CodeJudge();
@@ -63,6 +63,15 @@ const worker = new Worker('judgeQueue', async (job) => {
   );
 
   console.log(`✅ Submission ${submissionId} done (${status}, compilation: ${compilationSuccess})`);
+
+  // Update daily streak (only if passed)
+  if (status === 'passed') {
+    try {
+      await updateDailyStreak(userId);
+    } catch (err) {
+      console.error(`⚠️ Failed to update daily streak for user ${userId}:`, err);
+    }
+  }
 
   if (battleId) {
     try {
@@ -107,7 +116,7 @@ async function scheduleBattleTimeout(battleId) {
     await battleTimeoutQueue.add(
       'timeout',
       { battleId },
-      { 
+      {
         delay: MAX_BATTLE_DURATION_MS,
         attempts: 3,
         backoff: { type: 'exponential', delay: 2000 }
@@ -144,10 +153,10 @@ async function handleAcceptTimeout(battleId) {
     // Re-add match jobs for both players so they re-enter matching loop
     try {
       await matchQueue.add('match', { userId: battle.player1_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
-    } catch (e) {}
+    } catch (e) { }
     try {
       await matchQueue.add('match', { userId: battle.player2_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
-    } catch (e) {}
+    } catch (e) { }
 
     console.log(`⚠️ Battle ${battleId} cancelled due to accept timeout; players requeued`);
   } catch (err) {
@@ -211,7 +220,7 @@ async function processBattleIfReady(battleId) {
         [battle.player1_id, 'draw'],
         [battle.player2_id, 'draw'],
       ]),
-    }; 
+    };
 
     await finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2);
     return;
@@ -799,11 +808,37 @@ async function getExerciseDifficulty(exerciseId) {
     const configPath = path.join(exercisesDir, exerciseId, 'config.json');
     const configContent = await fs.promises.readFile(configPath, 'utf8');
     const config = JSON.parse(configContent);
-    return (config.difficulty || 'medium').toLowerCase();
-  } catch {
-    return 'medium';
+    return config.difficulty;
+  } catch (error) {
+    return 'medium'; // default
   }
 }
+
+async function updateDailyStreak(userId) {
+  try {
+    // Atomic DB Update - handles all date comparisons in DB
+    const res = await query(
+      `UPDATE users
+       SET
+         daily_streak = CASE
+           WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE THEN daily_streak
+           WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN daily_streak + 1
+           ELSE 1
+         END,
+         last_activity_date = CURRENT_DATE
+       WHERE id = $1
+       RETURNING daily_streak`,
+      [userId]
+    );
+    if (res.rows.length > 0) {
+      console.log(`🔥 Updated streak for user ${userId}: Now ${res.rows[0].daily_streak}`);
+    }
+
+  } catch (error) {
+    console.error("Error updating streak:", error);
+  }
+}
+
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
