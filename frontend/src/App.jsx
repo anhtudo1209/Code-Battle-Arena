@@ -5,8 +5,6 @@ import Home from "./pages/Home";
 import Practice from "./pages/Practice";
 import Admin from "./pages/Admin";
 import ResetPassword from "./pages/ResetPassword";
-import MatchTest from "./pages/MatchTest";
-import MatchDemo from "./pages/MatchDemo";
 import ThemeSwitch from "./components/ThemeToggle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
@@ -41,26 +39,10 @@ export default function App() {
           }
         />
         <Route
-          path="/match-demo"
-          element={
-            <ProtectedRoute>
-              <MatchDemo />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/create-room"
           element={
             <ProtectedRoute>
               <CreateRoom />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/match-test"
-          element={
-            <ProtectedRoute>
-              <MatchTest />
             </ProtectedRoute>
           }
         />

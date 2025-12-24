@@ -9,7 +9,6 @@ import "./Menu.css";
 export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     // Check if user is admin when menu opens
@@ -18,7 +17,6 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
         try {
           const data = await get("/auth/me");
           setIsAdmin(data.user?.role === "admin");
-          setStreak(data.user?.daily_streak || 0);
         } catch (error) {
           setIsAdmin(false);
         }
@@ -66,19 +64,7 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
     navigate("/admin");
   };
 
-  const handleMatchTest = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    navigate("/match-test");
-  };
 
-  const handleMatchDemo = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    navigate("/match-demo");
-  };
 
   const menu = (
     <div
@@ -90,12 +76,6 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
         Home
       </button>
 
-      <button className="menu-item" onClick={handleMatchTest}>
-        Match Test
-      </button>
-      <button className="menu-item" onClick={handleMatchDemo}>
-        Match Demo
-      </button>
       {isAdmin && (
         <button className="menu-item admin" onClick={handleAdmin}>
           Admin
