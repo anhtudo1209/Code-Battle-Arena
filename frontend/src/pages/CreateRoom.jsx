@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { get, post } from "../services/httpClient";
 import { logout } from "../services/authService";
 import { Search, PlusCircle, Users, LogOut, Filter, ArrowUpDown } from "lucide-react";
@@ -16,8 +16,18 @@ const COLOR_MAP = {
 
 export default function CreateRoom() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [sidebarView, setSidebarView] = useState("create-room"); // 'find-match', 'create-room', 'join-room'
+
+  // Handle navigation state from Home page
+  useEffect(() => {
+    if (location.state?.view) {
+      setSidebarView(location.state.view);
+      // Clear state so it doesn't persist if we navigate internally
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
   const [activeTab, setActiveTab] = useState("practice"); // 'practice', 'custom' (inner tabs)
 
   // Match demo states

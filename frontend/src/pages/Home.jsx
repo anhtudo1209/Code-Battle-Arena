@@ -26,7 +26,7 @@ export default function Home() {
   }, []);
 
   const handleGetStarted = () => {
-    navigate('/findmatch');
+    navigate('/create-room', { state: { view: 'find-match' } });
   };
 
   return (
