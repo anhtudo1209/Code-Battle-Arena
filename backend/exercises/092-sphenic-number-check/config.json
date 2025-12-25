@@ -1,7 +1,7 @@
 {
-  "timeLimit": 2,
+  "timeLimit": 3,
   "memoryLimit": "256m",
-  "difficulty": "easy",
+  "difficulty": "medium",
   "tags": ["Math", "Number Theory", "Primes", "Prime Factorization"],
 
   "starterCode": "starter.cpp",
