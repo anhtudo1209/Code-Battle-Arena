@@ -1,7 +1,7 @@
 {
-  "timeLimit": 2,
+  "timeLimit": 4,
   "memoryLimit": "256m",
-  "difficulty": "easy",
+  "difficulty": "hard",
   "tags": ["Recursion", "Math", "Digits", "Modulus"]
 }
 
