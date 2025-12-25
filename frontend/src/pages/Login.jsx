@@ -1,5 +1,5 @@
-import React, { useState,useEffect } from "react";
-import { FaFacebook, FaGoogle, FaGithub, FaUser, FaLock, FaEnvelope } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaFacebook, FaGoogle, FaUser, FaLock, FaEnvelope } from "react-icons/fa";
 import "./Login.css";
 import GoogleLogin from "../components/GoogleLogin";
 import { login as loginService, oauthLogin, forgotPassword } from "../services/authService";
@@ -84,8 +84,8 @@ export default function Login({
       });
 
       // Check login status only on HTTPS or localhost
-      const isSecureContext = 
-        window.location.protocol === 'https:' || 
+      const isSecureContext =
+        window.location.protocol === 'https:' ||
         window.location.hostname === 'localhost' ||
         window.location.hostname === '127.0.0.1';
 
@@ -211,37 +211,37 @@ export default function Login({
 
       <div className="social-login">
         <button
-  className="social-btn facebook"
-  onClick={handleFacebookLogin}
-  disabled={fbLoading}
-  title="Login with Facebook"
->
-  <FaFacebook />
-</button>
+          className="social-btn facebook"
+          onClick={handleFacebookLogin}
+          disabled={fbLoading}
+          title="Login with Facebook"
+        >
+          <FaFacebook />
+        </button>
 
-  <GoogleLogin
-    clientId={googleClientId} // abc xyz
-    onLogin={async (userInfo) => {
-      try {
-        const data = await oauthLogin({
-          provider: "google",
-          provider_user_id: userInfo.sub,
-          email: userInfo.email,
-          username: userInfo.name
-        });
-        const storage = rememberMe ? window.localStorage : window.sessionStorage;
-        storage.setItem("token", data.token);
-        navigate("/home");
-      } catch (err) {
-        setError("Google login failed");
-        }
-      }}
-    >
-      <button className="social-btn google">
-        <FaGoogle />
-      </button>
-  </GoogleLogin>
-   
+        <GoogleLogin
+          clientId={googleClientId} // abc xyz
+          onLogin={async (userInfo) => {
+            try {
+              const data = await oauthLogin({
+                provider: "google",
+                provider_user_id: userInfo.sub,
+                email: userInfo.email,
+                username: userInfo.name
+              });
+              const storage = rememberMe ? window.localStorage : window.sessionStorage;
+              storage.setItem("token", data.token);
+              navigate("/home");
+            } catch (err) {
+              setError("Google login failed");
+            }
+          }}
+        >
+          <button className="social-btn google">
+            <FaGoogle />
+          </button>
+        </GoogleLogin>
+
 
       </div>
 
