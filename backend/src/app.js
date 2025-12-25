@@ -15,14 +15,12 @@ import adminMiddleware from "./middleware/adminMiddleware.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from project root (override any existing env vars)
-// From backend/src, we need to go up 2 levels to reach project root
 dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true });
 const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: ["https://localhost:5173", "http://localhost:5173", "https://localhost:3000", "http://localhost:3000"],
+  origin: ["https://localhost:5173", "http://localhost:5173", "https://localhost:3000", "http://localhost:3000", "https://codebattlearena.id.vn"],
   credentials: true
 })); // allow frontend requests
 app.use(express.json());
