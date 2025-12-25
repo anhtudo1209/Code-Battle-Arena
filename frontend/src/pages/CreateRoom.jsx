@@ -22,6 +22,14 @@ export default function CreateRoom() {
   const [sidebarView, setSidebarView] = useState("create-room");
   const [activeTab, setActiveTab] = useState("practice");
 
+  // Handle navigation state from Home page
+  useEffect(() => {
+    if (location.state?.view) {
+      setSidebarView(location.state.view);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
+
   // Match demo states
   const [queue, setQueue] = useState(null);
   const [battle, setBattle] = useState(null);
@@ -76,7 +84,7 @@ export default function CreateRoom() {
       } else if (s.status === "queued") {
         setSidebarView("find-match");
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
@@ -130,7 +138,7 @@ export default function CreateRoom() {
           if (b.exercise?.starterCode && !code) setCode(b.exercise.starterCode);
           if (b.battle?.status === "pending") setAcceptCountdown(20);
         }
-      } catch (e) {}
+      } catch (e) { }
     }, 2000);
     return () => clearInterval(interval);
   }, [queue?.status]);
@@ -151,7 +159,7 @@ export default function CreateRoom() {
             setPreBattleRating(user.rating);
           }
           if (b.battle?.status !== "pending") setAcceptCountdown(null);
-        } catch (e) {}
+        } catch (e) { }
       }, 1500);
     }
     return () => clearInterval(interval);
@@ -168,7 +176,7 @@ export default function CreateRoom() {
           if (prevStatus === "active" && b.battle?.status === "completed") {
             await showBattleResult(b.battle);
           }
-        } catch (e) {}
+        } catch (e) { }
       }, 2000);
     }
     return () => clearInterval(interval);
@@ -309,9 +317,8 @@ export default function CreateRoom() {
       <div className="flex flex-1 overflow-hidden">
         {/* SIDEBAR */}
         <aside
-          className={`hidden md:flex w-64 h-full bg-slate-900 border-r border-slate-800 flex-col p-6 ${
-            battle?.battle?.status === "active" ? "hidden" : ""
-          }`}
+          className={`hidden md:flex w-64 h-full bg-slate-900 border-r border-slate-800 flex-col p-6 ${battle?.battle?.status === "active" ? "hidden" : ""
+            }`}
         >
           {/* User Profile */}
           <div className="flex flex-col items-center mb-10 mt-4">
@@ -322,9 +329,8 @@ export default function CreateRoom() {
               }}
             >
               <img
-                src={`https://ssl.gstatic.com/docs/common/profile/${
-                  user?.avatar_animal || "alligator"
-                }_lg.png`}
+                src={`https://ssl.gstatic.com/docs/common/profile/${user?.avatar_animal || "alligator"
+                  }_lg.png`}
                 alt="Profile"
                 className="w-16 h-16 object-contain"
               />
@@ -343,11 +349,10 @@ export default function CreateRoom() {
           <nav className="flex-1 space-y-3">
             <button
               onClick={() => setSidebarView("find-match")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-                sidebarView === "find-match"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${sidebarView === "find-match"
                   ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
                   : "text-slate-300 hover:text-white hover:bg-slate-800"
-              }`}
+                }`}
             >
               <Search className="w-5 h-5" />
               <span>Find match</span>
@@ -355,11 +360,10 @@ export default function CreateRoom() {
 
             <button
               onClick={() => setSidebarView("create-room")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-                sidebarView === "create-room"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${sidebarView === "create-room"
                   ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
                   : "text-slate-300 hover:text-white hover:bg-slate-800"
-              }`}
+                }`}
             >
               <PlusCircle className="w-5 h-5" />
               <span className="font-bold">Create room</span>
@@ -367,11 +371,10 @@ export default function CreateRoom() {
 
             <button
               onClick={() => setSidebarView("join-room")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-                sidebarView === "join-room"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${sidebarView === "join-room"
                   ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
                   : "text-slate-300 hover:text-white hover:bg-slate-800"
-              }`}
+                }`}
             >
               <Users className="w-5 h-5" />
               <span>Join room</span>
@@ -407,31 +410,28 @@ export default function CreateRoom() {
 
                 <div className="relative mx-auto mb-4 w-full max-w-md flex rounded-full bg-slate-900/70 border border-slate-700 px-2 py-1">
                   <div
-                    className={`absolute inset-y-1 left-2 w-[calc(50%-4px)] rounded-full transition-all duration-300 bg-emerald-600/30 ${
-                      activeTab === "practice"
+                    className={`absolute inset-y-1 left-2 w-[calc(50%-4px)] rounded-full transition-all duration-300 bg-emerald-600/30 ${activeTab === "practice"
                         ? "translate-x-0"
                         : "translate-x-full"
-                    }`}
+                      }`}
                   ></div>
 
                   <button
                     onClick={() => setActiveTab("practice")}
-                    className={`relative z-10 flex-1 py-3 rounded-full font-black tracking-wide transition-all focus:outline-none ${
-                      activeTab === "practice"
+                    className={`relative z-10 flex-1 py-3 rounded-full font-black tracking-wide transition-all focus:outline-none ${activeTab === "practice"
                         ? "text-emerald-400"
                         : "text-slate-400 hover:text-white"
-                    }`}
+                      }`}
                   >
                     PRACTICE
                   </button>
 
                   <button
                     onClick={() => setActiveTab("custom")}
-                    className={`relative z-10 flex-1 py-3 rounded-full font-black tracking-wide transition-all focus:outline-none ${
-                      activeTab === "custom"
+                    className={`relative z-10 flex-1 py-3 rounded-full font-black tracking-wide transition-all focus:outline-none ${activeTab === "custom"
                         ? "text-emerald-400"
                         : "text-slate-400 hover:text-white"
-                    }`}
+                      }`}
                   >
                     CUSTOM
                   </button>
@@ -583,9 +583,8 @@ export default function CreateRoom() {
                           }}
                         >
                           <img
-                            src={`https://ssl.gstatic.com/docs/common/profile/${
-                              battle.opponent?.avatar_animal || "alligator"
-                            }_lg.png`}
+                            src={`https://ssl.gstatic.com/docs/common/profile/${battle.opponent?.avatar_animal || "alligator"
+                              }_lg.png`}
                             alt="Opponent"
                             className="w-12 h-12 object-contain"
                           />
@@ -625,9 +624,8 @@ export default function CreateRoom() {
                           }}
                         >
                           <img
-                            src={`https://ssl.gstatic.com/docs/common/profile/${
-                              battle.opponent?.avatar_animal || "alligator"
-                            }_lg.png`}
+                            src={`https://ssl.gstatic.com/docs/common/profile/${battle.opponent?.avatar_animal || "alligator"
+                              }_lg.png`}
                             alt="Opponent"
                             className="w-8 h-8 object-contain"
                           />
@@ -644,9 +642,8 @@ export default function CreateRoom() {
                         </div>
                       </div>
                       <div
-                        className={`font-mono text-2xl font-bold ${
-                          battleTimer < 30 ? "text-red-500" : "text-emerald-400"
-                        }`}
+                        className={`font-mono text-2xl font-bold ${battleTimer < 30 ? "text-red-500" : "text-emerald-400"
+                          }`}
                       >
                         {Math.floor(battleTimer / 60)}:
                         {(battleTimer % 60).toString().padStart(2, "0")}
@@ -716,31 +713,29 @@ export default function CreateRoom() {
       {showResultPopup && resultPopupData && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div
-            className={`w-full max-w-md bg-slate-900 border-2 rounded-[32px] p-8 text-center animate-up transform transition-all ${
-              resultPopupData.outcome === "win"
+            className={`w-full max-w-md bg-slate-900 border-2 rounded-[32px] p-8 text-center animate-up transform transition-all ${resultPopupData.outcome === "win"
                 ? "border-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.2)]"
                 : "border-red-500 shadow-[0_0_60px_rgba(239,68,68,0.2)]"
-            }`}
+              }`}
           >
             <div className="text-8xl mb-6">
               {resultPopupData.outcome === "win"
                 ? "🏆"
                 : resultPopupData.outcome === "loss"
-                ? "💀"
-                : "🤝"}
+                  ? "💀"
+                  : "🤝"}
             </div>
             <h2
-              className={`text-4xl font-black mb-4 uppercase ${
-                resultPopupData.outcome === "win"
+              className={`text-4xl font-black mb-4 uppercase ${resultPopupData.outcome === "win"
                   ? "text-emerald-400"
                   : "text-red-500"
-              }`}
+                }`}
             >
               {resultPopupData.outcome === "win"
                 ? "VICTORY"
                 : resultPopupData.outcome === "loss"
-                ? "DEFEATED"
-                : "DRAW"}
+                  ? "DEFEATED"
+                  : "DRAW"}
             </h2>
             <div className="text-3xl font-bold text-slate-200 mb-8">
               {resultPopupData.delta > 0 ? "+" : ""}
