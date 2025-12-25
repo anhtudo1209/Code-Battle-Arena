@@ -5,6 +5,15 @@ import { logout } from "../services/authService";
 import { Search, PlusCircle, Users, LogOut, Filter, ArrowUpDown } from "lucide-react";
 import "./CreateRoom.css"; // Kept empty or for minimal overrides
 
+const COLOR_MAP = {
+  'red': '#E53935',
+  'orange': '#FB8C00',
+  'yellow': '#FDD835',
+  'green': '#43A047',
+  'purple': '#8E24AA',
+  'teal': '#00897B'
+};
+
 export default function CreateRoom() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -287,9 +296,17 @@ export default function CreateRoom() {
 
         {/* User Profile */}
         <div className="flex flex-col items-center mb-10 mt-4">
-          <img src="https://picsum.photos/200/200" className="w-20 h-20 rounded-full border border-slate-700" alt="Profile" />
-          <h2 className="mt-4 text-lg font-bold text-slate-100">{user?.username || "Guest"}</h2>
-          <p className="text-sm text-slate-400">ID: #{user?.id ? String(user.id).substring(0, 6) : "---"}</p>
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center border-2 border-emerald-500 overflow-hidden"
+            style={{ backgroundColor: COLOR_MAP[user?.avatar_color] || '#43A047' }}
+          >
+            <img
+              src={`https://ssl.gstatic.com/docs/common/profile/${user?.avatar_animal || 'alligator'}_lg.png`}
+              alt="Profile"
+              className="w-16 h-16 object-contain"
+            />
+          </div>
+          <h2 className="mt-4 text-lg font-bold text-slate-100">{user?.display_name || user?.username || "Guest"}</h2>
           <div className="mt-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700">
             <span className="text-emerald-400 text-sm font-semibold">ELO: {user?.rating || 0}</span>
           </div>
@@ -463,8 +480,23 @@ export default function CreateRoom() {
               {battle?.battle?.status === 'pending' && (
                 <div className="w-full max-w-xl h-full mx-auto flex flex-col justify-center">
                   <div className="bg-slate-900/60 border border-emerald-500/50 rounded-[32px] p-12 text-center shadow-[0_0_50px_rgba(16,185,129,0.15)]">
-                    <h2 className="text-4xl font-black text-emerald-400 mb-2">MATCH FOUND!</h2>
-                    <p className="text-slate-400 mb-8">Opponent: <strong className="text-slate-200">{battle.opponent?.username}</strong></p>
+                    <h2 className="text-4xl font-black text-emerald-400 mb-4">MATCH FOUND!</h2>
+                    <div className="flex items-center justify-center gap-4 mb-8">
+                      <div
+                        className="w-16 h-16 rounded-full flex items-center justify-center border-2 border-emerald-500 overflow-hidden"
+                        style={{ backgroundColor: COLOR_MAP[battle.opponent?.avatar_color] || '#43A047' }}
+                      >
+                        <img
+                          src={`https://ssl.gstatic.com/docs/common/profile/${battle.opponent?.avatar_animal || 'alligator'}_lg.png`}
+                          alt="Opponent"
+                          className="w-12 h-12 object-contain"
+                        />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xl font-bold text-white">{battle.opponent?.display_name || battle.opponent?.username}</p>
+                        <p className="text-sm text-emerald-400">ELO: {battle.opponent?.rating || '???'}</p>
+                      </div>
+                    </div>
 
                     <div className="text-8xl font-black text-emerald-500 mb-8 font-mono">
                       {acceptCountdown || 0}
@@ -482,8 +514,22 @@ export default function CreateRoom() {
                 <div className="flex-1 flex flex-col h-full bg-slate-950 absolute inset-0 z-50">
                   {/* Battle Header */}
                   <div className="h-16 px-6 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
-                    <div className="font-bold text-slate-300">
-                      VS <span className="text-white text-lg ml-2">{battle.opponent?.username}</span>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-emerald-500 overflow-hidden"
+                        style={{ backgroundColor: COLOR_MAP[battle.opponent?.avatar_color] || '#43A047' }}
+                      >
+                        <img
+                          src={`https://ssl.gstatic.com/docs/common/profile/${battle.opponent?.avatar_animal || 'alligator'}_lg.png`}
+                          alt="Opponent"
+                          className="w-8 h-8 object-contain"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-slate-400">VS</span>
+                        <span className="text-white text-lg ml-2 font-bold">{battle.opponent?.display_name || battle.opponent?.username}</span>
+                        <span className="text-emerald-400 text-sm ml-2">({battle.opponent?.rating || '???'})</span>
+                      </div>
                     </div>
                     <div className={`font-mono text-2xl font-bold ${battleTimer < 30 ? 'text-red-500' : 'text-emerald-400'}`}>
                       {Math.floor(battleTimer / 60)}:{(battleTimer % 60).toString().padStart(2, '0')}

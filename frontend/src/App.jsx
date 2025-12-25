@@ -12,6 +12,8 @@ import CreateRoom from "./pages/CreateRoom";
 import Support from "./pages/Support";
 import Challenge from "./pages/Challenge";
 import Settings from "./pages/Settings";
+import Confession from "./pages/Confession";
+import Friends from "./pages/Friends";
 
 export default function App() {
   return (
@@ -67,6 +69,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/confession"
+          element={
+            <ProtectedRoute>
+              <Confession />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/friends"
+          element={
+            <ProtectedRoute>
+              <Friends />
             </ProtectedRoute>
           }
         />

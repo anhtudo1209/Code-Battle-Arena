@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     User, Shield, Terminal, Bell,
     Camera, Mail, Key, Smartphone,
     ShieldCheck, AlertTriangle, Monitor,
-    Type, Code, Check, BellRing, Save, LogOut
+    Type, Code, Check, BellRing, Save, LogOut, Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/authService";
-import { put, del } from "../services/httpClient";
+import { put, del, get } from "../services/httpClient";
 import Header from "../components/Header";
 
 export default function Settings() {
@@ -19,6 +19,61 @@ export default function Settings() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [passwordStatus, setPasswordStatus] = useState(null); // { type: 'success' | 'error', message: '' }
+
+    // Profile State
+    const [displayName, setDisplayName] = useState("");
+    const [avatarAnimal, setAvatarAnimal] = useState("alligator");
+    const [avatarColor, setAvatarColor] = useState("green");
+    const [username, setUsername] = useState("");
+    const [profileLoading, setProfileLoading] = useState(true);
+    const [profileSaving, setProfileSaving] = useState(false);
+    const [profileStatus, setProfileStatus] = useState(null);
+
+    // Animal avatar options
+    const ANIMALS = [
+        'alligator', 'anteater', 'armadillo', 'axolotl', 'badger', 'bat', 'beaver',
+        'buffalo', 'camel', 'capybara', 'chameleon', 'cheetah', 'chinchilla', 'chipmunk',
+        'cormorant', 'coyote', 'crow', 'dingo', 'dinosaur', 'dolphin', 'dragon',
+        'duck', 'elephant', 'ferret', 'fox', 'frog', 'giraffe', 'goose', 'gopher', 'grizzly',
+        'hamster', 'hedgehog', 'hippo', 'hyena', 'ibex', 'iguana', 'jackal', 'kangaroo',
+        'koala', 'kraken', 'lemur', 'leopard', 'liger', 'llama', 'manatee', 'mink',
+        'monkey', 'moose', 'narwhal', 'orangutan', 'otter', 'panda', 'penguin', 'platypus',
+        'python', 'quagga', 'rabbit', 'raccoon', 'rhino', 'sheep', 'shrew', 'skunk',
+        'squirrel', 'tiger', 'turtle', 'unicorn', 'walrus', 'wolf', 'wolverine', 'wombat'
+    ];
+    const COLORS = [
+        { name: 'red', hex: '#E53935' },
+        { name: 'orange', hex: '#FB8C00' },
+        { name: 'yellow', hex: '#FDD835' },
+        { name: 'green', hex: '#43A047' },
+        { name: 'purple', hex: '#8E24AA' },
+        { name: 'teal', hex: '#00897B' }
+    ];
+
+    // Generate avatar URL from animal and color
+    const getAvatarUrl = (animal, color) => {
+        return `https://ssl.gstatic.com/docs/common/profile/${animal}_lg.png`;
+    };
+
+    // Fetch profile on mount
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const data = await get("/auth/me");
+                if (data.user) {
+                    setUsername(data.user.username);
+                    setDisplayName(data.user.display_name || data.user.username);
+                    setAvatarAnimal(data.user.avatar_animal || 'alligator');
+                    setAvatarColor(data.user.avatar_color || 'green');
+                }
+            } catch (err) {
+                console.error("Failed to load profile:", err);
+            } finally {
+                setProfileLoading(false);
+            }
+        };
+        fetchProfile();
+    }, []);
 
     // Tabs configuration
     const tabs = [
@@ -47,6 +102,19 @@ export default function Settings() {
             setConfirmPassword("");
         } catch (error) {
             setPasswordStatus({ type: 'error', message: error.response?.data?.message || 'Failed to update password' });
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        setProfileStatus(null);
+        setProfileSaving(true);
+        try {
+            await put('/auth/profile', { display_name: displayName, avatar_animal: avatarAnimal, avatar_color: avatarColor });
+            setProfileStatus({ type: 'success', message: 'Profile updated successfully!' });
+        } catch (error) {
+            setProfileStatus({ type: 'error', message: error.response?.data?.error || 'Failed to update profile' });
+        } finally {
+            setProfileSaving(false);
         }
     };
 
@@ -147,27 +215,76 @@ export default function Settings() {
                                         <h2 className="font-semibold text-slate-100">Identity Configuration</h2>
                                     </div>
                                     <div className="p-6 space-y-8">
-                                        {/* Avatar Section (Placeholder) */}
-                                        <div className="flex flex-col sm:flex-row items-center gap-6">
-                                            <div className="relative group">
-                                                <div className="w-24 h-24 rounded-2xl overflow-hidden ring-2 ring-slate-700 group-hover:ring-emerald-500 transition-all">
-                                                    <img src="https://picsum.photos/seed/codemaster/200" alt="Profile" className="w-full h-full object-cover" />
+                                        {/* Avatar Section */}
+                                        <div className="space-y-6">
+                                            {/* Current Avatar Preview */}
+                                            <div className="flex items-center gap-6">
+                                                <div
+                                                    className="w-24 h-24 rounded-2xl overflow-hidden flex items-center justify-center"
+                                                    style={{ backgroundColor: COLORS.find(c => c.name === avatarColor)?.hex || '#43A047' }}
+                                                >
+                                                    <img
+                                                        src={`https://ssl.gstatic.com/docs/common/profile/${avatarAnimal}_lg.png`}
+                                                        alt="Avatar"
+                                                        className="w-20 h-20 object-contain"
+                                                    />
                                                 </div>
-                                                <button className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl backdrop-blur-sm cursor-pointer">
-                                                    <Camera className="w-6 h-6 text-white" />
-                                                </button>
+                                                <div>
+                                                    <h3 className="font-medium text-slate-200">Your Avatar</h3>
+                                                    <p className="text-sm text-slate-400 capitalize">{avatarAnimal} • {avatarColor}</p>
+                                                </div>
                                             </div>
-                                            <div className="text-center sm:text-left space-y-2">
-                                                <h3 className="font-medium text-slate-200">Holographic Avatar</h3>
-                                                <p className="text-sm text-slate-400 max-w-xs">Supports JPG, PNG or GIF. Max payload size 2MB.</p>
-                                                <button className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors">Upload New File</button>
+
+                                            {/* Color Picker */}
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-300 block mb-3">Select Color</label>
+                                                <div className="flex gap-3">
+                                                    {COLORS.map(color => (
+                                                        <button
+                                                            key={color.name}
+                                                            onClick={() => setAvatarColor(color.name)}
+                                                            className={`w-10 h-10 rounded-xl transition-all ${avatarColor === color.name ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110' : 'hover:scale-105'}`}
+                                                            style={{ backgroundColor: color.hex }}
+                                                            title={color.name}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Animal Picker Grid */}
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-300 block mb-3">Select Animal</label>
+                                                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-64 overflow-y-auto p-2 bg-slate-950/30 rounded-xl border border-slate-800">
+                                                    {ANIMALS.map(animal => (
+                                                        <button
+                                                            key={animal}
+                                                            onClick={() => setAvatarAnimal(animal)}
+                                                            className={`p-1 rounded-lg transition-all ${avatarAnimal === animal ? 'ring-2 ring-emerald-500 bg-emerald-900/30' : 'hover:bg-slate-800'}`}
+                                                            title={animal}
+                                                        >
+                                                            <img
+                                                                src={`https://ssl.gstatic.com/docs/common/profile/${animal}_lg.png`}
+                                                                alt={animal}
+                                                                className="w-8 h-8 object-contain mx-auto"
+                                                            />
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div className="grid gap-6">
                                             <div className="grid gap-2">
                                                 <label className="text-sm font-medium text-slate-300">Display Handle</label>
-                                                <input type="text" readOnly value="CodeMaster_VN" className="w-full bg-slate-950/50 border border-slate-800 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 transition-all outline-none" />
+                                                <input
+                                                    type="text"
+                                                    value={profileLoading ? "Loading..." : displayName}
+                                                    onChange={(e) => setDisplayName(e.target.value)}
+                                                    disabled={profileLoading}
+                                                    maxLength={50}
+                                                    className="w-full bg-slate-950/50 border border-slate-800 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 transition-all outline-none disabled:opacity-50"
+                                                />
+                                                <p className="text-xs text-slate-500">This is the name displayed on your profile and in battles.</p>
                                             </div>
                                             <div className="grid gap-2">
                                                 <label className="text-sm font-medium text-slate-300">Bio Data</label>
@@ -175,10 +292,20 @@ export default function Settings() {
                                             </div>
                                         </div>
 
+                                        {profileStatus && (
+                                            <div className={`text-sm ${profileStatus.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                {profileStatus.message}
+                                            </div>
+                                        )}
+
                                         <div className="pt-6 border-t border-slate-700/50 flex justify-end">
-                                            <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all shadow-lg shadow-emerald-900/20 active:scale-95">
-                                                <Save className="w-4 h-4" />
-                                                Save Changes
+                                            <button
+                                                onClick={handleSaveProfile}
+                                                disabled={profileSaving || profileLoading}
+                                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all shadow-lg shadow-emerald-900/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {profileSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                                {profileSaving ? "Saving..." : "Save Changes"}
                                             </button>
                                         </div>
 

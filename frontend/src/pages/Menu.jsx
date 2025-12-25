@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/authService";
 import { get } from "../services/httpClient";
-import { Flame } from "lucide-react";
 import "./Menu.css";
 
 export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
@@ -81,12 +80,12 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
           Admin
         </button>
       )}
-      <a href="/Friends.html" className="menu-item">
+      <button className="menu-item" onClick={() => { closeMenu(); navigate("/friends"); }}>
         Friends
-      </a>
-      <a href="/Confession.html" className="menu-item">
+      </button>
+      <button className="menu-item" onClick={() => { closeMenu(); navigate("/confession"); }}>
         Confession
-      </a>
+      </button>
       <button className="menu-item" onClick={() => { closeMenu(); navigate("/support"); }}>
         Support
       </button>

@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
     loss_streak INTEGER NOT NULL DEFAULT 0,
     daily_streak INTEGER DEFAULT 0,
     last_activity_date DATE DEFAULT NULL,
+    display_name VARCHAR(255),
+    avatar_animal VARCHAR(50) DEFAULT 'alligator',
+    avatar_color VARCHAR(20) DEFAULT 'green',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

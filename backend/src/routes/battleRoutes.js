@@ -149,7 +149,7 @@ router.get("/status", async (req, res) => {
 
       // Get opponent info
       const opponentResult = await query(
-        'SELECT id, username FROM users WHERE id = $1',
+        'SELECT id, username, display_name, avatar_animal, avatar_color, rating FROM users WHERE id = $1',
         [opponentId]
       );
 
@@ -234,7 +234,7 @@ router.get("/active", async (req, res) => {
 
     // Get opponent info
     const opponentResult = await query(
-      'SELECT id, username FROM users WHERE id = $1',
+      'SELECT id, username, display_name, avatar_animal, avatar_color, rating FROM users WHERE id = $1',
       [opponentId]
     );
 
