@@ -43,5 +43,5 @@ app.get(/.*/, (req, res) => {
 // Start server
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running ${PORT}`);
+  console.log(`Server running ${PORT}`);
 });
