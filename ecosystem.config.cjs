@@ -4,7 +4,7 @@ module.exports = {
             name: "code-battle-backend",
             script: "./backend/src/app.js",
             env: {
-                NODE_ENV: "production",
+                NODE_ENV: "production", m
             },
         },
         {

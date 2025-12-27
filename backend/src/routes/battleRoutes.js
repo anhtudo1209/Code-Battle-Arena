@@ -577,6 +577,35 @@ router.post("/submit", async (req, res) => {
   }
 });
 
+// Get submission details by ID
+router.get("/submissions/:id", async (req, res) => {
+  const userId = req.userId;
+  const submissionId = req.params.id;
+
+  try {
+    const result = await query(
+      `SELECT * FROM submissions 
+       WHERE id = $1 AND user_id = $2`,
+      [submissionId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Submission not found" });
+    }
+
+    const submission = result.rows[0];
+    const sanitizedSubmission = {
+      ...submission,
+      compilation_error: null, // Hide raw error for security/consistency if needed, or expose it
+    };
+
+    res.json({ submission: sanitizedSubmission });
+  } catch (error) {
+    console.error("Error fetching submission:", error);
+    res.status(500).json({ error: "Failed to fetch submission" });
+  }
+});
+
 // Get battle by ID
 router.get("/:id", async (req, res) => {
   const battleId = req.params.id;

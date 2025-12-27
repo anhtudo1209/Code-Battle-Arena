@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Editor } from "@monaco-editor/react";
 import { get, post } from "../services/httpClient";
 import { logout } from "../services/authService";
-import { Search, PlusCircle, Users, LogOut } from "lucide-react";
+import { Search, PlusCircle, Users, LogOut, Code, Swords } from "lucide-react";
 import Header from "../components/Header";
 import "./CreateRoom.css";
 
@@ -20,7 +21,6 @@ export default function CreateRoom() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [sidebarView, setSidebarView] = useState("create-room");
-  const [activeTab, setActiveTab] = useState("practice");
 
   // Handle navigation state from Home page
   useEffect(() => {
@@ -47,6 +47,9 @@ export default function CreateRoom() {
   const [battleTimer, setBattleTimer] = useState(0);
   const battleStartTimeRef = useRef(null);
   const shownResultBattleId = useRef(null);
+  const editorRef = useRef(null);
+  const [results, setResults] = useState(null);
+  const [submissionId, setSubmissionId] = useState(null);
 
   // --- Initial Load ---
   const loadUser = async () => {
@@ -268,6 +271,86 @@ export default function CreateRoom() {
     }
   };
 
+  const handleEditorMount = (editor, monaco) => {
+    editorRef.current = editor;
+  };
+
+  const pollSubmissionStatus = async (id) => {
+    try {
+      const data = await get(`/battle/submissions/${id}`);
+      const submission = data.submission;
+
+      const isProcessing =
+        submission.status === "queued" || submission.status === "running";
+
+      if (isProcessing) {
+        setTimeout(() => pollSubmissionStatus(id), 1000);
+        return;
+      }
+
+      const finalStates = ["passed", "failed", "compilation_error"];
+      if (!finalStates.includes(submission.status)) {
+        setTimeout(() => pollSubmissionStatus(id), 1000);
+        return;
+      }
+
+      setSubmitting(false);
+      const compilationSuccess = submission.compilation_success === true;
+      let testResults = [];
+      if (submission.test_results) {
+        if (typeof submission.test_results === "string") {
+          try {
+            testResults = JSON.parse(submission.test_results);
+          } catch (e) {
+            testResults = [];
+          }
+        } else {
+          testResults = submission.test_results;
+        }
+      }
+
+      setResults({
+        success: submission.status === "passed",
+        compilationSuccess: compilationSuccess,
+        compilationError: "",
+        testResults: testResults,
+      });
+
+      // If passed or failed, update info message briefly
+      if (submission.status === "passed") {
+        setInfo("Correct Answer!");
+      } else {
+        setInfo("Submission failed.");
+      }
+    } catch (error) {
+      console.error("Polling error:", error);
+      setSubmitting(false);
+      setResults({ error: "Failed to get submission status" });
+    }
+  };
+
+  // Override handleSubmit to use polling
+  const handleRankedSubmit = async () => {
+    if (!battle?.battle?.id) return;
+    setSubmitting(true);
+    setError("");
+    setInfo("Submitting...");
+    setResults(null);
+    try {
+      const res = await post("/battle/submit", {
+        battleId: battle.battle.id,
+        exerciseId: battle.battle.exerciseId,
+        code,
+      });
+      setInfo("Running tests...");
+      setSubmissionId(res.submissionId); // Ensure backend returns this
+      pollSubmissionStatus(res.submissionId);
+    } catch (e) {
+      setError(e.message);
+      setSubmitting(false);
+    }
+  };
+
   const showBattleResult = async (battleData) => {
     if (!battleData || !user || shownResultBattleId.current === battleData.id)
       return;
@@ -350,8 +433,8 @@ export default function CreateRoom() {
             <button
               onClick={() => setSidebarView("find-match")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${sidebarView === "find-match"
-                  ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800"
+                ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
+                : "text-slate-300 hover:text-white hover:bg-slate-800"
                 }`}
             >
               <Search className="w-5 h-5" />
@@ -359,10 +442,21 @@ export default function CreateRoom() {
             </button>
 
             <button
+              onClick={() => setSidebarView("practice")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${sidebarView === "practice"
+                ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
+                : "text-slate-300 hover:text-white hover:bg-slate-800"
+                }`}
+            >
+              <Code className="w-5 h-5" />
+              <span>Practice</span>
+            </button>
+
+            <button
               onClick={() => setSidebarView("create-room")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${sidebarView === "create-room"
-                  ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800"
+                ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
+                : "text-slate-300 hover:text-white hover:bg-slate-800"
                 }`}
             >
               <PlusCircle className="w-5 h-5" />
@@ -372,8 +466,8 @@ export default function CreateRoom() {
             <button
               onClick={() => setSidebarView("join-room")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${sidebarView === "join-room"
-                  ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800"
+                ? "bg-emerald-900/40 border border-emerald-700/50 text-emerald-300"
+                : "text-slate-300 hover:text-white hover:bg-slate-800"
                 }`}
             >
               <Users className="w-5 h-5" />
@@ -401,125 +495,105 @@ export default function CreateRoom() {
               <div className="w-full max-w-7xl h-full bg-slate-900/40 border border-slate-800 rounded-[32px] p-6 flex flex-col">
                 <div className="text-center mt-6 mb-3">
                   <h2 className="text-4xl font-black text-emerald-400">
-                    CREATE ROOM
+                    CUSTOM ROOM
                   </h2>
                   <p className="text-slate-400 mt-1">
-                    Choose how you want to play
+                    Create a custom lobby
                   </p>
                 </div>
 
-                <div className="relative mx-auto mb-4 w-full max-w-md flex rounded-full bg-slate-900/70 border border-slate-700 px-2 py-1">
-                  <div
-                    className={`absolute inset-y-1 left-2 w-[calc(50%-4px)] rounded-full transition-all duration-300 bg-emerald-600/30 ${activeTab === "practice"
-                        ? "translate-x-0"
-                        : "translate-x-full"
-                      }`}
-                  ></div>
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="max-w-xl w-full bg-slate-900/50 border border-slate-800 rounded-3xl p-8">
+                    <h3 className="text-3xl font-bold text-emerald-400 text-center mb-6">
+                      Room Settings
+                    </h3>
+                    <div className="space-y-4">
+                      <input
+                        className="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200"
+                        placeholder="Room name"
+                      />
+                      <select className="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200">
+                        <option>Easy</option>
+                        <option>Medium</option>
+                        <option>Hard</option>
+                      </select>
+                      <input
+                        type="number"
+                        className="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200"
+                        placeholder="Max players"
+                      />
+                      <label className="flex items-center gap-2 text-slate-400">
+                        <input type="checkbox" /> Private room
+                      </label>
+                      <button className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black transition">
+                        CREATE
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-                  <button
-                    onClick={() => setActiveTab("practice")}
-                    className={`relative z-10 flex-1 py-3 rounded-full font-black tracking-wide transition-all focus:outline-none ${activeTab === "practice"
-                        ? "text-emerald-400"
-                        : "text-slate-400 hover:text-white"
-                      }`}
-                  >
+            {/* PRACTICE VIEW */}
+            {sidebarView === "practice" && (
+              <div className="w-full max-w-7xl h-full bg-slate-900/40 border border-slate-800 rounded-[32px] p-6 flex flex-col">
+                <div className="text-center mt-6 mb-3">
+                  <h2 className="text-4xl font-black text-emerald-400">
                     PRACTICE
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTab("custom")}
-                    className={`relative z-10 flex-1 py-3 rounded-full font-black tracking-wide transition-all focus:outline-none ${activeTab === "custom"
-                        ? "text-emerald-400"
-                        : "text-slate-400 hover:text-white"
-                      }`}
-                  >
-                    CUSTOM
-                  </button>
+                  </h2>
+                  <p className="text-slate-400 mt-1">
+                    Sharpen your skills solo
+                  </p>
                 </div>
 
-                <div className="flex-1 relative overflow-hidden">
-                  {activeTab === "practice" && (
-                    <div className="h-full flex flex-col items-center justify-center p-8">
-                      <h3 className="text-3xl font-bold text-white mb-8">
-                        Select Difficulty
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-                        <button
-                          onClick={() =>
-                            navigate("/practice", {
-                              state: { difficulty: "easy" },
-                            })
-                          }
-                          className="group relative bg-slate-900/60 border border-slate-700 hover:border-emerald-500 rounded-2xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
-                          <h4 className="text-2xl font-black text-emerald-400 mb-2">
-                            EASY
-                          </h4>
-                          <p className="text-slate-400 mb-6">Should be easy</p>
-                        </button>
-                        <button
-                          onClick={() =>
-                            navigate("/practice", {
-                              state: { difficulty: "medium" },
-                            })
-                          }
-                          className="group relative bg-slate-900/60 border border-slate-700 hover:border-yellow-500 rounded-2xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(234,179,8,0.1)]"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
-                          <h4 className="text-2xl font-black text-yellow-400 mb-2">
-                            MEDIUM
-                          </h4>
-                          <p className="text-slate-400 mb-6">Still easy</p>
-                        </button>
-                        <button
-                          onClick={() =>
-                            navigate("/practice", {
-                              state: { difficulty: "difficult" },
-                            })
-                          }
-                          className="group relative bg-slate-900/60 border border-slate-700 hover:border-red-500 rounded-2xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(239,68,68,0.1)]"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
-                          <h4 className="text-2xl font-black text-red-500 mb-2">
-                            HARD
-                          </h4>
-                          <p className="text-slate-400 mb-6">Not that easy</p>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {activeTab === "custom" && (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="max-w-xl w-full bg-slate-900/50 border border-slate-800 rounded-3xl p-8">
-                        <h3 className="text-3xl font-bold text-emerald-400 text-center mb-6">
-                          Custom Room
-                        </h3>
-                        <div className="space-y-4">
-                          <input
-                            className="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200"
-                            placeholder="Room name"
-                          />
-                          <select className="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200">
-                            <option>Easy</option>
-                            <option>Medium</option>
-                            <option>Hard</option>
-                          </select>
-                          <input
-                            type="number"
-                            className="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200"
-                            placeholder="Max players"
-                          />
-                          <label className="flex items-center gap-2 text-slate-400">
-                            <input type="checkbox" /> Private room
-                          </label>
-                          <button className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black transition">
-                            CREATE
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                <div className="h-full flex flex-col items-center justify-center p-8">
+                  <h3 className="text-3xl font-bold text-white mb-8">
+                    Select Difficulty
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+                    <button
+                      onClick={() =>
+                        navigate("/practice", {
+                          state: { difficulty: "easy" },
+                        })
+                      }
+                      className="group relative bg-slate-900/60 border border-slate-700 hover:border-emerald-500 rounded-2xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
+                      <h4 className="text-2xl font-black text-emerald-400 mb-2">
+                        EASY
+                      </h4>
+                      <p className="text-slate-400 mb-6">Should be easy</p>
+                    </button>
+                    <button
+                      onClick={() =>
+                        navigate("/practice", {
+                          state: { difficulty: "medium" },
+                        })
+                      }
+                      className="group relative bg-slate-900/60 border border-slate-700 hover:border-yellow-500 rounded-2xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(234,179,8,0.1)]"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
+                      <h4 className="text-2xl font-black text-yellow-400 mb-2">
+                        MEDIUM
+                      </h4>
+                      <p className="text-slate-400 mb-6">Still easy</p>
+                    </button>
+                    <button
+                      onClick={() =>
+                        navigate("/practice", {
+                          state: { difficulty: "hard" },
+                        })
+                      }
+                      className="group relative bg-slate-900/60 border border-slate-700 hover:border-red-500 rounded-2xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(239,68,68,0.1)]"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition"></div>
+                      <h4 className="text-2xl font-black text-red-500 mb-2">
+                        HARD
+                      </h4>
+                      <p className="text-slate-400 mb-6">Not that easy</p>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -615,6 +689,7 @@ export default function CreateRoom() {
                   <div className="flex-1 flex flex-col h-full bg-slate-950 absolute inset-0 z-50">
                     <div className="h-16 px-6 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
                       <div className="flex items-center gap-3">
+                        <span className="text-slate-400 font-bold text-lg mr-2">VS</span>
                         <div
                           className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-emerald-500 overflow-hidden"
                           style={{
@@ -631,7 +706,6 @@ export default function CreateRoom() {
                           />
                         </div>
                         <div>
-                          <span className="text-slate-400">VS</span>
                           <span className="text-white text-lg ml-2 font-bold">
                             {battle.opponent?.display_name ||
                               battle.opponent?.username}
@@ -673,18 +747,61 @@ export default function CreateRoom() {
                           </pre>
                         </div>
                       </div>
-                      <div className="w-1/2 flex flex-col bg-slate-950">
-                        <textarea
-                          className="flex-1 w-full bg-[#0d1117] text-slate-200 p-6 font-mono text-sm leading-6 resize-none outline-none border-none focus:ring-0"
-                          placeholder="// Write your solution here..."
-                          spellCheck="false"
-                          value={code}
-                          onChange={(e) => setCode(e.target.value)}
-                        />
+                      <div className="w-1/2 flex flex-col bg-slate-950 relative">
+                        <div className="flex-1 relative">
+                          <Editor
+                            height="100%"
+                            defaultLanguage="cpp"
+                            theme="vs-dark"
+                            value={code}
+                            onChange={(val) => setCode(val || "")}
+                            onMount={handleEditorMount}
+                            options={{
+                              minimap: { enabled: false },
+                              fontSize: 14,
+                              automaticLayout: true,
+                              padding: { top: 16 },
+                              fontFamily: "'JetBrains Mono', monospace",
+                            }}
+                          />
+                        </div>
+
+                        {/* Results / Feedback Area */}
+                        {(results || submitting) && (
+                          <div className="absolute bottom-20 left-4 right-4 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-xl p-4 shadow-xl z-20 animate-in slide-in-from-bottom-5">
+                            {submitting ? (
+                              <div className="flex items-center gap-3 text-slate-300">
+                                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                <span>Running tests...</span>
+                              </div>
+                            ) : results?.error ? (
+                              <div className="text-red-400 font-bold">Error: {results.error}</div>
+                            ) : !results?.compilationSuccess ? (
+                              <div className="text-red-400 font-bold mb-1">⚠️ Compilation Error</div>
+                            ) : results?.success ? (
+                              <div className="text-emerald-400 font-bold text-lg">🎉 Accepted</div>
+                            ) : (
+                              <div className="text-red-400 font-bold text-lg">❌ Wrong Answer</div>
+                            )}
+
+                            {results?.testResults && results.testResults.length > 0 && (
+                              <div className="mt-2 flex gap-1 flex-wrap">
+                                {results.testResults.map((t, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={`w-3 h-3 rounded-full ${t.passed ? 'bg-emerald-500' : 'bg-red-500'}`}
+                                    title={`Test Case ${idx + 1}: ${t.passed ? 'Passed' : 'Failed'}`}
+                                  ></div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div className="h-20 bg-slate-900 border-t border-slate-800 flex items-center justify-between px-6">
                           <span className="text-slate-500 text-sm">{info}</span>
                           <button
-                            onClick={handleSubmit}
+                            onClick={handleRankedSubmit}
                             disabled={submitting}
                             className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
                           >
@@ -714,8 +831,8 @@ export default function CreateRoom() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div
             className={`w-full max-w-md bg-slate-900 border-2 rounded-[32px] p-8 text-center animate-up transform transition-all ${resultPopupData.outcome === "win"
-                ? "border-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.2)]"
-                : "border-red-500 shadow-[0_0_60px_rgba(239,68,68,0.2)]"
+              ? "border-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.2)]"
+              : "border-red-500 shadow-[0_0_60px_rgba(239,68,68,0.2)]"
               }`}
           >
             <div className="text-8xl mb-6">
@@ -727,8 +844,8 @@ export default function CreateRoom() {
             </div>
             <h2
               className={`text-4xl font-black mb-4 uppercase ${resultPopupData.outcome === "win"
-                  ? "text-emerald-400"
-                  : "text-red-500"
+                ? "text-emerald-400"
+                : "text-red-500"
                 }`}
             >
               {resultPopupData.outcome === "win"

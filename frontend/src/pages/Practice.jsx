@@ -7,6 +7,7 @@ import "./Practice.css";
 
 export default function Practice() {
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [currentDifficulty, setCurrentDifficulty] = useState(null);
   const [problemContent, setProblemContent] = useState("");
   const [code, setCode] = useState(``);
   const [results, setResults] = useState(null);
@@ -54,6 +55,7 @@ export default function Practice() {
 
   const handleDifficultySelect = (difficulty) => {
     setShowModal(false);
+    setCurrentDifficulty(difficulty);
     fetchExercises(difficulty);
   };
 
@@ -266,8 +268,8 @@ export default function Practice() {
               <button onClick={() => handleDifficultySelect("medium")}>
                 Medium
               </button>
-              <button onClick={() => handleDifficultySelect("difficult")}>
-                Difficult
+              <button onClick={() => handleDifficultySelect("hard")}>
+                Hard
               </button>
             </div>
           </div>
@@ -292,7 +294,15 @@ export default function Practice() {
 
             <main className="practice-main">
               <section className="code-section">
-                <h3>Your Code:</h3>
+                <div className="flex justify-between items-center mb-2">
+                  <h3>Your Code:</h3>
+                  <button
+                    onClick={() => fetchExercises(currentDifficulty)}
+                    className="text-xs text-slate-400 hover:text-white underline decoration-slate-600"
+                  >
+                    Skip / Next Problem
+                  </button>
+                </div>
                 <Editor
                   height="60vh"
                   language="cpp"
