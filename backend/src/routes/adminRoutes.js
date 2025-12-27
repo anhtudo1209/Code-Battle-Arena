@@ -368,38 +368,92 @@ router.get("/tickets", async (req, res) => {
   }
 });
 
-// Reply to ticket
-router.put("/tickets/:id", async (req, res) => {
+// Get single ticket details with messages
+router.get("/tickets/:id", async (req, res) => {
   const ticketId = req.params.id;
-  const { admin_response, status } = req.body;
 
   try {
-    const updates = [];
-    const values = [];
-    let paramCount = 1;
+    const ticketResult = await query(
+      `SELECT t.*, u.username, u.email 
+       FROM tickets t
+       JOIN users u ON t.user_id = u.id
+       WHERE t.id = $1`,
+      [ticketId]
+    );
 
-    if (admin_response !== undefined) {
-      updates.push(`admin_response = $${paramCount++}`);
-      values.push(admin_response);
-    }
-    if (status !== undefined) {
-      updates.push(`status = $${paramCount++}`);
-      values.push(status);
-    }
-
-    if (updates.length === 0) {
-      return res.status(400).json({ error: "No fields to update" });
+    if (ticketResult.rows.length === 0) {
+      return res.status(404).json({ error: "Ticket not found" });
     }
 
-    updates.push(`updated_at = CURRENT_TIMESTAMP`);
-    values.push(ticketId);
+    const messagesResult = await query(
+      `SELECT tm.*, u.username, u.role
+       FROM ticket_messages tm
+       LEFT JOIN users u ON tm.sender_id = u.id
+       WHERE tm.ticket_id = $1
+       ORDER BY tm.created_at ASC`,
+      [ticketId]
+    );
 
+    res.json({
+      ticket: ticketResult.rows[0],
+      messages: messagesResult.rows
+    });
+  } catch (error) {
+    console.error("Error fetching ticket details:", error);
+    res.status(500).json({ error: "Failed to fetch ticket" });
+  }
+});
+
+// Reply to ticket (Add Admin Message)
+router.post("/tickets/:id/message", async (req, res) => {
+  const ticketId = req.params.id;
+  const adminId = req.userId; // Admin is performing the action
+  const { message } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  try {
+    // 1. Add message
+    const msgResult = await query(
+      `INSERT INTO ticket_messages (ticket_id, sender_id, message)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [ticketId, adminId, message]
+    );
+
+    // 2. Update ticket (status remains open, just update timestamp)
+    // Optionally set status to 'open' if it was closed? User asked for "sending over and over".
+    // Let's ensure it stays open if admin replies.
+    await query(
+      `UPDATE tickets SET updated_at = CURRENT_TIMESTAMP, status = 'open' WHERE id = $1`,
+      [ticketId]
+    );
+
+    res.json({ success: true, message: msgResult.rows[0] });
+  } catch (error) {
+    console.error("Error replying to ticket:", error);
+    res.status(500).json({ error: "Failed to reply" });
+  }
+});
+
+// Update ticket status (Resolve/Close)
+router.put("/tickets/:id/status", async (req, res) => {
+  const ticketId = req.params.id;
+  const { status } = req.body;
+
+  if (!['open', 'resolved', 'closed'].includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  try {
     const result = await query(
       `UPDATE tickets 
-       SET ${updates.join(", ")} 
-       WHERE id = $${paramCount} 
+       SET status = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 
        RETURNING *`,
-      values
+      [status, ticketId]
     );
 
     if (result.rows.length === 0) {
@@ -408,8 +462,8 @@ router.put("/tickets/:id", async (req, res) => {
 
     res.json({ ticket: result.rows[0] });
   } catch (error) {
-    console.error("Error updating ticket:", error);
-    res.status(500).json({ error: "Failed to update ticket" });
+    console.error("Error updating ticket status:", error);
+    res.status(500).json({ error: "Failed to update status" });
   }
 });
 

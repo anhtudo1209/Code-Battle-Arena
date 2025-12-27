@@ -32,7 +32,20 @@ export default function Admin() {
 
   // Ticket management
   const [tickets, setTickets] = useState([]);
-  const [replyForm, setReplyForm] = useState({ id: null, response: "" });
+  const [activeTicket, setActiveTicket] = useState(null);
+  const [ticketMessages, setTicketMessages] = useState([]);
+  const [adminReply, setAdminReply] = useState("");
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (activeTicket) {
+      scrollToBottom();
+    }
+  }, [ticketMessages, activeTicket]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     if (activeTab === "users") {
@@ -195,17 +208,45 @@ export default function Admin() {
     }
   };
 
-  const handleReplyTicket = async (ticketId) => {
+  const loadTicketDetails = async (ticketId) => {
     try {
       setLoading(true);
-      await put(`/admin/tickets/${ticketId}`, {
-        admin_response: replyForm.response,
-        status: 'resolved'
-      });
-      setReplyForm({ id: null, response: "" });
-      await loadTickets();
+      const data = await get(`/admin/tickets/${ticketId}`);
+      setActiveTicket(data.ticket);
+      setTicketMessages(data.messages || []);
     } catch (err) {
-      setError(err.message || "Failed to reply to ticket");
+      setError(err.message || "Failed to load ticket details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminReply = async (e) => {
+    e.preventDefault();
+    if (!adminReply.trim() || !activeTicket) return;
+
+    try {
+      setLoading(true);
+      const res = await post(`/admin/tickets/${activeTicket.id}/message`, { message: adminReply });
+      setTicketMessages([...ticketMessages, res.message]);
+      setAdminReply("");
+      loadTickets(); // Refresh list to update status if needed
+    } catch (err) {
+      setError(err.message || "Failed to send reply");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (status) => {
+    if (!activeTicket) return;
+    try {
+      setLoading(true);
+      const res = await put(`/admin/tickets/${activeTicket.id}/status`, { status });
+      setActiveTicket(res.ticket);
+      loadTickets();
+    } catch (err) {
+      setError(err.message || "Failed to update status");
     } finally {
       setLoading(false);
     }
@@ -616,65 +657,97 @@ export default function Admin() {
         )}
 
         {activeTab === "tickets" && (
-          <div className="admin-section">
-            <h2>Support Tickets</h2>
-            {loading ? <p>Loading...</p> : (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>User</th>
-                    <th>Subject</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+          <div className="admin-section flex-row gap-6 h-[calc(100vh-140px)]">
+            {/* List */}
+            <div className="flex-1 bg-white overflow-y-auto p-4 rounded-lg border border-gray-200 shadow-sm">
+              <h2 className="mb-4 text-gray-800 font-bold border-b border-gray-100 pb-2">All Tickets</h2>
+              {tickets.length === 0 ? <p className="text-gray-500">No tickets.</p> : (
+                <div className="space-y-3">
                   {tickets.map(ticket => (
-                    <React.Fragment key={ticket.id}>
-                      <tr>
-                        <td>{ticket.id}</td>
-                        <td>{ticket.username} <br /><small>{ticket.email}</small></td>
-                        <td>{ticket.subject}</td>
-                        <td>
-                          <span className={`status-badge ${ticket.status}`}>
-                            {ticket.status}
-                          </span>
-                        </td>
-                        <td>{new Date(ticket.created_at).toLocaleDateString()}</td>
-                        <td>
-                          <button onClick={() => setReplyForm(prev => prev.id === ticket.id ? { id: null, response: "" } : { id: ticket.id, response: ticket.admin_response || "" })}>
-                            {ticket.status === 'resolved' ? 'View/Edit' : 'Reply'}
-                          </button>
-                        </td>
-                      </tr>
-                      {replyForm.id === ticket.id && (
-                        <tr>
-                          <td colSpan="6" className="ticket-detail-row">
-                            <div className="ticket-detail-content">
-                              <p><strong>Content:</strong> {ticket.content}</p>
-                              <div className="reply-box">
-                                <label>Admin Response:</label>
-                                <textarea
-                                  rows="4"
-                                  value={replyForm.response}
-                                  onChange={e => setReplyForm({ ...replyForm, response: e.target.value })}
-                                />
-                                <div className="reply-actions">
-                                  <button onClick={() => handleReplyTicket(ticket.id)}>Send Reply & Resolve</button>
-                                  <button onClick={() => setReplyForm({ id: null, response: "" })}>Cancel</button>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
+                    <div
+                      key={ticket.id}
+                      onClick={() => loadTicketDetails(ticket.id)}
+                      className={`p-3 rounded border cursor-pointer transition-colors ${activeTicket?.id === ticket.id
+                        ? 'bg-blue-50 border-blue-500 shadow-sm'
+                        : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                        }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <span className={`font-bold ${activeTicket?.id === ticket.id ? 'text-blue-700' : 'text-gray-800'}`}>{ticket.subject}</span>
+                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${ticket.status === 'open' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>{ticket.status}</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 flex justify-between">
+                        <span>{ticket.username}</span>
+                        <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            )}
+                </div>
+              )}
+            </div>
+
+            {/* Chat Detail */}
+            <div className="flex-[2] bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+              {activeTicket ? (
+                <>
+                  <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800">{activeTicket.subject}</h3>
+                      <p className="text-xs text-gray-500">User: {activeTicket.username} | ID: #{activeTicket.id}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {activeTicket.status === 'open' ? (
+                        <button onClick={() => handleUpdateStatus('resolved')} className="bg-green-600 text-white text-xs px-3 py-1 rounded hover:bg-green-700 transition">Mark Resolved</button>
+                      ) : (
+                        <button onClick={() => handleUpdateStatus('open')} className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700 transition">Reopen</button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-gray-50">
+                    {ticketMessages.map(msg => {
+                      // In Admin view: 
+                      // - The "Customer" (Ticket Owner) should be on the LEFT (items-start).
+                      // - The "Support" (Me or other Admins) should be on the RIGHT (items-end).
+                      const isCustomer = msg.sender_id === activeTicket.user_id;
+
+                      return (
+                        <div key={msg.id} className={`flex flex-col ${!isCustomer ? 'items-end' : 'items-start'}`}>
+                          <div className={`p-3 rounded-lg max-w-[80%] shadow-sm ${!isCustomer
+                            ? 'bg-blue-600 text-white rounded-br-sm'
+                            : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                            }`}>
+                            <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                          </div>
+                          <div className="text-[10px] text-gray-500 mt-1 px-1">
+                            {!isCustomer ? 'Admin' : msg.username} • {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  <div className="p-4 border-t border-gray-200 bg-white">
+                    <form onSubmit={handleAdminReply} className="flex gap-2">
+                      <input
+                        className="flex-1 bg-white border border-gray-300 rounded p-2 text-gray-800 focus:outline-none focus:border-blue-500 transition"
+                        placeholder="Reply to user..."
+                        value={adminReply}
+                        onChange={e => setAdminReply(e.target.value)}
+                      />
+                      <button type="submit" disabled={loading || !adminReply.trim()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded transition shadow-sm disabled:opacity-50">Send</button>
+                    </form>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-gray-400 bg-gray-50">
+                  <div className="text-center">
+                    <p className="mb-2">Select a ticket to view conversation</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

@@ -103,10 +103,19 @@ CREATE TABLE IF NOT EXISTS tickets (
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     subject TEXT NOT NULL,
     content TEXT NOT NULL,
-    admin_response TEXT,
+    admin_response TEXT, -- Deprecated, use ticket_messages
     status VARCHAR(50) DEFAULT 'open',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Ticket messages table (for threaded conversations)
+CREATE TABLE IF NOT EXISTS ticket_messages (
+    id SERIAL PRIMARY KEY,
+    ticket_id INTEGER REFERENCES tickets(id) ON DELETE CASCADE,
+    sender_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for better performance
