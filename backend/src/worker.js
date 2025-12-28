@@ -21,10 +21,10 @@ import { battleTimeoutQueue, matchQueue } from './queue.js';
 
 
 const connection = new IORedis({
-    host: '127.0.0.1',
-    port: 6379,
-    maxRetriesPerRequest: null,   
-    enableReadyCheck: false,
+  host: '127.0.0.1',
+  port: 6379,
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
 });
 
 const judge = new CodeJudge();
@@ -34,7 +34,7 @@ const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
 const worker = new Worker('judgeQueue', async (job) => {
   const { submissionId, userId, exerciseId, code, language, battleId } = job.data;
 
-  console.log(`⚙️ Processing submission ${submissionId} for user ${userId} on ${exerciseId}${battleId ? ` (battle ${battleId})` : ''}`);
+  console.log(`Processing submission ${submissionId} for user ${userId} on ${exerciseId}${battleId ? ` (battle ${battleId})` : ''}`);
 
   // Update DB: status = running (using submissionId for accuracy)
   await query(`UPDATE submissions SET status = 'running' WHERE id = $1`,
@@ -62,7 +62,16 @@ const worker = new Worker('judgeQueue', async (job) => {
     ]
   );
 
-  console.log(`✅ Submission ${submissionId} done (${status}, compilation: ${compilationSuccess})`);
+  console.log(`Submission ${submissionId} done (${status}, compilation: ${compilationSuccess})`);
+
+  // Update daily streak (only if passed)
+  if (status === 'passed') {
+    try {
+      await updateDailyStreak(userId);
+    } catch (err) {
+      console.error(`Failed to update daily streak for user ${userId}:`, err);
+    }
+  }
 
   if (battleId) {
     try {
@@ -74,13 +83,13 @@ const worker = new Worker('judgeQueue', async (job) => {
 }, { connection, concurrency: 3 }); // can handle 3 submissions at once
 
 worker.on('failed', (job, err) => {
-  console.error(`❌ Job ${job.id} failed:`, err);
+  console.error(`Job ${job.id} failed:`, err);
 });
 
 // Battle timeout worker - handles both acceptance timeouts and battle duration timeouts
 const timeoutWorker = new Worker('battleTimeoutQueue', async (job) => {
   const { battleId } = job.data;
-  console.log(`⏱️ Battle job '${job.name}' triggered for ${battleId}`);
+  console.log(`Battle job '${job.name}' triggered for ${battleId}`);
 
   try {
     if (job.name === 'timeout') {
@@ -90,16 +99,16 @@ const timeoutWorker = new Worker('battleTimeoutQueue', async (job) => {
       // acceptance window expired
       await handleAcceptTimeout(battleId);
     } else {
-      console.warn(`⚠️ Unknown battleTimeout job name: ${job.name}`);
+      console.warn(`Unknown battleTimeout job name: ${job.name}`);
     }
   } catch (error) {
-    console.error(`❌ Error processing battle job ${job.id} (${job.name}) for ${battleId}:`, error);
+    console.error(`Error processing battle job ${job.id} (${job.name}) for ${battleId}:`, error);
     throw error;
   }
 }, { connection, concurrency: 10 });
 
 timeoutWorker.on('failed', (job, err) => {
-  console.error(`❌ Battle timeout job ${job.id} failed:`, err);
+  console.error(`Battle timeout job ${job.id} failed:`, err);
 });
 
 async function scheduleBattleTimeout(battleId) {
@@ -107,13 +116,13 @@ async function scheduleBattleTimeout(battleId) {
     await battleTimeoutQueue.add(
       'timeout',
       { battleId },
-      { 
+      {
         delay: MAX_BATTLE_DURATION_MS,
         attempts: 3,
         backoff: { type: 'exponential', delay: 2000 }
       }
     );
-    console.log(`📅 Battle ${battleId} timeout scheduled for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
+    console.log(`Battle ${battleId} timeout scheduled for ${MAX_BATTLE_DURATION_MS / 1000 / 60} minutes`);
   } catch (error) {
     console.error(`Failed to schedule timeout for battle ${battleId}:`, error);
   }
@@ -144,14 +153,14 @@ async function handleAcceptTimeout(battleId) {
     // Re-add match jobs for both players so they re-enter matching loop
     try {
       await matchQueue.add('match', { userId: battle.player1_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
-    } catch (e) {}
+    } catch (e) { }
     try {
       await matchQueue.add('match', { userId: battle.player2_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
-    } catch (e) {}
+    } catch (e) { }
 
-    console.log(`⚠️ Battle ${battleId} cancelled due to accept timeout; players requeued`);
+    console.log(`Battle ${battleId} cancelled due to accept timeout; players requeued`);
   } catch (err) {
-    console.error(`❌ Error handling accept timeout for battle ${battleId}:`, err);
+    console.error(`Error handling accept timeout for battle ${battleId}:`, err);
   }
 }
 
@@ -173,7 +182,7 @@ async function processBattleIfReady(battleId) {
   );
   const timedOut = timeoutCheck.rows[0]?.timed_out === true;
   const startedAtUtc = timeoutCheck.rows[0]?.started_at_utc || battle.started_at;
-  console.log(`⏱️ Battle ${battleId} timing (DB): started_at_utc=${startedAtUtc}, timedOut=${timedOut}`);
+  console.log(`Battle ${battleId} timing (DB): started_at_utc=${startedAtUtc}, timedOut=${timedOut}`);
 
   const ids = [];
   if (battle.player1_submission_id) ids.push(battle.player1_submission_id);
@@ -181,7 +190,7 @@ async function processBattleIfReady(battleId) {
 
   if (ids.length === 0) {
     if (!timedOut) {
-      console.log(`⏳ Battle ${battleId} waiting for first submission`);
+      console.log(`Battle ${battleId} waiting for first submission`);
       return;
     }
     // Timed out with no submissions at all → treat as draw with zero performance
@@ -211,7 +220,7 @@ async function processBattleIfReady(battleId) {
         [battle.player1_id, 'draw'],
         [battle.player2_id, 'draw'],
       ]),
-    }; 
+    };
 
     await finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2);
     return;
@@ -233,9 +242,9 @@ async function processBattleIfReady(battleId) {
   // Diagnostic snapshot
   try {
     const subsSummary = [...submissionsMap.entries()].map(([id, s]) => ({ id, status: s.status }));
-    console.log(`🔎 Evaluating battle ${battleId}: status=${battle.status}, created_at=${battle.created_at}, started_at=${battle.started_at}, submissions=${JSON.stringify(subsSummary)}, now=${new Date().toISOString()}`);
+    console.log(`Evaluating battle ${battleId}: status=${battle.status}, created_at=${battle.created_at}, started_at=${battle.started_at}, submissions=${JSON.stringify(subsSummary)}, now=${new Date().toISOString()}`);
   } catch (err) {
-    console.warn('⚠️ Could not log battle/submission snapshot:', err.message || err);
+    console.warn('Could not log battle/submission snapshot:', err.message || err);
   }
 
   // Case 1: both players have submitted
@@ -264,7 +273,7 @@ async function processBattleIfReady(battleId) {
     if (!timedOut) {
       // Not timed out yet & no one has fully passed -> let them keep submitting
       console.log(
-        `⏳ Battle ${battleId} has submissions from both players but no full pass yet – waiting or until timeout`
+        `Battle ${battleId} has submissions from both players but no full pass yet – waiting or until timeout`
       );
       return;
     }
@@ -325,7 +334,7 @@ async function processBattleIfReady(battleId) {
   // Case 2: only one player has submitted.
   const singleSubmission = submission1 || submission2;
   if (!singleSubmission) {
-    console.log(`⚠️ Battle ${battleId} submissions not fully recorded yet`);
+    console.log(`Battle ${battleId} submissions not fully recorded yet`);
     return;
   }
 
@@ -379,7 +388,7 @@ async function processBattleIfReady(battleId) {
 
   // Single submission, not passed. If we've hit the 15 minute limit, end as timeout.
   if (!timedOut) {
-    console.log(`⏳ Battle ${battleId} has one submission but not passed yet – waiting for opponent or future pass`);
+    console.log(`Battle ${battleId} has one submission but not passed yet – waiting for opponent or future pass`);
     return;
   }
 
@@ -445,17 +454,17 @@ async function processBattleIfReady(battleId) {
 }
 
 async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2) {
-  console.log(`🔔 finalizeBattleAndRatings called for battle ${battleId} with outcomeWinner=${outcome.winnerId}, battleStatus=${battle.status}`);
+  console.log(`finalizeBattleAndRatings called for battle ${battleId} with outcomeWinner=${outcome.winnerId}, battleStatus=${battle.status}`);
   // Sanity-check current battle state to avoid premature finalization
   const latestBattle = await query('SELECT player1_submission_id, player2_submission_id, started_at, status FROM battles WHERE id = $1', [battleId]);
   if (latestBattle.rowCount === 0) {
-    console.log(`⚠️ Battle ${battleId} not found during finalization check, skipping`);
+    console.log(`Battle ${battleId} not found during finalization check, skipping`);
     return;
   }
 
   const latest = latestBattle.rows[0];
   if (latest.status !== 'active') {
-    console.log(`⚠️ Battle ${battleId} not active during finalization check (status: ${latest.status}), skipping`);
+    console.log(`Battle ${battleId} not active during finalization check (status: ${latest.status}), skipping`);
     return;
   }
 
@@ -465,7 +474,7 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
 
   // If there are NO recorded submissions and the battle hasn't timed out, do NOT finalize as it would be premature
   if (!latest.player1_submission_id && !latest.player2_submission_id && !timedOut) {
-    console.log(`⚠️ Skipping premature finalization for battle ${battleId}: no submissions and not timed out`);
+    console.log(`Skipping premature finalization for battle ${battleId}: no submissions and not timed out`);
     return;
   }
 
@@ -476,11 +485,11 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
       const subRes = await query('SELECT status FROM submissions WHERE id = $1', [singleSubmissionId]);
       const subStatus = subRes.rowCount > 0 ? subRes.rows[0].status : null;
       if (subStatus !== 'passed' && !timedOut) {
-        console.log(`⚠️ Skipping premature finalization for battle ${battleId}: single submission ${singleSubmissionId} status='${subStatus}' and not timed out`);
+        console.log(`Skipping premature finalization for battle ${battleId}: single submission ${singleSubmissionId} status='${subStatus}' and not timed out`);
         return;
       }
     } catch (err) {
-      console.warn(`⚠️ Could not read submission ${singleSubmissionId} status during finalization check:`, err.message || err);
+      console.warn(`Could not read submission ${singleSubmissionId} status during finalization check:`, err.message || err);
       // If we can't read submission status, err on the side of not finalizing
       return;
     }
@@ -503,7 +512,7 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
     const isTimedOut = (Date.now() - latestStartedAt) >= MAX_BATTLE_DURATION_MS;
 
     if (!hasPassed && !bothSubmitted && !isTimedOut) {
-      console.log(`⚠️ Finalization blocked for battle ${battleId}: no pass, not both submitted, not timed out (subStatuses=${JSON.stringify([...subMap.entries()])})`);
+      console.log(`Finalization blocked for battle ${battleId}: no pass, not both submitted, not timed out (subStatuses=${JSON.stringify([...subMap.entries()])})`);
       return;
     }
 
@@ -515,20 +524,20 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
           const recentMs = new Date(recent.rows[0].submitted_at).getTime();
           const ageMs = Date.now() - recentMs;
           if (ageMs < 60 * 1000) {
-            console.log(`⚠️ Blocking finalization for battle ${battleId}: DB timed_out=true but a recent submission was received ${ageMs}ms ago`);
+            console.log(`Blocking finalization for battle ${battleId}: DB timed_out=true but a recent submission was received ${ageMs}ms ago`);
             return;
           }
         }
       } catch (err) {
-        console.warn(`⚠️ Could not check recent submissions for battle ${battleId}:`, err.message || err);
+        console.warn(`Could not check recent submissions for battle ${battleId}:`, err.message || err);
         // If we can't validate recent submission, abort finalization conservatively
         return;
       }
     }
 
-    console.log(`✅ Finalization allowed for battle ${battleId}: hasPassed=${hasPassed}, bothSubmitted=${bothSubmitted}, isTimedOut=${isTimedOut}, subStatuses=${JSON.stringify([...subMap.entries()])}`);
+    console.log(`Finalization allowed for battle ${battleId}: hasPassed=${hasPassed}, bothSubmitted=${bothSubmitted}, isTimedOut=${isTimedOut}, subStatuses=${JSON.stringify([...subMap.entries()])}`);
   } catch (err) {
-    console.warn(`⚠️ Could not validate submissions before finalizing battle ${battleId}:`, err.message || err);
+    console.warn(`Could not validate submissions before finalizing battle ${battleId}:`, err.message || err);
     // conservative approach: abort finalization if we can't validate
     return;
   }
@@ -543,12 +552,12 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
   );
 
   if (res.rowCount === 0) {
-    console.log(`⚠️ Battle ${battleId} already finalized or not active, skipping finalization`);
+    console.log(`Battle ${battleId} already finalized or not active, skipping finalization`);
     // Best-effort: remove scheduled timeout job if present
     try {
       const timeoutJobId = `battle-timeout-${battleId}`;
       await battleTimeoutQueue.remove(timeoutJobId);
-      console.log(`🧹 Removed timeout job ${timeoutJobId} (if it existed)`);
+      console.log(`Removed timeout job ${timeoutJobId} (if it existed)`);
     } catch (err) {
       // ignore removal errors
     }
@@ -563,15 +572,15 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
     [[battle.player1_id, battle.player2_id]]
   );
 
-  console.log(`🏆 Battle ${battleId} completed. Winner: ${outcome.winnerId || 'Draw'}`);
+  console.log(`Battle ${battleId} completed. Winner: ${outcome.winnerId || 'Draw'}`);
 
   // Remove the scheduled timeout job now that the battle is finishing
   try {
     const timeoutJobId = `battle-timeout-${battleId}`;
     await battleTimeoutQueue.remove(timeoutJobId);
-    console.log(`🧹 Removed timeout job ${timeoutJobId}`);
+    console.log(`Removed timeout job ${timeoutJobId}`);
   } catch (err) {
-    console.warn(`⚠️ Could not remove timeout job for battle ${battleId}:`, err.message || err);
+    console.warn(`Could not remove timeout job for battle ${battleId}:`, err.message || err);
   }
 
   await updatePlayerRatings({ battle, perf1, perf2, outcome });
@@ -725,11 +734,11 @@ async function updatePlayerRatings({ battle, perf1, perf2, outcome }) {
     await query('COMMIT');
 
     console.log(
-      `📈 Ratings updated: Player ${player1.id} ${player1.rating}→${newRating1} (${delta1 >= 0 ? '+' : ''}${delta1}), ` +
+      `Ratings updated: Player ${player1.id} ${player1.rating}→${newRating1} (${delta1 >= 0 ? '+' : ''}${delta1}), ` +
       `Player ${player2.id} ${player2.rating}→${newRating2} (${delta2 >= 0 ? '+' : ''}${delta2})`
     );
   } catch (err) {
-    console.error(`❌ Error updating ratings for battle ${battle.id}:`, err);
+    console.error(`Error updating ratings for battle ${battle.id}:`, err);
     try { await query('ROLLBACK'); } catch (e) { }
   }
 }
@@ -799,11 +808,37 @@ async function getExerciseDifficulty(exerciseId) {
     const configPath = path.join(exercisesDir, exerciseId, 'config.json');
     const configContent = await fs.promises.readFile(configPath, 'utf8');
     const config = JSON.parse(configContent);
-    return (config.difficulty || 'medium').toLowerCase();
-  } catch {
-    return 'medium';
+    return config.difficulty;
+  } catch (error) {
+    return 'medium'; // default
   }
 }
+
+async function updateDailyStreak(userId) {
+  try {
+    // Atomic DB Update - handles all date comparisons in DB
+    const res = await query(
+      `UPDATE users
+       SET
+         daily_streak = CASE
+           WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE THEN daily_streak
+           WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN daily_streak + 1
+           ELSE 1
+         END,
+         last_activity_date = CURRENT_DATE
+       WHERE id = $1
+       RETURNING daily_streak`,
+      [userId]
+    );
+    if (res.rows.length > 0) {
+      console.log(`🔥 Updated streak for user ${userId}: Now ${res.rows[0].daily_streak}`);
+    }
+
+  } catch (error) {
+    console.error("Error updating streak:", error);
+  }
+}
+
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));

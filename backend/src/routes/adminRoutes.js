@@ -101,7 +101,7 @@ router.delete("/users/:id", async (req, res) => {
 
   try {
     const result = await query("DELETE FROM users WHERE id = $1 RETURNING id", [userId]);
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -199,7 +199,7 @@ router.get("/exercises/:id", async (req, res) => {
     const files = await fs.promises.readdir(exerciseDir);
     const testCases = [];
     const inputFiles = files.filter(f => f.endsWith('.input.txt')).sort();
-    
+
     for (const inputFile of inputFiles) {
       const testCaseNum = inputFile.replace('.input.txt', '');
       const outputFile = `${testCaseNum}.output.txt`;
@@ -235,7 +235,7 @@ router.put("/exercises/:id", async (req, res) => {
 
   try {
     const exerciseDir = path.join(__dirname, '..', '..', 'exercises', exerciseId);
-    
+
     // Ensure directory exists
     await fs.promises.mkdir(exerciseDir, { recursive: true });
 
@@ -262,7 +262,7 @@ router.put("/exercises/:id", async (req, res) => {
       for (const testCase of testCases) {
         const inputPath = path.join(exerciseDir, `${testCase.id}.input.txt`);
         const outputPath = path.join(exerciseDir, `${testCase.id}.output.txt`);
-        
+
         if (testCase.input !== undefined) {
           await fs.promises.writeFile(inputPath, testCase.input, 'utf8');
         }
@@ -289,7 +289,7 @@ router.post("/exercises", async (req, res) => {
 
   try {
     const exerciseDir = path.join(__dirname, '..', '..', 'exercises', id);
-    
+
     // Check if exercise already exists
     if (fs.existsSync(exerciseDir)) {
       return res.status(400).json({ error: "Exercise already exists" });
@@ -337,7 +337,7 @@ router.delete("/exercises/:id", async (req, res) => {
 
   try {
     const exerciseDir = path.join(__dirname, '..', '..', 'exercises', exerciseId);
-    
+
     if (!fs.existsSync(exerciseDir)) {
       return res.status(404).json({ error: "Exercise not found" });
     }
@@ -347,6 +347,123 @@ router.delete("/exercises/:id", async (req, res) => {
   } catch (error) {
     console.error(`Error deleting exercise ${exerciseId}:`, error);
     res.status(500).json({ error: "Failed to delete exercise" });
+  }
+});
+
+// ========== TICKET MANAGEMENT ==========
+
+// Get all tickets
+router.get("/tickets", async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT t.*, u.username, u.email 
+       FROM tickets t
+       JOIN users u ON t.user_id = u.id
+       ORDER BY t.created_at DESC`
+    );
+    res.json({ tickets: result.rows });
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    res.status(500).json({ error: "Failed to fetch tickets" });
+  }
+});
+
+// Get single ticket details with messages
+router.get("/tickets/:id", async (req, res) => {
+  const ticketId = req.params.id;
+
+  try {
+    const ticketResult = await query(
+      `SELECT t.*, u.username, u.email 
+       FROM tickets t
+       JOIN users u ON t.user_id = u.id
+       WHERE t.id = $1`,
+      [ticketId]
+    );
+
+    if (ticketResult.rows.length === 0) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const messagesResult = await query(
+      `SELECT tm.*, u.username, u.role
+       FROM ticket_messages tm
+       LEFT JOIN users u ON tm.sender_id = u.id
+       WHERE tm.ticket_id = $1
+       ORDER BY tm.created_at ASC`,
+      [ticketId]
+    );
+
+    res.json({
+      ticket: ticketResult.rows[0],
+      messages: messagesResult.rows
+    });
+  } catch (error) {
+    console.error("Error fetching ticket details:", error);
+    res.status(500).json({ error: "Failed to fetch ticket" });
+  }
+});
+
+// Reply to ticket (Add Admin Message)
+router.post("/tickets/:id/message", async (req, res) => {
+  const ticketId = req.params.id;
+  const adminId = req.userId; // Admin is performing the action
+  const { message } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  try {
+    // 1. Add message
+    const msgResult = await query(
+      `INSERT INTO ticket_messages (ticket_id, sender_id, message)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [ticketId, adminId, message]
+    );
+
+    // 2. Update ticket (status remains open, just update timestamp)
+    // Optionally set status to 'open' if it was closed? User asked for "sending over and over".
+    // Let's ensure it stays open if admin replies.
+    await query(
+      `UPDATE tickets SET updated_at = CURRENT_TIMESTAMP, status = 'open' WHERE id = $1`,
+      [ticketId]
+    );
+
+    res.json({ success: true, message: msgResult.rows[0] });
+  } catch (error) {
+    console.error("Error replying to ticket:", error);
+    res.status(500).json({ error: "Failed to reply" });
+  }
+});
+
+// Update ticket status (Resolve/Close)
+router.put("/tickets/:id/status", async (req, res) => {
+  const ticketId = req.params.id;
+  const { status } = req.body;
+
+  if (!['open', 'resolved', 'closed'].includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  try {
+    const result = await query(
+      `UPDATE tickets 
+       SET status = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 
+       RETURNING *`,
+      [status, ticketId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    res.json({ ticket: result.rows[0] });
+  } catch (error) {
+    console.error("Error updating ticket status:", error);
+    res.status(500).json({ error: "Failed to update status" });
   }
 });
 

@@ -63,19 +63,7 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
     navigate("/admin");
   };
 
-  const handleMatchTest = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    navigate("/match-test");
-  };
 
-  const handleMatchDemo = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    navigate("/match-demo");
-  };
 
   const menu = (
     <div
@@ -86,29 +74,24 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
       <button className="menu-item" onClick={handleHome}>
         Home
       </button>
-      <button className="menu-item" onClick={handleMatchTest}>
-        Match Test
-      </button>
-      <button className="menu-item" onClick={handleMatchDemo}>
-        Match Demo
-      </button>
+
       {isAdmin && (
         <button className="menu-item admin" onClick={handleAdmin}>
           Admin
         </button>
       )}
-      <a href="/Friends.html" className="menu-item">
+      <button className="menu-item" onClick={() => { closeMenu(); navigate("/friends"); }}>
         Friends
-      </a>
-      <a href="/Confession.html" className="menu-item">
+      </button>
+      <button className="menu-item" onClick={() => { closeMenu(); navigate("/confession"); }}>
         Confession
-      </a>
-      <a href="/Support.html" className="menu-item">
+      </button>
+      <button className="menu-item" onClick={() => { closeMenu(); navigate("/support"); }}>
         Support
-      </a>
-      <a href="/Settings.html" className="menu-item">
+      </button>
+      <button className="menu-item" onClick={() => { closeMenu(); navigate("/settings"); }}>
         Settings
-      </a>
+      </button>
       <button className="menu-item logout" onClick={handleLogout}>
         Log out
       </button>

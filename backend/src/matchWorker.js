@@ -18,19 +18,19 @@ import { pickDifficultyForRating, getDifficultyBucket, getMaxRatingDifference } 
 import { battleTimeoutQueue } from './queue.js';
 
 const connection = new IORedis({
-    host: '127.0.0.1',
-    port: 6379,
-    maxRetriesPerRequest: null,   
-    enableReadyCheck: false,
+  host: '127.0.0.1',
+  port: 6379,
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
 });
 
-const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
+const MAX_BATTLE_DURATION_MS = 20 * 60 * 1000; // 20 minutes
 
 // Matching worker that processes match requests and pairs players
 const matchWorker = new Worker('matchQueue', async (job) => {
   const { userId } = job.data;
 
-  console.log(`🔍 Processing match request for user ${userId}`);
+  console.log(`Processing match request for user ${userId}`);
 
   try {
     // Check if user is still in queue and get rating
@@ -43,7 +43,7 @@ const matchWorker = new Worker('matchQueue', async (job) => {
     );
 
     if (playerResult.rows.length === 0) {
-      console.log(`⚠️ User ${userId} no longer in queue, skipping match`);
+      console.log(`User ${userId} no longer in queue, skipping match`);
       return;
     }
 
@@ -66,7 +66,7 @@ const matchWorker = new Worker('matchQueue', async (job) => {
     );
 
     if (opponentResult.rows.length === 0) {
-      console.log(`⏳ No opponent found for user ${userId}, will retry...`);
+      console.log(`No opponent found for user ${userId}, will retry...`);
       // Re-queue the job with a delay (retry after 5 seconds)
       throw new Error('No opponent found');
     }
@@ -81,9 +81,9 @@ const matchWorker = new Worker('matchQueue', async (job) => {
        WHERE user_id IN ($1, $2) AND status = 'waiting'`,
       [userId, opponentId]
     );
-    
+
     if (bothStillWaiting.rows[0].count !== '2') {
-      console.log(`⚠️ User ${userId} or ${opponentId} already matched by another worker, skipping`);
+      console.log(`User ${userId} or ${opponentId} already matched by another worker, skipping`);
       return; // Other worker handled it, just exit cleanly
     }
 
@@ -95,8 +95,8 @@ const matchWorker = new Worker('matchQueue', async (job) => {
     const exerciseId = await selectExerciseForDifficulty(exercisesDir, averageRating, primaryDifficulty);
 
     if (!exerciseId) {
-      console.error(`❌ No exercises available for selected difficulty mix (avg rating ${averageRating})`);
-      await query('UPDATE match_queue SET status = $1 WHERE user_id IN ($2, $3) AND status = $4', 
+      console.error(`No exercises available for selected difficulty mix (avg rating ${averageRating})`);
+      await query('UPDATE match_queue SET status = $1 WHERE user_id IN ($2, $3) AND status = $4',
         ['cancelled', userId, opponentId, 'waiting']);
       return;
     }
@@ -104,16 +104,16 @@ const matchWorker = new Worker('matchQueue', async (job) => {
     // Use a transaction to atomically create battle and update queue statuses
     await query('BEGIN');
     try {
-    // Create battle record in 'pending' state while we wait for acceptances
-    // Explicitly set created_at to UTC to avoid timezone issues
-    const battleResult = await query(
-      `INSERT INTO battles (player1_id, player2_id, exercise_id, status, created_at)
+      // Create battle record in 'pending' state while we wait for acceptances
+      // Explicitly set created_at to UTC to avoid timezone issues
+      const battleResult = await query(
+        `INSERT INTO battles (player1_id, player2_id, exercise_id, status, created_at)
        VALUES ($1, $2, $3, $4, NOW() AT TIME ZONE 'UTC')
        RETURNING id, created_at`,
-      [userId, opponentId, exerciseId, 'pending']
-    );
+        [userId, opponentId, exerciseId, 'pending']
+      );
 
-    const battleId = battleResult.rows[0].id;
+      const battleId = battleResult.rows[0].id;
 
       // Update both players' queue status to 'matched' (atomically)
       const updateResult = await query(
@@ -126,34 +126,34 @@ const matchWorker = new Worker('matchQueue', async (job) => {
       // Verify both were updated
       if (updateResult.rows.length !== 2) {
         await query('ROLLBACK');
-        console.log(`⚠️ Race condition: only ${updateResult.rows.length}/2 players updated, another worker may have matched them`);
+        console.log(`Race condition: only ${updateResult.rows.length}/2 players updated, another worker may have matched them`);
         return;
       }
 
       await query('COMMIT');
 
-    // Schedule accept timeout job (20s) so pending match expires if not accepted
+      // Schedule accept timeout job (20s) so pending match expires if not accepted
       // Do this AFTER commit so battle definitely exists
       const acceptJobId = `battle-accept-${battleId}`;
       try {
-    await battleTimeoutQueue.add(
-      'accept',
-      { battleId },
-      {
-        jobId: acceptJobId,
-        delay: 20 * 1000, // 20 seconds to accept
-        attempts: 1
-      }
-    );
-    console.log(`📅 Battle ${battleId} accept window scheduled (job ${acceptJobId}) for 20 seconds`);
+        await battleTimeoutQueue.add(
+          'accept',
+          { battleId },
+          {
+            jobId: acceptJobId,
+            delay: 20 * 1000, // 20 seconds to accept
+            attempts: 1
+          }
+        );
+        console.log(`Battle ${battleId} accept window scheduled (job ${acceptJobId}) for 20 seconds`);
       } catch (queueError) {
         // If queue add fails, log but don't fail the match (battle is already created)
-        console.error(`⚠️ Failed to schedule accept timeout for battle ${battleId}:`, queueError.message || queueError);
+        console.error(`Failed to schedule accept timeout for battle ${battleId}:`, queueError.message || queueError);
         // Battle still exists, players can accept manually, but timeout won't work
       }
 
-    const bucketLabel = getDifficultyBucket(averageRating).label;
-    console.log(`✅ Matched user ${userId} (rating ${playerRating}) with ${opponentId} (rating ${opponentRating}) in battle ${battleId} (${bucketLabel}) → exercise ${exerciseId}`);
+      const bucketLabel = getDifficultyBucket(averageRating).label;
+      console.log(`Matched user ${userId} (rating ${playerRating}) with ${opponentId} (rating ${opponentRating}) in battle ${battleId} (${bucketLabel}) → exercise ${exerciseId}`);
     } catch (dbError) {
       await query('ROLLBACK');
       throw dbError; // Re-throw to be caught by outer catch
@@ -164,28 +164,28 @@ const matchWorker = new Worker('matchQueue', async (job) => {
     if (error.message === 'No opponent found') {
       throw error; // This will trigger BullMQ retry
     }
-    
+
     // Check if user was already matched by another worker (race condition)
     const currentStatus = await query(
       'SELECT status FROM match_queue WHERE user_id = $1',
       [userId]
     );
-    
+
     if (currentStatus.rows.length > 0 && currentStatus.rows[0].status === 'matched') {
-      console.log(`ℹ️ User ${userId} was already matched by another worker, ignoring error`);
+      console.log(`User ${userId} was already matched by another worker, ignoring error`);
       return; // Don't cancel, they're already matched
     }
-    
-    console.error(`❌ Error matching user ${userId}:`, error);
-    
+
+    console.error(`Error matching user ${userId}:`, error);
+
     // Only cancel if user is still waiting (not already matched/cancelled)
     await query(
       'UPDATE match_queue SET status = $1 WHERE user_id = $2 AND status = $3',
       ['cancelled', userId, 'waiting']
     );
   }
-}, { 
-  connection, 
+}, {
+  connection,
   concurrency: 5, // Can handle 5 match requests at once
   limiter: {
     max: 10, // Max 10 jobs
@@ -202,10 +202,10 @@ matchWorker.on('failed', async (job, err) => {
     // Retry after 5 seconds if no opponent found (up to 20 attempts)
     if (job.attemptsMade < 20) {
       const retryDelay = 5000;
-      console.log(`🔄 Retrying match for user ${job.data.userId} in ${retryDelay}ms (attempt ${job.attemptsMade + 1}/20)`);
-      
+      console.log(`Retrying match for user ${job.data.userId} in ${retryDelay}ms (attempt ${job.attemptsMade + 1}/20)`);
+
       // Re-add job with delay
-      await matchQueue.add('match', job.data, { 
+      await matchQueue.add('match', job.data, {
         delay: retryDelay,
         attempts: job.attemptsMade + 1,
         backoff: {
@@ -214,7 +214,7 @@ matchWorker.on('failed', async (job, err) => {
         }
       });
     } else {
-      console.log(`⏰ Match timeout for user ${job.data.userId} after 20 attempts`);
+      console.log(`Match timeout for user ${job.data.userId} after 20 attempts`);
       // Remove from queue after max attempts
       await query(
         'UPDATE match_queue SET status = $1 WHERE user_id = $2',
@@ -222,7 +222,7 @@ matchWorker.on('failed', async (job, err) => {
       );
     }
   } else {
-    console.error(`❌ Match job ${job.id} failed:`, err);
+    console.error(`Match job ${job.id} failed:`, err);
   }
 });
 
@@ -275,5 +275,5 @@ async function getExercisesByDifficulty(exercisesDir, difficulty) {
   return matches;
 }
 
-console.log('🎮 Match worker started');
+console.log('Match worker started');
 

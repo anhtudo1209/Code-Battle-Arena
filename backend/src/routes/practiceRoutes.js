@@ -236,6 +236,33 @@ router.get("/exercises", async (req, res) => {
   }
 });
 
+// Get random exercise
+router.get("/exercises/random", async (req, res) => {
+  try {
+    const exercisesDir = path.join(__dirname, '..', '..', 'exercises');
+    const folders = await fs.promises.readdir(exercisesDir, { withFileTypes: true });
+
+    // Filter only directories
+    const exerciseIds = folders
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
+
+    if (exerciseIds.length === 0) {
+      return res.status(404).json({ error: "No exercises found" });
+    }
+
+    const randomId = exerciseIds[Math.floor(Math.random() * exerciseIds.length)];
+
+    // Redirect to the specific exercise detail endpoint logic, or just return the ID
+    // Returning ID is safer, frontend can then fetch details
+    res.json({ id: randomId });
+
+  } catch (error) {
+    console.error("Error getting random exercise:", error);
+    res.status(500).json({ error: "Failed to get random exercise" });
+  }
+});
+
 // Get single exercise details
 router.get("/exercises/:id", async (req, res) => {
   const exerciseId = req.params.id;
@@ -244,7 +271,7 @@ router.get("/exercises/:id", async (req, res) => {
   try {
     const exercisesDir = path.join(__dirname, '..', '..', 'exercises');
     const problemPath = path.join(exercisesDir, exerciseId, 'problem.md');
-    
+
     const exerciseDir = path.join(__dirname, "..", "..", "exercises", exerciseId);
     const configPath = path.join(exerciseDir, "config.json");
 
@@ -258,21 +285,8 @@ router.get("/exercises/:id", async (req, res) => {
 
     let starterCode = "";
     if (config.starterCode) {
-        // Try to load language-specific starter code
-        const baseStarterName = config.starterCode.replace(/\.(c|cpp)$/, '');
-        const languageExt = language === 'c' ? '.c' : '.cpp';
-        const languageSpecificPath = path.join(exerciseDir, baseStarterName + languageExt);
-        
-        // If language-specific file exists, use it; otherwise fall back to original
-        if (fs.existsSync(languageSpecificPath)) {
-          starterCode = fs.readFileSync(languageSpecificPath, "utf8");
-        } else {
-          // Fall back to original starter code file
-          const starterPath = path.join(exerciseDir, config.starterCode);
-          if (fs.existsSync(starterPath)) {
-            starterCode = fs.readFileSync(starterPath, "utf8");
-          }
-        }
+      const starterPath = path.join(exerciseDir, config.starterCode);
+      starterCode = fs.readFileSync(starterPath, "utf8");
     }
 
     res.json({

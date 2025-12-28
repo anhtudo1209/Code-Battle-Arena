@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Editor } from "@monaco-editor/react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
@@ -6,6 +7,7 @@ import "./Practice.css";
 
 export default function Practice() {
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [currentDifficulty, setCurrentDifficulty] = useState(null);
   const [problemContent, setProblemContent] = useState("");
   const [code, setCode] = useState(``);
   const [results, setResults] = useState(null);
@@ -20,7 +22,14 @@ export default function Practice() {
   const decorationsRef = useRef([]);
   const lastValidCodeRef = useRef("");
 
+  const location = useLocation();
   const [showModal, setShowModal] = useState(true);
+
+  useEffect(() => {
+    if (location.state?.difficulty) {
+      handleDifficultySelect(location.state.difficulty);
+    }
+  }, [location.state]);
 
   const fetchExercises = async (difficulty) => {
     setLoadingExercises(true);
@@ -47,6 +56,7 @@ export default function Practice() {
 
   const handleDifficultySelect = (difficulty) => {
     setShowModal(false);
+    setCurrentDifficulty(difficulty);
     fetchExercises(difficulty);
   };
 
@@ -270,8 +280,8 @@ export default function Practice() {
               <button onClick={() => handleDifficultySelect("medium")}>
                 Medium
               </button>
-              <button onClick={() => handleDifficultySelect("difficult")}>
-                Difficult
+              <button onClick={() => handleDifficultySelect("hard")}>
+                Hard
               </button>
             </div>
           </div>
@@ -296,30 +306,14 @@ export default function Practice() {
 
             <main className="practice-main">
               <section className="code-section">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <div className="flex justify-between items-center mb-2">
                   <h3>Your Code:</h3>
-                  {lockedLines.length === 2 && (
-                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                      <span style={{ fontSize: "14px", color: "#ccc" }}>Language:</span>
-                      <button
-                        onClick={handleLanguageToggle}
-                        style={{
-                          padding: "8px 16px",
-                          backgroundColor: selectedLanguage === "cpp" ? "#4CAF50" : "#2196F3",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "14px",
-                          fontWeight: "500"
-                        }}
-                        onMouseOver={(e) => e.target.style.opacity = "0.9"}
-                        onMouseOut={(e) => e.target.style.opacity = "1"}
-                      >
-                        {selectedLanguage === "cpp" ? "C++" : "C"}
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => fetchExercises(currentDifficulty)}
+                    className="text-xs text-slate-400 hover:text-white underline decoration-slate-600"
+                  >
+                    Skip / Next Problem
+                  </button>
                 </div>
                 <Editor
                   height="60vh"

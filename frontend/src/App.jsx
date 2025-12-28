@@ -5,11 +5,15 @@ import Home from "./pages/Home";
 import Practice from "./pages/Practice";
 import Admin from "./pages/Admin";
 import ResetPassword from "./pages/ResetPassword";
-import MatchTest from "./pages/MatchTest";
-import MatchDemo from "./pages/MatchDemo";
 import ThemeSwitch from "./components/ThemeToggle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import CreateRoom from "./pages/CreateRoom";
+import Support from "./pages/Support";
+import Challenge from "./pages/Challenge";
+import Settings from "./pages/Settings";
+import Confession from "./pages/Confession";
+import Friends from "./pages/Friends";
 
 export default function App() {
   return (
@@ -37,18 +41,50 @@ export default function App() {
           }
         />
         <Route
-          path="/match-demo"
+          path="/create-room"
           element={
             <ProtectedRoute>
-              <MatchDemo />
+              <CreateRoom />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/match-test"
+          path="/support"
           element={
             <ProtectedRoute>
-              <MatchTest />
+              <Support />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/challenge"
+          element={
+            <ProtectedRoute>
+              <Challenge />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/confession"
+          element={
+            <ProtectedRoute>
+              <Confession />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/friends"
+          element={
+            <ProtectedRoute>
+              <Friends />
             </ProtectedRoute>
           }
         />
@@ -61,6 +97,6 @@ export default function App() {
           }
         />
       </Routes>
-    </BrowserRouter>
+    </BrowserRouter >
   );
 }

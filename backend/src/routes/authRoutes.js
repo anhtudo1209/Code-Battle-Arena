@@ -13,23 +13,23 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
-    
+
     // Username validation: 6-20 characters
     if (!username || username.length < 6 || username.length > 20) {
         return res.status(400).send({ message: "Username must be 6-20 characters" });
     }
-    
+
     // Username pattern: alphanumeric, underscore, hyphen only
     const usernameRegex = /^[a-zA-Z0-9_-]+$/;
     if (!usernameRegex.test(username)) {
         return res.status(400).send({ message: "Username can only contain letters, numbers, underscore, and hyphen" });
     }
-    
+
     // Password validation: minimum 8 characters, at least 1 letter and 1 number
     if (!password || password.length < 8) {
         return res.status(400).send({ message: "Password must be at least 8 characters" });
     }
-    
+
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
     if (!passwordRegex.test(password)) {
         return res.status(400).send({ message: "Password must contain at least 1 letter and 1 number" });
@@ -37,14 +37,14 @@ router.post("/register", async (req, res) => {
 
     const usernameExists = await query("SELECT id from users WHERE username = $1", [username]);
     if (usernameExists.rows.length > 0) {
-        return res.status(400).send({ message: "Username exists"});
+        return res.status(400).send({ message: "Username exists" });
     }
 
     const emailExists = await query("SELECT id from users WHERE email = $1", [email]);
     if (emailExists.rows.length > 0) {
-        return res.status(400).send({ message: "Email already registered"});
+        return res.status(400).send({ message: "Email already registered" });
     }
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
     try {
         const result = await query(
@@ -67,11 +67,11 @@ router.post("/login", async (req, res) => {
     try {
         const result = await query("SELECT * FROM users WHERE username = $1", [username]);
         const user = result.rows[0];
-        
+
         if (!user) {
             return res.status(404).send({ message: "User not found" });
         }
-        
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return res.status(401).send({ message: "Invalid credentials" });
@@ -203,11 +203,24 @@ router.post("/logout", async (req, res) => {
     }
 });
 
+// Get leaderboard (top 5 users by rating)
+router.get("/leaderboard", async (req, res) => {
+    try {
+        const result = await query(
+            "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 5"
+        );
+        res.json({ leaderboard: result.rows });
+    } catch (err) {
+        console.error("Leaderboard error:", err);
+        return res.status(500).json({ error: "Failed to get leaderboard" });
+    }
+});
+
 // Get current user info (requires auth middleware)
 router.get("/me", authMiddleware, async (req, res) => {
     try {
         const result = await query(
-            "SELECT id, username, email, role, rating, win_streak, loss_streak, created_at FROM users WHERE id = $1",
+            "SELECT id, username, email, role, rating, win_streak, loss_streak, daily_streak, display_name, avatar_animal, avatar_color, created_at FROM users WHERE id = $1",
             [req.userId]
         );
 
@@ -219,6 +232,65 @@ router.get("/me", authMiddleware, async (req, res) => {
     } catch (err) {
         console.error("Get user error:", err);
         return res.status(500).json({ error: "Failed to get user info" });
+    }
+});
+
+// Valid animals and colors for avatar selection
+const VALID_ANIMALS = [
+    'alligator', 'anteater', 'armadillo', 'axolotl', 'badger', 'bat', 'beaver',
+    'buffalo', 'camel', 'capybara', 'chameleon', 'cheetah', 'chinchilla', 'chipmunk',
+    'cormorant', 'coyote', 'crow', 'dingo', 'dinosaur', 'dolphin', 'dragon',
+    'duck', 'elephant', 'ferret', 'fox', 'frog', 'giraffe', 'goose', 'gopher', 'grizzly',
+    'hamster', 'hedgehog', 'hippo', 'hyena', 'ibex', 'iguana', 'jackal', 'kangaroo',
+    'koala', 'kraken', 'lemur', 'leopard', 'liger', 'llama', 'manatee', 'mink',
+    'monkey', 'moose', 'narwhal', 'orangutan', 'otter', 'panda', 'penguin', 'platypus',
+    'python', 'quagga', 'rabbit', 'raccoon', 'rhino', 'sheep', 'shrew', 'skunk',
+    'squirrel', 'tiger', 'turtle', 'unicorn', 'walrus', 'wolf', 'wolverine', 'wombat'
+];
+const VALID_COLORS = ['red', 'orange', 'yellow', 'green', 'purple', 'teal'];
+
+// Update user profile (display_name, avatar_animal, avatar_color)
+router.put("/profile", authMiddleware, async (req, res) => {
+    const { display_name, avatar_animal, avatar_color } = req.body;
+
+    try {
+        // Validate display_name if provided
+        if (display_name !== undefined) {
+            if (display_name.length > 50) {
+                return res.status(400).json({ error: "Display name must be 50 characters or less" });
+            }
+        }
+
+        // Validate avatar_animal if provided
+        if (avatar_animal !== undefined && !VALID_ANIMALS.includes(avatar_animal)) {
+            return res.status(400).json({ error: "Invalid animal selection" });
+        }
+
+        // Validate avatar_color if provided
+        if (avatar_color !== undefined && !VALID_COLORS.includes(avatar_color)) {
+            return res.status(400).json({ error: "Invalid color selection" });
+        }
+
+        await query(
+            `UPDATE users SET 
+                display_name = COALESCE($1, display_name), 
+                avatar_animal = COALESCE($2, avatar_animal), 
+                avatar_color = COALESCE($3, avatar_color), 
+                updated_at = CURRENT_TIMESTAMP 
+             WHERE id = $4`,
+            [display_name || null, avatar_animal || null, avatar_color || null, req.userId]
+        );
+
+        // Return updated user
+        const result = await query(
+            "SELECT id, username, display_name, avatar_animal, avatar_color FROM users WHERE id = $1",
+            [req.userId]
+        );
+
+        res.json({ message: "Profile updated", user: result.rows[0] });
+    } catch (err) {
+        console.error("Update profile error:", err);
+        return res.status(500).json({ error: "Failed to update profile" });
     }
 });
 
@@ -313,6 +385,68 @@ router.post("/reset-password", async (req, res) => {
     } catch (err) {
         console.error("Reset password error:", err);
         return res.status(500).json({ error: "Failed to reset password" });
+    }
+});
+
+// Change password
+router.put("/change-password", authMiddleware, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current and new password are required" });
+    }
+
+    // Password validation
+    if (newPassword.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({ message: "Password must contain at least 1 letter and 1 number" });
+    }
+
+    try {
+        const result = await query("SELECT password FROM users WHERE id = $1", [req.userId]);
+        const user = result.rows[0];
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Incorrect current password" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await query("UPDATE users SET password = $1 WHERE id = $2", [hashedPassword, req.userId]);
+
+        res.json({ message: "Password updated successfully" });
+    } catch (err) {
+        console.error("Change password error:", err);
+        return res.status(500).json({ message: "Failed to update password" });
+    }
+});
+
+// Delete account
+router.delete("/delete-account", authMiddleware, async (req, res) => {
+    const userId = req.userId;
+    try {
+        // 1. Confirm user exists
+        const userResult = await query("SELECT id FROM users WHERE id = $1", [userId]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // 2. Delete user
+        // Database is configured with ON DELETE CASCADE for all related tables (battles, submissions, etc.)
+        await query("DELETE FROM users WHERE id = $1", [userId]);
+
+        res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+        console.error("Delete account error:", error);
+        res.status(500).json({ message: "Server error during account deletion" });
     }
 });
 

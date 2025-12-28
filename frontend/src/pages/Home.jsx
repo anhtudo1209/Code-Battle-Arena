@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaPlay,
@@ -9,13 +9,28 @@ import {
 } from "react-icons/fa";
 import Stepper, { Step } from "../components/Stepper";
 import Header from "../components/Header";
+import { get } from "../services/httpClient";
 import "./Home.css";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [streak, setStreak] = useState(0);
+
+  useEffect(() => {
+    // Parallel fetch
+    Promise.all([
+      get("/auth/leaderboard").then((data) =>
+        setLeaderboard(data.leaderboard || [])
+      ),
+      get("/auth/me")
+        .then((data) => setStreak(data.user?.daily_streak || 0))
+        .catch(() => {}),
+    ]).catch((err) => console.error("Failed to load home data", err));
+  }, []);
 
   const handleGetStarted = () => {
-    navigate('/findmatch');
+    navigate("/create-room", { state: { view: "find-match" } });
   };
 
   return (
@@ -32,8 +47,9 @@ export default function Home() {
             repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 80px),
             radial-gradient(circle at 60% 40%, rgba(0,255,128,0.05) 0, transparent 60%)
           `,
-          backgroundSize: "80px 80px, 40px 40px, 60px 60px, 80px 80px, 100% 100%",
-          backgroundPosition: "0 0, 0 0, 0 0, 40px 40px, center"
+          backgroundSize:
+            "80px 80px, 40px 40px, 60px 60px, 80px 80px, 100% 100%",
+          backgroundPosition: "0 0, 0 0, 0 0, 40px 40px, center",
         }}
       />
 
@@ -42,7 +58,7 @@ export default function Home() {
       <div className="content">
         <aside className="sidebar">
           <div className="glass-card streak">
-            <h2>0 Day Streak</h2>
+            <h2>{streak} Day Streak</h2>
             <p>Take a lesson today to start a new streak!</p>
             <div className="streak-days">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
@@ -63,23 +79,53 @@ export default function Home() {
           <div className="glass-card leaderboard">
             <h2>LEADERBOARD</h2>
             <ul>
-              <li>NO.1 Username1</li>
-              <li>NO.2 Username2</li>
-              <li>NO.3 Username3</li>
-              <li>NO.4 Username4</li>
+              {leaderboard.length > 0 ? (
+                leaderboard.map((player, index) => (
+                  <li
+                    key={index}
+                    className="flex justify-between items-center py-2 border-b border-gray-700/30 last:border-0"
+                  >
+                    <span className="font-bold flex items-center gap-2">
+                      <span
+                        className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${
+                          index === 0
+                            ? "bg-yellow-500/20 text-yellow-400"
+                            : index === 1
+                            ? "bg-slate-300/20 text-slate-300"
+                            : index === 2
+                            ? "bg-amber-700/20 text-amber-600"
+                            : "bg-slate-800 text-slate-500"
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      {player.username}
+                    </span>
+                    <span className="text-emerald-400 text-sm font-mono">
+                      {player.rating}
+                    </span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-slate-500 text-sm text-center py-2">
+                  Loading...
+                </li>
+              )}
             </ul>
           </div>
 
           <div className="glass-card daily">
             <h2>DAILY CHALLENGE</h2>
-            <p>Earn 10 Exp</p>
-            <div className="progress-bar">
-              <div className="progress"></div>
-            </div>
+            <p className="mb-4 text-slate-400 text-sm">
+              Solve a random problem!
+            </p>
 
-            <a href="/practice" className="btn play-btn">
+            <button
+              onClick={() => navigate("/challenge")}
+              className="btn play-btn w-full"
+            >
               PLAY
-            </a>
+            </button>
           </div>
         </aside>
 
@@ -216,7 +262,9 @@ export default function Home() {
             </div>
           </div>
 
-          <button className="btn start-btn" onClick={handleGetStarted}>GET STARTED</button>
+          <button className="btn start-btn" onClick={handleGetStarted}>
+            GET STARTED
+          </button>
 
           <div
             className="tutorial-section"

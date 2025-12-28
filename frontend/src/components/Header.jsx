@@ -54,7 +54,7 @@ export default function Header() {
         <input type="text" placeholder="Search..." className="search-bar" />
         <button
           className="icon-btn"
-          onClick={() => (window.location.href = "/createroom.html")}
+          onClick={() => navigate("/create-room")}
         >
           Create Room
         </button>

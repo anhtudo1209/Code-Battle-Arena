@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import practiceRoutes from "./routes/practiceRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import battleRoutes from "./routes/battleRoutes.js";
+import supportRoutes from "./routes/supportRoutes.js";
 import authMiddleware from "./middleware/authMiddleware.js";
 import adminMiddleware from "./middleware/adminMiddleware.js";
 
@@ -14,14 +15,12 @@ import adminMiddleware from "./middleware/adminMiddleware.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from project root (override any existing env vars)
-// From backend/src, we need to go up 2 levels to reach project root
 dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true });
 const app = express();
 
 // Middlewares
-app.use(cors({ 
-  origin: ["https://localhost:5173", "http://localhost:5173", "https://localhost:3000", "http://localhost:3000"],
+app.use(cors({
+  origin: ["https://localhost:5173", "http://localhost:5173", "https://localhost:3000", "http://localhost:3000", "https://codebattlearena.id.vn"],
   credentials: true
 })); // allow frontend requests
 app.use(express.json());
@@ -31,6 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/practice", authMiddleware, practiceRoutes);
 app.use("/api/battle", authMiddleware, battleRoutes);
 app.use("/api/admin", adminMiddleware, adminRoutes);
+app.use("/api/support", authMiddleware, supportRoutes);
 
 // Serve frontend (static build) - only after API routes
 app.use(express.static(path.join(__dirname, "../../frontend/dist")));
@@ -39,7 +39,7 @@ app.get(/.*/, (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT ;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running ${PORT}`);
+  console.log(`Server running ${PORT}`);
 });
