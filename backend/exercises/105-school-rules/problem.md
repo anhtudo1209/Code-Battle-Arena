@@ -5,13 +5,14 @@ According to the school regulations, each case of not wearing a student ID card 
 Enter the values `a`, `b`, `c`, `t`, `n`, `m` from the keyboard and calculate the total merit points deducted in that month.
 
 ## Input
-The values `a`, `b`, `c`, `t`, `n`, `m`
-
+Line 1: The values `a`, `b`, `c`, `t`, `n`, `m`
+Line 2: The amount of cases of broken rules.
+ all values are seperated by a space
 ## Output
 The total merit points deducted in the month
 
 ## Sample Input
 1 1 1 1 1 1
-
+1 2 3 4 5 6
 ## Sample Output
-3
+21

@@ -3,7 +3,8 @@
 Given a circular array, find the maximum possible sum of a non-empty subarray. A circular array means the end of the array connects to the beginning.
 
 ## Input
-A circular array
+Line 1: the size of the array
+Line 2: the array
 
 ## Output
 Find the maximum possible sum of a non-empty subarray.

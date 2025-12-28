@@ -3,6 +3,9 @@
 Find a target element in a "bitonic" or "mountain" array (an array that increases to a peak and then decreases).
 An array
 
+## Input
+Line 1: the size of the array and the target
+Line 2: the index of the target if found, else print -1
 ## Output
 Find a target element in a "bitonic" or "mountain" array
 

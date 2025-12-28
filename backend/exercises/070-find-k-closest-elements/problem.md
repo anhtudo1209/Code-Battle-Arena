@@ -1,9 +1,11 @@
 # Find K Closest Elements
 
-Given a sorted array, a value x, and an integer k, find the k closest elements to x in the array. The result should also be sorted.
+Given a sorted array, an integer k, and a value x, find the k closest elements to x in the array. The result should also be sorted.
 
 ## Input
-An sorted array, a value x, and an integer k
+Line 1: The size of the array, an integer k, and a value x
+Line 2: An sorted array
+
 
 ## Output
 Find the k closest elements to x in the array. The result should also be sorted.

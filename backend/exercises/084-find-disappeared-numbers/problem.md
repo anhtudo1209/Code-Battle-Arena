@@ -2,7 +2,8 @@
 
 Write a function int* findDisappearedNumbers(int *arr, int size) that takes an array of n integers where arr[i] is in the range [1, n]. Return an array of all the integers in the range [1, n] that do not appear in the input array. Must be O(n) time and O(1) extra space (the return array doesn't count).
 ## Input
-An array of n integers
+Line 1: the size of the array
+Line 2: the array
 
 ## Output
 Return an array of all the integers in the range [1, n] that do not appear in the input array.

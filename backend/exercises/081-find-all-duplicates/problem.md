@@ -3,7 +3,8 @@
 Given an array of n integers where 1 less than or equal nums[i] more than or equal n, each integer appears once or twice. Return an array of all the integers that appear twice.
 
 ## Input
-An array of n integers
+Line 1: the size of the array
+Line 2: the array
 
 ## Output
 Return an array of all the integers that appear twice.
