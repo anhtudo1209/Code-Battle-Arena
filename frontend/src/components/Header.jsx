@@ -51,13 +51,16 @@ export default function Header() {
         CODE BATTLE ARENA
       </h1>
       <div className="header-right">
-        <input type="text" placeholder="Search..." className="search-bar" />
         <button
-          className="icon-btn"
-          onClick={() => navigate("/create-room")}
+          className="play-btn"
+          onClick={() => navigate("/create-room", { state: { view: "find-match" } })}
         >
-          Create Room
+          ▶ PLAY
         </button>
+        <button className="nav-btn" onClick={() => navigate("/friends")}>Friends</button>
+        <button className="nav-btn" onClick={() => navigate("/confession")}>Confession</button>
+        <button className="nav-btn" onClick={() => navigate("/support")}>Support</button>
+
         <button
           ref={menuButtonRef}
           className="icon-btn menu-btn"
