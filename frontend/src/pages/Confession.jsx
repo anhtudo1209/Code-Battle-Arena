@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import { Heart, MessageCircle, Share2, PenLine, Search, X, Rocket, MoreHorizontal, AlertCircle } from "lucide-react";
 
 // Mock data - backend integration left blank
@@ -114,6 +115,7 @@ export default function Confession() {
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 antialiased">
+            <PageTitle title="Confession" />
             <Header />
 
             <main className="pt-24 pb-10 px-4 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/10 via-slate-950 to-slate-950">

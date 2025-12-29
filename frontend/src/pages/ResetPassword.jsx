@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import PageTitle from "../components/PageTitle";
 import { FaLock, FaEnvelope, FaFacebook, FaGoogle, FaGithub } from "react-icons/fa";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { resetPassword } from "../services/authService";
@@ -89,6 +90,7 @@ export default function ResetPassword() {
   if (!token) {
     return (
       <div className="auth-page">
+        <PageTitle title="Forgot Password" />
         <div className="bg-image" />
         <div className="bg-overlay" />
         <div className="liquid-ether-wrapper">{liquidEtherBackground}</div>
@@ -132,6 +134,7 @@ export default function ResetPassword() {
   if (success) {
     return (
       <div className="auth-page">
+        <PageTitle title="Password Reset" />
         <div className="bg-image" />
         <div className="bg-overlay" />
         <div className="liquid-ether-wrapper">{liquidEtherBackground}</div>
@@ -151,6 +154,7 @@ export default function ResetPassword() {
 
   return (
     <div className="auth-page">
+      <PageTitle title="Reset Password" />
       <div className="bg-image" />
       <div className="bg-overlay" />
       <div className="liquid-ether-wrapper">{liquidEtherBackground}</div>
@@ -158,40 +162,40 @@ export default function ResetPassword() {
       <div className="glass-card">
         <h1 className="title">CODE BATTLE ARENA</h1>
         <div className="reset-password-form">
-        <h2 className="subtitle">Reset Your Password</h2>
-        <form className="form" onSubmit={handleSubmit}>
-          <div className="input-container">
-            <FaLock className="input-icon" />
-            <input
-              type="password"
-              placeholder="New Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="input-container">
-            <FaLock className="input-icon" />
-            <input
-              type="password"
-              placeholder="Confirm New Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="error" style={{ color: "#f87171", marginBottom: 8 }}>
-              {error}
+          <h2 className="subtitle">Reset Your Password</h2>
+          <form className="form" onSubmit={handleSubmit}>
+            <div className="input-container">
+              <FaLock className="input-icon" />
+              <input
+                type="password"
+                placeholder="New Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
-          )}
 
-          <button type="submit" className="btn" disabled={loading || !token}>
-            {loading ? "Resetting..." : "Reset Password"}
-          </button>
-        </form>
+            <div className="input-container">
+              <FaLock className="input-icon" />
+              <input
+                type="password"
+                placeholder="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="error" style={{ color: "#f87171", marginBottom: 8 }}>
+                {error}
+              </div>
+            )}
+
+            <button type="submit" className="btn" disabled={loading || !token}>
+              {loading ? "Resetting..." : "Reset Password"}
+            </button>
+          </form>
         </div>
       </div>
     </div>

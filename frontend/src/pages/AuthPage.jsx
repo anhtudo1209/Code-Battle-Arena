@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import PageTitle from "../components/PageTitle";
 import "./Auth.css";
 import Login from "./Login";
 import Register from "./Register";
@@ -28,6 +29,7 @@ export default function AuthPage() {
 
   return (
     <div className="auth-page">
+      <PageTitle title={isLogin ? "Login" : "Register"} />
       {/* 🔹 Image Background */}
       <div className="bg-image"></div>
 

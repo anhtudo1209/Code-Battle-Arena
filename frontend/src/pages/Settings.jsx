@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "../services/authService";
 import { put, del, get } from "../services/httpClient";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -241,7 +242,7 @@ export default function Settings() {
       console.error("Delete account error:", error);
       alert(
         "Failed to delete account: " +
-          (error.response?.data?.message || "Unknown error")
+        (error.response?.data?.message || "Unknown error")
       );
     }
   };
@@ -250,6 +251,7 @@ export default function Settings() {
     // Layout: Flex Column, Full screen, no body scroll
     <div className="flex flex-col h-screen w-full bg-[#050b18] text-slate-100 font-sans overflow-hidden selection:bg-emerald-500/30">
       {/* Header always on top */}
+      <PageTitle title="Settings" />
       <Header />
 
       {/* Main content scrollable area */}
@@ -277,11 +279,10 @@ export default function Settings() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
-                        activeTab === tab.id
-                          ? "bg-emerald-600/10 text-emerald-400 ring-1 ring-emerald-500/50"
-                          : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
-                      }`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${activeTab === tab.id
+                        ? "bg-emerald-600/10 text-emerald-400 ring-1 ring-emerald-500/50"
+                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                        }`}
                     >
                       <tab.icon className="w-4 h-4" />
                       {tab.label}
@@ -357,11 +358,10 @@ export default function Settings() {
                               <button
                                 key={color.name}
                                 onClick={() => setAvatarColor(color.name)}
-                                className={`w-10 h-10 rounded-xl transition-all ${
-                                  avatarColor === color.name
-                                    ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110"
-                                    : "hover:scale-105"
-                                }`}
+                                className={`w-10 h-10 rounded-xl transition-all ${avatarColor === color.name
+                                  ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110"
+                                  : "hover:scale-105"
+                                  }`}
                                 style={{ backgroundColor: color.hex }}
                                 title={color.name}
                               />
@@ -379,11 +379,10 @@ export default function Settings() {
                               <button
                                 key={animal}
                                 onClick={() => setAvatarAnimal(animal)}
-                                className={`p-1 rounded-lg transition-all ${
-                                  avatarAnimal === animal
-                                    ? "ring-2 ring-emerald-500 bg-emerald-900/30"
-                                    : "hover:bg-slate-800"
-                                }`}
+                                className={`p-1 rounded-lg transition-all ${avatarAnimal === animal
+                                  ? "ring-2 ring-emerald-500 bg-emerald-900/30"
+                                  : "hover:bg-slate-800"
+                                  }`}
                                 title={animal}
                               >
                                 <img
@@ -429,11 +428,10 @@ export default function Settings() {
 
                       {profileStatus && (
                         <div
-                          className={`text-sm ${
-                            profileStatus.type === "success"
-                              ? "text-emerald-400"
-                              : "text-rose-400"
-                          }`}
+                          className={`text-sm ${profileStatus.type === "success"
+                            ? "text-emerald-400"
+                            : "text-rose-400"
+                            }`}
                         >
                           {profileStatus.message}
                         </div>
@@ -506,11 +504,10 @@ export default function Settings() {
 
                           {passwordStatus && (
                             <div
-                              className={`text-sm ${
-                                passwordStatus.type === "success"
-                                  ? "text-emerald-400"
-                                  : "text-rose-400"
-                              }`}
+                              className={`text-sm ${passwordStatus.type === "success"
+                                ? "text-emerald-400"
+                                : "text-rose-400"
+                                }`}
                             >
                               {passwordStatus.message}
                             </div>

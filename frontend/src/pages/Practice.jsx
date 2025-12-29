@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { Editor } from "@monaco-editor/react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import "./Practice.css";
 
 export default function Practice() {
@@ -278,6 +279,7 @@ export default function Practice() {
 
       {!showModal && (
         <>
+          <PageTitle title="Practice" />
           <Header />
 
           <div className="practice-layout">
