@@ -8,7 +8,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load .env from project root (override any existing env vars)
-// From backend/src, we need to go up 2 levels to reach project root
 dotenv.config({ path: path.resolve(__dirname, '../..', '.env'), override: true });
 
 
@@ -29,7 +28,7 @@ const connection = new IORedis({
 
 const judge = new CodeJudge();
 
-const MAX_BATTLE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
+const MAX_BATTLE_DURATION_MS = 20 * 60 * 1000; // 2 minutes
 
 const worker = new Worker('judgeQueue', async (job) => {
   const { submissionId, userId, exerciseId, code, language, battleId } = job.data;
@@ -677,7 +676,7 @@ async function updatePlayerRatings({ battle, perf1, perf2, outcome }) {
     );
 
     if (playersResult.rowCount < 2) {
-      console.error(`⚠️ Unable to load player ratings for battle ${battle.id}`);
+      console.error(`Unable to load player ratings for battle ${battle.id}`);
       await query('ROLLBACK');
       return;
     }
@@ -831,7 +830,7 @@ async function updateDailyStreak(userId) {
       [userId]
     );
     if (res.rows.length > 0) {
-      console.log(`🔥 Updated streak for user ${userId}: Now ${res.rows[0].daily_streak}`);
+      console.log(`Updated streak for user ${userId}: Now ${res.rows[0].daily_streak}`);
     }
 
   } catch (error) {

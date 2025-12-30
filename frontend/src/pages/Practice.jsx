@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { Editor } from "@monaco-editor/react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import "./Practice.css";
 
 export default function Practice() {
@@ -290,6 +291,7 @@ export default function Practice() {
 
       {!showModal && (
         <>
+          <PageTitle title="Practice" />
           <Header />
 
           <div className="practice-layout">
@@ -344,11 +346,11 @@ export default function Practice() {
                     {results.error ? (
                       <div className="error">{results.error}</div>
                     ) : !results.compilationSuccess ? (
-                      <div className="error">⚠️ Compilation Error</div>
+                      <div className="error">Compilation Error</div>
                     ) : results.success ? (
-                      <div className="success">🎉 Accepted</div>
+                      <div className="success">Accepted</div>
                     ) : (
-                      <div className="error">❌ Wrong Answer</div>
+                      <div className="error">Wrong Answer</div>
                     )}
                   </>
                 ) : (

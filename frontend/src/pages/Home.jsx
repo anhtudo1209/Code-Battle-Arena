@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import Stepper, { Step } from "../components/Stepper";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import { get } from "../services/httpClient";
 import "./Home.css";
 
@@ -25,7 +26,7 @@ export default function Home() {
       ),
       get("/auth/me")
         .then((data) => setStreak(data.user?.daily_streak || 0))
-        .catch(() => {}),
+        .catch(() => { }),
     ]).catch((err) => console.error("Failed to load home data", err));
   }, []);
 
@@ -35,6 +36,7 @@ export default function Home() {
 
   return (
     <div className="home-page">
+      <PageTitle title="Home" />
       <div className="bg-overlay"></div>
 
       <div
@@ -87,15 +89,14 @@ export default function Home() {
                   >
                     <span className="font-bold flex items-center gap-2">
                       <span
-                        className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${
-                          index === 0
+                        className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${index === 0
                             ? "bg-yellow-500/20 text-yellow-400"
                             : index === 1
-                            ? "bg-slate-300/20 text-slate-300"
-                            : index === 2
-                            ? "bg-amber-700/20 text-amber-600"
-                            : "bg-slate-800 text-slate-500"
-                        }`}
+                              ? "bg-slate-300/20 text-slate-300"
+                              : index === 2
+                                ? "bg-amber-700/20 text-amber-600"
+                                : "bg-slate-800 text-slate-500"
+                          }`}
                       >
                         {index + 1}
                       </span>

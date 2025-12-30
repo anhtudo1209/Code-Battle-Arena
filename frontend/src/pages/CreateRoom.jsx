@@ -5,6 +5,7 @@ import { get, post } from "../services/httpClient";
 import { logout } from "../services/authService";
 import { Search, PlusCircle, Users, LogOut, Code, Swords } from "lucide-react";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import "./CreateRoom.css";
 
 const COLOR_MAP = {
@@ -393,6 +394,7 @@ export default function CreateRoom() {
   return (
     // THAY ĐỔI CHÍNH: Flex-col để Header nằm trên cùng
     <div className="flex flex-col h-screen w-full bg-gray-950 text-slate-100 font-sans overflow-hidden selection:bg-emerald-500/30">
+      <PageTitle title="Create Room" />
       {/* HEADER: Nằm ngoài wrapper, trên cùng, full-width */}
       {battle?.battle?.status !== "active" && <Header />}
 
@@ -777,11 +779,11 @@ export default function CreateRoom() {
                             ) : results?.error ? (
                               <div className="text-red-400 font-bold">Error: {results.error}</div>
                             ) : !results?.compilationSuccess ? (
-                              <div className="text-red-400 font-bold mb-1">⚠️ Compilation Error</div>
+                              <div className="text-red-400 font-bold mb-1">Compilation Error</div>
                             ) : results?.success ? (
-                              <div className="text-emerald-400 font-bold text-lg">🎉 Accepted</div>
+                              <div className="text-emerald-400 font-bold text-lg">Accepted</div>
                             ) : (
-                              <div className="text-red-400 font-bold text-lg">❌ Wrong Answer</div>
+                              <div className="text-red-400 font-bold text-lg">Wrong Answer</div>
                             )}
 
                             {results?.testResults && results.testResults.length > 0 && (

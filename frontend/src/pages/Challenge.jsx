@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import "./Practice.css"; // Reuse Practice CSS
 
 export default function Challenge() {
@@ -235,6 +236,7 @@ export default function Challenge() {
 
     return (
         <div className="practice-page">
+            <PageTitle title="Challenge" />
             <Header />
 
             <div className="practice-layout">
@@ -291,11 +293,11 @@ export default function Challenge() {
                                 {results.error ? (
                                     <div className="error">{results.error}</div>
                                 ) : !results.compilationSuccess ? (
-                                    <div className="error">⚠️ Compilation Error</div>
+                                    <div className="error">Compilation Error</div>
                                 ) : results.success ? (
-                                    <div className="success">🎉 Accepted</div>
+                                    <div className="success">Accepted</div>
                                 ) : (
-                                    <div className="error">❌ Wrong Answer</div>
+                                    <div className="error">Wrong Answer</div>
                                 )}
                             </>
                         ) : (

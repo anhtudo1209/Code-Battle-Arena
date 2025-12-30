@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import { MessageSquare, Clock, CheckCircle, Plus, Send, ChevronLeft } from "lucide-react";
 
 export default function Support() {
@@ -103,6 +104,7 @@ export default function Support() {
 
     return (
         <div className="min-h-screen bg-gray-950 text-slate-100 font-sans selection:bg-emerald-500/30">
+            <PageTitle title="Support" />
             <Header />
 
             <main className="max-w-6xl mx-auto p-6 pt-10 h-[calc(100vh-80px)] flex flex-col">

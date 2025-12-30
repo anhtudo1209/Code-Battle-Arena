@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { get, post, put, del as delRequest } from "../services/httpClient";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import "./Admin.css";
 
 export default function Admin() {
@@ -272,6 +273,7 @@ export default function Admin() {
 
   return (
     <div className="admin-page">
+      <PageTitle title="Admin" />
       <Header />
       <div className="admin-container">
         <h1>Admin Panel</h1>

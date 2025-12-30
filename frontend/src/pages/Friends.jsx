@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Header from "../components/Header";
+import PageTitle from "../components/PageTitle";
 import { Search } from "lucide-react";
 
 // Mock data - backend integration left blank
@@ -104,6 +105,7 @@ export default function Friends() {
   return (
     // Layout chính: Flex Column, Full màn hình, không cuộn body
     <div className="flex flex-col h-screen w-full bg-slate-950 text-slate-100 font-sans overflow-hidden selection:bg-emerald-500/30">
+      <PageTitle title="Friends" />
       {/* Header luôn nằm trên cùng */}
       <Header />
 
@@ -132,21 +134,19 @@ export default function Friends() {
             <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
               <button
                 onClick={() => setActiveTab("find")}
-                className={`px-5 py-2 text-sm rounded-xl transition-all ${
-                  activeTab === "find"
+                className={`px-5 py-2 text-sm rounded-xl transition-all ${activeTab === "find"
                     ? "bg-slate-800 text-emerald-400 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
-                }`}
+                  }`}
               >
                 Find Developers
               </button>
               <button
                 onClick={() => setActiveTab("friends")}
-                className={`px-5 py-2 text-sm rounded-xl transition-all ${
-                  activeTab === "friends"
+                className={`px-5 py-2 text-sm rounded-xl transition-all ${activeTab === "friends"
                     ? "bg-slate-800 text-emerald-400 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
-                }`}
+                  }`}
               >
                 My Friends
                 <span className="ml-2 text-xs bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded-md">
@@ -155,11 +155,10 @@ export default function Friends() {
               </button>
               <button
                 onClick={() => setActiveTab("requests")}
-                className={`px-5 py-2 text-sm rounded-xl transition-all ${
-                  activeTab === "requests"
+                className={`px-5 py-2 text-sm rounded-xl transition-all ${activeTab === "requests"
                     ? "bg-slate-800 text-emerald-400 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
-                }`}
+                  }`}
               >
                 Requests
                 {requestsCount > 0 && (
@@ -256,11 +255,10 @@ export default function Friends() {
                           ? handleMessage(user.name)
                           : handleConnect(user.name)
                       }
-                      className={`mt-auto w-full rounded-xl py-3 font-bold text-sm transition-all shadow-lg transform active:scale-95 ${
-                        user.color === "indigo"
+                      className={`mt-auto w-full rounded-xl py-3 font-bold text-sm transition-all shadow-lg transform active:scale-95 ${user.color === "indigo"
                           ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/20"
                           : "bg-emerald-500 hover:bg-emerald-400 text-slate-900 shadow-emerald-900/20"
-                      }`}
+                        }`}
                     >
                       {user.btn}
                     </button>

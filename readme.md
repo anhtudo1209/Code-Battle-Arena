@@ -9,5 +9,6 @@
 0. change the origin in the app.js to http://localhost:3000 (for testing)
 1. In the root folder: npm run start (start the backend + frontend)
 2. cd backend/src: node worker.js (jugde system)
+3. cd backend/src: node matchworker.js (match system)
 
-docker exec -it redis redis-cli FLUSHDB
+// flush redis: docker exec -it redis redis-cli FLUSHDB

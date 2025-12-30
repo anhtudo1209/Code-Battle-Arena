@@ -71,24 +71,16 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
       className="menu-popup"
       onClick={(e) => e.stopPropagation()}
     >
-      <button className="menu-item" onClick={handleHome}>
-        Home
-      </button>
+      {/* Home Button Removed */}
 
       {isAdmin && (
         <button className="menu-item admin" onClick={handleAdmin}>
           Admin
         </button>
       )}
-      <button className="menu-item" onClick={() => { closeMenu(); navigate("/friends"); }}>
-        Friends
-      </button>
-      <button className="menu-item" onClick={() => { closeMenu(); navigate("/confession"); }}>
-        Confession
-      </button>
-      <button className="menu-item" onClick={() => { closeMenu(); navigate("/support"); }}>
-        Support
-      </button>
+
+      {/* Friends, Confession, Support Moved to Header */}
+
       <button className="menu-item" onClick={() => { closeMenu(); navigate("/settings"); }}>
         Settings
       </button>
