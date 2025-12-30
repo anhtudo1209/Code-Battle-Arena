@@ -779,11 +779,11 @@ export default function CreateRoom() {
                             ) : results?.error ? (
                               <div className="text-red-400 font-bold">Error: {results.error}</div>
                             ) : !results?.compilationSuccess ? (
-                              <div className="text-red-400 font-bold mb-1">⚠️ Compilation Error</div>
+                              <div className="text-red-400 font-bold mb-1">Compilation Error</div>
                             ) : results?.success ? (
-                              <div className="text-emerald-400 font-bold text-lg">🎉 Accepted</div>
+                              <div className="text-emerald-400 font-bold text-lg">Accepted</div>
                             ) : (
-                              <div className="text-red-400 font-bold text-lg">❌ Wrong Answer</div>
+                              <div className="text-red-400 font-bold text-lg">Wrong Answer</div>
                             )}
 
                             {results?.testResults && results.testResults.length > 0 && (

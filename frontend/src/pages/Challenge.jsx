@@ -293,11 +293,11 @@ export default function Challenge() {
                                 {results.error ? (
                                     <div className="error">{results.error}</div>
                                 ) : !results.compilationSuccess ? (
-                                    <div className="error">⚠️ Compilation Error</div>
+                                    <div className="error">Compilation Error</div>
                                 ) : results.success ? (
-                                    <div className="success">🎉 Accepted</div>
+                                    <div className="success">Accepted</div>
                                 ) : (
-                                    <div className="error">❌ Wrong Answer</div>
+                                    <div className="error">Wrong Answer</div>
                                 )}
                             </>
                         ) : (

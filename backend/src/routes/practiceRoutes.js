@@ -18,7 +18,7 @@ router.post("/submit", async (req, res) => {
   const userId = req.userId;
 
   // -----------------------------
-  // 🔒 Read-Only Code Protection
+  // Read-Only Code Protection
   // -----------------------------
   const exercisePath = path.join(__dirname, '..', '..', 'exercises', exerciseId);
 
