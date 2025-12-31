@@ -1,0 +1,6 @@
+{
+  "timeLimit": 4,
+  "memoryLimit": "256m",
+  "difficulty": "hard",
+  "tags": ["algorithms", "simulation", "grid movement", "coordinate geometry"]
+}
