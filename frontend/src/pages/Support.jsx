@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
 import PageTitle from "../components/PageTitle";
+import ThemeToggle from "../components/ThemeToggle";
 import { MessageSquare, Clock, CheckCircle, Plus, Send, ChevronLeft } from "lucide-react";
+import "./Home.css";
 
 export default function Support() {
     const [tickets, setTickets] = useState([]);
@@ -103,17 +105,30 @@ export default function Support() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-950 text-slate-100 font-sans selection:bg-emerald-500/30">
+        <div className="home-page">
             <PageTitle title="Support" />
             <Header />
+            <ThemeToggle />
 
-            <main className="max-w-6xl mx-auto p-6 pt-10 h-[calc(100vh-80px)] flex flex-col">
-                <h1 className="text-4xl font-black text-slate-100 mb-6 flex items-center gap-3 shrink-0">
-                    <MessageSquare className="w-10 h-10 text-emerald-500" />
-                    SUPPORT <span className="text-emerald-500">CENTER</span>
-                </h1>
+            <main className="flex-1 p-4 md:p-6">
+                <div className="max-w-5xl mx-auto h-full flex flex-col">
+                    {/* Page Title Area */}
+                    <div className="flex flex-col md:flex-row justify-between gap-6 mb-6 mt-4 flex-shrink-0">
+                        <div>
+                            <span className="inline-flex items-center gap-2 text-xs text-emerald-400 bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-800">
+                                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                                Support Center
+                            </span>
+                            <h2 className="text-3xl font-bold mt-3">
+                                Get <span className="text-emerald-400">Help</span>
+                            </h2>
+                            <p className="text-slate-400 mt-2 max-w-xl">
+                                Submit support tickets, track your requests, and get assistance from our team.
+                            </p>
+                        </div>
+                    </div>
 
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 min-h-0">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 min-h-0">
 
                     {/* LEFT LIST (Visible on mobile if no active ticket) */}
                     <div className={`md:col-span-4 bg-slate-900/40 border border-slate-800 rounded-2xl flex flex-col overflow-hidden ${activeTicket ? 'hidden md:flex' : 'flex'}`}>
@@ -285,6 +300,7 @@ export default function Support() {
                         )}
                     </div>
 
+                </div>
                 </div>
             </main>
         </div>

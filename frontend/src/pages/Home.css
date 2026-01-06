@@ -62,13 +62,16 @@
 .home-page {
   position: relative;
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
   color: var(--text-color);
-  overflow-x: hidden;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background-image: url("/assets/img/maindark.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
   transition: background-image 0.4s ease;
 }
 

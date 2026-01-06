@@ -64,6 +64,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  overflow: hidden;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -78,6 +82,7 @@ body {
   min-height: 100vh;
   width: 100%;
   display: block;
+  overflow: hidden;
 }
 
 h1 {

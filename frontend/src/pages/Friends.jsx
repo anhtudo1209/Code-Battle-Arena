@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import Header from "../components/Header";
 import PageTitle from "../components/PageTitle";
+import ThemeToggle from "../components/ThemeToggle";
 import { Search } from "lucide-react";
+import "./Home.css";
 
 // Mock data - backend integration left blank
 const MOCK_DATA = {
@@ -103,11 +105,10 @@ export default function Friends() {
   const requestsCount = MOCK_DATA.requests.length;
 
   return (
-    // Layout chính: Flex Column, Full màn hình, không cuộn body
-    <div className="flex flex-col h-screen w-full bg-slate-950 text-slate-100 font-sans overflow-hidden selection:bg-emerald-500/30">
+    <div className="home-page">
       <PageTitle title="Friends" />
-      {/* Header luôn nằm trên cùng */}
       <Header />
+      <ThemeToggle />
 
       {/* Main content: Chiếm phần còn lại, tự cuộn (overflow-y-auto) */}
       <main className="flex-1 overflow-y-auto p-4 md:p-6">
