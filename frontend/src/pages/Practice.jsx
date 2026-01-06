@@ -17,7 +17,6 @@ export default function Practice() {
   const [submissionId, setSubmissionId] = useState(null);
   const [lockedLines, setLockedLines] = useState([]);
   const [guardMessage, setGuardMessage] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState("cpp");
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const decorationsRef = useRef([]);
@@ -61,13 +60,9 @@ export default function Practice() {
     fetchExercises(difficulty);
   };
 
-  const loadExercise = async (exerciseId, language = null) => {
+  const loadExercise = async (exerciseId) => {
     try {
-      // If it's a new exercise (different ID), reset to cpp; otherwise use provided language or current
-      const isNewExercise = selectedExercise !== exerciseId;
-      const langToUse = language || (isNewExercise ? "cpp" : selectedLanguage);
-      
-      const data = await get(`/practice/exercises/${exerciseId}?lang=${langToUse}`);
+      const data = await get(`/practice/exercises/${exerciseId}`);
       setSelectedExercise(exerciseId);
       setProblemContent(data.content);
       if (
@@ -83,18 +78,11 @@ export default function Practice() {
       lastValidCodeRef.current = template;
       setGuardMessage("");
       setResults(null);
-      setSelectedLanguage(langToUse);
     } catch (error) {
       console.error("Error loading exercise:", error);
       setLockedLines([]);
       setGuardMessage("");
     }
-  };
-
-  const handleLanguageToggle = () => {
-    if (!selectedExercise) return;
-    const newLanguage = selectedLanguage === "cpp" ? "c" : "cpp";
-    loadExercise(selectedExercise, newLanguage);
   };
 
   const isWithinEditableRegion = (changes = []) => {
@@ -319,7 +307,7 @@ export default function Practice() {
                 </div>
                 <Editor
                   height="60vh"
-                  language={selectedLanguage}
+                  language="cpp"
                   theme="vs-dark"
                   value={code}
                   onMount={handleEditorMount}
