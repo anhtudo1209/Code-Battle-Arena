@@ -3,7 +3,8 @@
 Given an array of integers, return true if it can become non-decreasing by modifying at most one element.
 
 ## Input
-An array of integers
+Line 1: the size of the array
+Line 2: the array
 
 ## Output
 true if the array can be made non-decreasing with at most one modification, otherwise false

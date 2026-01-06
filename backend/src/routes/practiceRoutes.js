@@ -266,6 +266,7 @@ router.get("/exercises/random", async (req, res) => {
 // Get single exercise details
 router.get("/exercises/:id", async (req, res) => {
   const exerciseId = req.params.id;
+  const language = req.query.lang || 'cpp'; // Default to cpp, accept 'c' or 'cpp'
 
   try {
     const exercisesDir = path.join(__dirname, '..', '..', 'exercises');

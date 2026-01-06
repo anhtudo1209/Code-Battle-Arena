@@ -3,7 +3,8 @@
 Given an array of integers, find all unique triplets (a, b, c) in the array that sum to zero.
 
 ## Input
-An array of integers
+Line 1: the size of the array
+Line 2: the array
 
 ## Output
 Find all unique triplets (a, b, c) in the array that sum to zero.
