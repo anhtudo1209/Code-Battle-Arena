@@ -1,0 +1,119 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap");
+
+/* --- 1. KHAI BÁO BIẾN MÀU (THEME SYSTEM) --- */
+:root {
+  /* DARK MODE (Mặc định - Giống màu cũ) */
+  --bg-color: #101014;
+  --text-color: #ffffff;
+  --text-sub: rgba(255, 255, 255, 0.85);
+
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --card-shadow: 0 6px 25px rgba(0, 0, 0, 0.4), 0 0 25px rgba(52, 211, 153, 0.2);
+
+  --primary-gradient: linear-gradient(120deg, #34d399, #06b6d4);
+  --primary-gradient-hover: linear-gradient(120deg, #06b6d4, #34d399);
+
+  --accent-color: #7af2b2;
+  --glow-filter: drop-shadow(0 0 10px rgba(122, 242, 178, 0.8));
+
+  --monitor-fill: #34d399;
+  --monitor-stroke: #06b6d4;
+
+  --dot-bg: rgba(255, 255, 255, 0.2);
+  --dot-border: #06b6d4;
+
+  --bg-pattern-opacity: 1; /* Hiển thị pattern trong dark mode */
+}
+
+/* LIGHT MODE OVERRIDES */
+[data-theme="light"] {
+  --bg-color: #f3f4f6; /* Xám trắng sáng */
+  --text-color: #1e293b; /* Đen xám đậm */
+  --text-sub: #475569; /* Xám vừa */
+
+  --glass-bg: rgba(255, 255, 255, 0.85); /* Kính đục hơn */
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  --primary-gradient: linear-gradient(120deg, #10b981, #0ea5e9);
+  --primary-gradient-hover: linear-gradient(120deg, #0ea5e9, #10b981);
+
+  --accent-color: #059669; /* Xanh lá đậm */
+  --glow-filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.4)); /* Giảm chói */
+
+  --monitor-fill: #10b981;
+  --monitor-stroke: #0284c7;
+
+  --dot-bg: #cbd5e1;
+  --dot-border: #0ea5e9;
+
+  --bg-pattern-opacity: 0.15; /* Làm mờ pattern nền đi */
+}
+
+/* --- 2. GLOBAL RESET & BASE --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+.page-background {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  color: var(--text-color);
+  overflow-x: hidden;
+  background-image: url("/assets/img/maindark.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.4s ease;
+}
+
+[data-theme="light"] .page-background {
+  background-image: url("/assets/img/mainlight.png");
+}
+
+/* --- 3. BACKGROUND PATTERN --- */
+/* Chuyển style inline cũ sang class để dùng biến --bg-pattern-opacity */
+.bg-pattern {
+  opacity: var(--bg-pattern-opacity);
+  transition: opacity 0.4s ease;
+  background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.04) 0,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      rgba(0, 255, 128, 0.09) 0,
+      rgba(0, 255, 128, 0.09) 1px,
+      transparent 1px,
+      transparent 20px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 0, 128, 0.1) 0,
+      rgba(255, 0, 128, 0.1) 1px,
+      transparent 1px,
+      transparent 30px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 0,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 80px
+    ),
+    radial-gradient(
+      circle at 60% 40%,
+      rgba(0, 255, 128, 0.05) 0,
+      transparent 60%
+    );
+  background-size: 80px 80px, 40px 40px, 60px 60px, 80px 80px, 100% 100%;
+  background-position: 0 0, 0 0, 0 0, 40px 40px, center;
+}

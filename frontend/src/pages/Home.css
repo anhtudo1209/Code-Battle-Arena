@@ -65,8 +65,15 @@
   min-height: 100vh;
   color: var(--text-color);
   overflow-x: hidden;
-  background-color: var(--bg-color);
-  transition: background-color 0.4s ease, color 0.4s ease;
+  background-image: url("/assets/img/maindark.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.4s ease;
+}
+
+[data-theme="light"] .home-page {
+  background-image: url("/assets/img/mainlight.png");
 }
 
 /* --- 3. BACKGROUND PATTERN --- */

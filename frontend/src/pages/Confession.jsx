@@ -114,12 +114,12 @@ export default function Confession() {
     );
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 antialiased">
+    <div className="flex flex-col h-screen w-full bg-slate-950 text-slate-100 font-sans overflow-hidden selection:bg-emerald-500/30">
             <PageTitle title="Confession" />
             <Header />
 
-            <main className="pt-24 pb-10 px-4 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/10 via-slate-950 to-slate-950">
-                <div className="max-w-4xl mx-auto">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6">
+                <div className="max-w-5xl mx-auto pb-10">
 
                     {/* Header Section */}
                     <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10">
