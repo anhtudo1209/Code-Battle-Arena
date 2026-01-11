@@ -39,7 +39,7 @@
   --primary-gradient: linear-gradient(120deg, #10b981, #0ea5e9);
   --primary-gradient-hover: linear-gradient(120deg, #0ea5e9, #10b981);
 
-  --accent-color: #059669; /* Xanh lá đậm */
+  --accent-color: #7af2b2; /* Giữ màu giống dark theme */
   --glow-filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.4)); /* Giảm chói */
 
   --monitor-fill: #10b981;
@@ -150,7 +150,7 @@
 /* --- 5. CARDS & CONTENT (Dùng biến) --- */
 .content {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 30px;
   padding: 20px 40px;
   position: relative;
@@ -163,6 +163,8 @@
   flex: 1;
   padding: 20px 0;
   justify-content: center;
+  margin-top: 180px;
+  margin-left: -100px;
 }
 
 .glass-card {
@@ -207,6 +209,10 @@
 
 .leaderboard ul li {
   border-color: var(--glass-border);
+}
+
+[data-theme="light"] .leaderboard ul li span.font-bold {
+  color: #000000;
 }
 
 .btn {

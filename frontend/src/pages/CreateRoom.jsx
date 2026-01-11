@@ -6,7 +6,9 @@ import { logout } from "../services/authService";
 import { Search, PlusCircle, Users, LogOut, Code, Swords } from "lucide-react";
 import Header from "../components/Header";
 import PageTitle from "../components/PageTitle";
+import ThemeToggle from "../components/ThemeToggle";
 import "./CreateRoom.css";
+import "./Home.css";
 
 const COLOR_MAP = {
   red: "#E53935",
@@ -392,11 +394,10 @@ export default function CreateRoom() {
 
   // --- Renderers ---
   return (
-    // THAY ĐỔI CHÍNH: Flex-col để Header nằm trên cùng
-    <div className="flex flex-col h-screen w-full bg-gray-950 text-slate-100 font-sans overflow-hidden selection:bg-emerald-500/30">
+    <div className="home-page">
       <PageTitle title="Create Room" />
-      {/* HEADER: Nằm ngoài wrapper, trên cùng, full-width */}
-      {battle?.battle?.status !== "active" && <Header />}
+      <Header />
+      <ThemeToggle />
 
       {/* CONTENT WRAPPER: Chứa Sidebar và Main nằm ngang hàng */}
       <div className="flex flex-1 overflow-hidden">

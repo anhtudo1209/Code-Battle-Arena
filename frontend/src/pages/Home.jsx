@@ -26,7 +26,7 @@ export default function Home() {
       ),
       get("/auth/me")
         .then((data) => setStreak(data.user?.daily_streak || 0))
-        .catch(() => { }),
+        .catch(() => {}),
     ]).catch((err) => console.error("Failed to load home data", err));
   }, []);
 
@@ -43,7 +43,15 @@ export default function Home() {
       <div className="content">
         <aside className="sidebar">
           <div className="glass-card streak">
-            <h2>{streak} Day Streak</h2>
+            <h2
+              style={{
+                color: "#34d399",
+                textTransform: "uppercase",
+                fontWeight: "bold",
+              }}
+            >
+              {streak} DAY STREAK
+            </h2>
             <p>Take a lesson today to start a new streak!</p>
             <div className="streak-days">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
@@ -62,7 +70,15 @@ export default function Home() {
           </div>
 
           <div className="glass-card leaderboard">
-            <h2>LEADERBOARD</h2>
+            <h2
+              style={{
+                color: "#34d399",
+                textTransform: "uppercase",
+                fontWeight: "800",
+              }}
+            >
+              LEADERBOARD
+            </h2>
             <ul>
               {leaderboard.length > 0 ? (
                 leaderboard.map((player, index) => (
@@ -72,14 +88,17 @@ export default function Home() {
                   >
                     <span className="font-bold flex items-center gap-2">
                       <span
-                        className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${index === 0
+                        className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${
+                          index === 0
                             ? "bg-yellow-500/20 text-yellow-400"
                             : index === 1
-                              ? "bg-slate-300/20 text-slate-300"
-                              : index === 2
-                                ? "bg-amber-700/20 text-amber-600"
-                                : "bg-slate-800 text-slate-500"
-                          }`}
+                            ? "bg-slate-300/20 text-slate-300"
+                            : index === 2
+                            ? "bg-amber-700/20 text-amber-600"
+                            : index === 3 || index === 4
+                            ? "bg-slate-600/30 text-slate-400"
+                            : "bg-slate-800 text-slate-500"
+                        }`}
                       >
                         {index + 1}
                       </span>
@@ -99,7 +118,15 @@ export default function Home() {
           </div>
 
           <div className="glass-card daily">
-            <h2>DAILY CHALLENGE</h2>
+            <h2
+              style={{
+                color: "#34d399",
+                textTransform: "uppercase",
+                fontWeight: "800",
+              }}
+            >
+              DAILY CHALLENGE
+            </h2>
             <p className="mb-4 text-slate-400 text-sm">
               Solve a random problem!
             </p>
@@ -113,147 +140,13 @@ export default function Home() {
           </div>
         </aside>
 
-        <main className="main-area">
-          <p className="subtitle">
-            Code Battle Arena is an online code battle game with multiple game
-            modes.
-          </p>
-
-          <div className="battle-area">
-            <div className="icon-wrap">
-              <img
-                src="/assets/img/human.png"
-                alt="warrior icon"
-                className="person-svg glowing"
-                style={{
-                  height: "120px",
-                  width: "auto",
-                  filter: "drop-shadow(0 0 10px rgba(122, 242, 178, 0.8))",
-                }}
-              />
-            </div>
-
-            <div className="icon-wrap">
-              <svg
-                className="monitor-svg glowing"
-                viewBox="0 0 120 90"
-                xmlns="http://www.w3.org/2000/svg"
-                role="img"
-                aria-hidden
-              >
-                <rect
-                  x="6"
-                  y="6"
-                  rx="8"
-                  ry="8"
-                  width="108"
-                  height="60"
-                  fill="#34d399"
-                  stroke="#06b6d4"
-                  strokeWidth="4"
-                />
-                <rect
-                  x="14"
-                  y="14"
-                  rx="4"
-                  ry="4"
-                  width="92"
-                  height="44"
-                  fill="#ffffff"
-                />
-                <rect
-                  x="44"
-                  y="70"
-                  width="32"
-                  height="8"
-                  rx="3"
-                  fill="#34d399"
-                />
-                <rect
-                  x="50"
-                  y="78"
-                  width="20"
-                  height="6"
-                  rx="3"
-                  fill="#06b6d4"
-                />
-                <circle cx="60" cy="74" r="2.5" fill="#7af2b2" />
-              </svg>
-            </div>
-
-            <div className="vs">VS</div>
-
-            <div className="icon-wrap">
-              <svg
-                className="monitor-svg glowing"
-                viewBox="0 0 120 90"
-                xmlns="http://www.w3.org/2000/svg"
-                role="img"
-                aria-hidden
-              >
-                <rect
-                  x="6"
-                  y="6"
-                  rx="8"
-                  ry="8"
-                  width="108"
-                  height="60"
-                  fill="#34d399"
-                  stroke="#06b6d4"
-                  strokeWidth="4"
-                />
-                <rect
-                  x="14"
-                  y="14"
-                  rx="4"
-                  ry="4"
-                  width="92"
-                  height="44"
-                  fill="#ffffff"
-                />
-                <rect
-                  x="44"
-                  y="70"
-                  width="32"
-                  height="8"
-                  rx="3"
-                  fill="#34d399"
-                />
-                <rect
-                  x="50"
-                  y="78"
-                  width="20"
-                  height="6"
-                  rx="3"
-                  fill="#06b6d4"
-                />
-                <circle cx="60" cy="74" r="2.5" fill="#7af2b2" />
-              </svg>
-            </div>
-
-            <div className="icon-wrap">
-              <img
-                src="/assets/img/human.png"
-                alt="warrior icon"
-                className="person-svg mirrored glowing"
-                style={{
-                  height: "120px",
-                  width: "auto",
-                  transform: "scaleX(-1)",
-                  filter: "drop-shadow(0 0 10px rgba(122, 242, 178, 0.8))",
-                }}
-              />
-            </div>
-          </div>
-
-          <button className="btn start-btn" onClick={handleGetStarted}>
-            GET STARTED
-          </button>
-
+        <main className="main-area" style={{ marginBottom: "20px" }}>
           <div
             className="tutorial-section"
             style={{
-              marginTop: "50px",
+              marginTop: "530px",
+              marginBottom: "0px",
+              marginLeft: "350px",
               textAlign: "center",
             }}
           >
@@ -264,6 +157,8 @@ export default function Home() {
                 fontWeight: "600",
                 marginBottom: "10px",
                 color: "#7af2b2",
+                textShadow: "2px 2px 8px rgba(0, 0, 0, 0.9)",
+                textTransform: "uppercase",
               }}
             >
               How to Get Started
@@ -279,7 +174,9 @@ export default function Home() {
               style={{ maxWidth: "600px", margin: "0 auto" }}
             >
               <Step>
-                <h3>Step 1: Register an Account</h3>
+                <h3 style={{ color: "#43ff9bff" }}>
+                  Step 1: Register an Account
+                </h3>
                 <p>
                   Create your account to access all features of Code Battle
                   Arena.

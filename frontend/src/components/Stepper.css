@@ -12,7 +12,7 @@
   width: 100%;
   max-width: 28rem;
   border-radius: 2rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(15px);
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4), 0 0 25px rgba(52, 211, 153, 0.2);
@@ -68,8 +68,6 @@
   padding: 12px 20px;
   transition: all 0.3s ease;
 }
-
-
 
 .back-button.inactive {
   pointer-events: none;
@@ -162,4 +160,14 @@
 .step-content-default p {
   font-weight: normal;
   color: white;
+}
+
+@media (prefers-color-scheme: light) {
+  .step-content-default h3 {
+    color: #75f2c0;
+  }
+
+  .step-content-default p {
+    color: #1f2937;
+  }
 }

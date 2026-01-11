@@ -4,6 +4,7 @@ import { Editor } from "@monaco-editor/react";
 import { post, get } from "../services/httpClient";
 import Header from "../components/Header";
 import PageTitle from "../components/PageTitle";
+import ThemeToggle from "../components/ThemeToggle";
 import "./Practice.css";
 
 export default function Practice() {
@@ -17,6 +18,7 @@ export default function Practice() {
   const [submissionId, setSubmissionId] = useState(null);
   const [lockedLines, setLockedLines] = useState([]);
   const [guardMessage, setGuardMessage] = useState("");
+  const [editorTheme, setEditorTheme] = useState("vs-dark");
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const decorationsRef = useRef([]);
@@ -30,6 +32,25 @@ export default function Practice() {
       handleDifficultySelect(location.state.difficulty);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      const isLight = document.documentElement.getAttribute("data-theme") === "light";
+      setEditorTheme(isLight ? "vs" : "vs-dark");
+    };
+
+    // Initial check
+    handleThemeChange();
+
+    // Listen for theme changes
+    const observer = new MutationObserver(handleThemeChange);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const fetchExercises = async (difficulty) => {
     setLoadingExercises(true);
@@ -281,10 +302,11 @@ export default function Practice() {
         <>
           <PageTitle title="Practice" />
           <Header />
+          <ThemeToggle />
 
           <div className="practice-layout">
             <aside className="problem-sidebar">
-              <h3>Problem</h3>
+              <h3>PROBLEM</h3>
               {loadingExercises ? (
                 <p>Loading problem...</p>
               ) : (
@@ -297,10 +319,10 @@ export default function Practice() {
             <main className="practice-main">
               <section className="code-section">
                 <div className="flex justify-between items-center mb-2">
-                  <h3>Your Code:</h3>
+                  <h3>YOUR CODE</h3>
                   <button
                     onClick={() => fetchExercises(currentDifficulty)}
-                    className="text-xs text-slate-400 hover:text-white underline decoration-slate-600"
+                    className="text-xs text-slate-400 hover:text-white"
                   >
                     Skip / Next Problem
                   </button>
@@ -308,7 +330,7 @@ export default function Practice() {
                 <Editor
                   height="60vh"
                   language="cpp"
-                  theme="vs-dark"
+                  theme={editorTheme}
                   value={code}
                   onMount={handleEditorMount}
                   onChange={handleEditorChange}
@@ -328,7 +350,7 @@ export default function Practice() {
               </section>
 
               <section className="output-section">
-                <h3>Output:</h3>
+                <h3>OUTPUT</h3>
                 {results ? (
                   <>
                     {results.error ? (

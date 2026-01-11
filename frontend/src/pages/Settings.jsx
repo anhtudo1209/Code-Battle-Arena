@@ -17,6 +17,8 @@ import { logout } from "../services/authService";
 import { put, del, get } from "../services/httpClient";
 import Header from "../components/Header";
 import PageTitle from "../components/PageTitle";
+import ThemeToggle from "../components/ThemeToggle";
+import "./Home.css";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -248,14 +250,13 @@ export default function Settings() {
   };
 
   return (
-    // Layout: Flex Column, Full screen, no body scroll
-    <div className="flex flex-col h-screen w-full bg-[#050b18] text-slate-100 font-sans overflow-hidden selection:bg-emerald-500/30">
-      {/* Header always on top */}
+    <div className="home-page">
       <PageTitle title="Settings" />
       <Header />
+      <ThemeToggle />
 
-      {/* Main content scrollable area */}
-      <main className="flex-1 overflow-y-auto pt-8 pb-24 px-6">
+      {/* Main content: Chiếm phần còn lại, tự cuộn (overflow-y-auto) */}
+      <main className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center mb-16 animate-fade-in">
             <h1 className="text-[44px] font-bold mb-4 tracking-tight">
