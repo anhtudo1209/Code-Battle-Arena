@@ -414,16 +414,7 @@ export default function Settings() {
                             battles.
                           </p>
                         </div>
-                        <div className="grid gap-2">
-                          <label className="text-sm font-medium text-slate-300">
-                            Bio Data
-                          </label>
-                          <textarea
-                            rows="4"
-                            className="w-full bg-slate-950/50 border border-slate-800 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 transition-all outline-none resize-none"
-                            defaultValue="Full stack developer by day, code warrior by night. Specializing in Python and recursive algorithms."
-                          ></textarea>
-                        </div>
+
                       </div>
 
                       {profileStatus && (
