@@ -152,7 +152,7 @@
   display: flex;
   justify-content: flex-start;
   gap: 30px;
-  padding: 20px 40px;
+  padding: 84px 40px 20px 40px;
   position: relative;
   z-index: 2;
 }
@@ -163,7 +163,7 @@
   flex: 1;
   padding: 20px 0;
   justify-content: center;
-  margin-top: 180px;
+  margin-top: 0px;
   margin-left: -100px;
 }
 

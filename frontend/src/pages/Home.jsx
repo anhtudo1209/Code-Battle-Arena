@@ -144,7 +144,7 @@ export default function Home() {
           <div
             className="tutorial-section"
             style={{
-              marginTop: "530px",
+              marginTop: "0px",
               marginBottom: "0px",
               marginLeft: "350px",
               textAlign: "center",
