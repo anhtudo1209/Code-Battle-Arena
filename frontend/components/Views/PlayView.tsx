@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { 
-    Swords, Globe, Lock, Users, Zap, Search, Clock, 
+import {
+    Swords, Globe, Lock, Users, Zap, Search, Clock,
     AlertTriangle, CheckCircle, XCircle, Terminal, Play,
     Cpu, Code2, ChevronRight, Loader2, Shield
 } from "lucide-react";
@@ -53,14 +53,14 @@ const SimpleCodeEditor = ({ code, onChange }: { code: string, onChange: (val: st
 
 export default function PlayView() {
     const [viewMode, setViewMode] = useState<'ranked' | 'create' | 'join'>('ranked');
-    
+
     // Ranked Queue States
     const [queueStatus, setQueueStatus] = useState<'idle' | 'searching' | 'found' | 'battle'>('idle');
     const [queueTimer, setQueueTimer] = useState(0);
     const [battleTimer, setBattleTimer] = useState(1200); // 20 mins
     const [code, setCode] = useState(MOCK_PROBLEM.starterCode);
     const [acceptCountdown, setAcceptCountdown] = useState(15);
-    
+
     // Simulation Logic
     useEffect(() => {
         let interval: any;
@@ -85,7 +85,7 @@ export default function PlayView() {
                 });
             }, 1000);
         } else if (queueStatus === 'battle') {
-             interval = setInterval(() => {
+            interval = setInterval(() => {
                 setBattleTimer(prev => Math.max(0, prev - 1));
             }, 1000);
         }
@@ -184,19 +184,9 @@ export default function PlayView() {
                                 <h2 className="text-4xl font-display font-black text-ui-text-main mb-2 tracking-wide">RANKED ARENA</h2>
                                 <p className="text-gray-500 text-sm font-mono uppercase tracking-widest">Global Matchmaking System</p>
                             </div>
-                            
-                            <div className="flex justify-center gap-8 text-center">
-                                <div>
-                                    <div className="text-2xl font-bold text-ui-text-main">1540</div>
-                                    <div className="text-[10px] text-brand font-bold uppercase">Current MMR</div>
-                                </div>
-                                <div>
-                                    <div className="text-2xl font-bold text-ui-text-main">52.4%</div>
-                                    <div className="text-[10px] text-gray-500 font-bold uppercase">Win Rate</div>
-                                </div>
-                            </div>
 
-                            <button 
+
+                            <button
                                 onClick={handleStartSearch}
                                 className="w-64 h-16 bg-brand hover:bg-white hover:scale-105 active:scale-95 transition-all mx-auto clip-path-polygon flex items-center justify-center gap-3 group relative overflow-hidden"
                                 style={{ clipPath: 'polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%)' }}
@@ -217,7 +207,7 @@ export default function PlayView() {
                                     00:{(queueTimer).toString().padStart(2, '0')}
                                 </span>
                             </div>
-                            
+
                             <div>
                                 <h3 className="text-xl font-bold text-ui-text-main animate-pulse">SEARCHING FOR OPPONENT...</h3>
                                 <p className="text-xs text-gray-500 mt-2 font-mono">ESTIMATED TIME: 00:15</p>
@@ -232,13 +222,13 @@ export default function PlayView() {
                     {queueStatus === 'found' && (
                         <div className="bg-ui-800 border border-brand/50 p-8 text-center relative shadow-[0_0_50px_rgba(11,220,168,0.2)] animate-scale-in">
                             <div className="absolute top-0 left-0 w-full h-1 bg-brand animate-pulse"></div>
-                            
+
                             <h3 className="text-3xl font-display font-black text-ui-text-main mb-6">MATCH FOUND</h3>
-                            
+
                             <div className="flex items-center justify-center gap-6 mb-8">
                                 <div className="text-center">
                                     <div className="w-16 h-16 bg-ui-700 border-2 border-brand rounded-full mx-auto mb-2 flex items-center justify-center overflow-hidden">
-                                         <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#14b8a6' }}>
+                                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#14b8a6' }}>
                                             <img src="https://api.dicebear.com/9.x/bottts/svg?seed=robot" alt="User" className="w-full h-full object-cover" />
                                         </div>
                                     </div>
@@ -333,7 +323,7 @@ export default function PlayView() {
                 </div>
                 <h2 className="text-2xl font-bold text-ui-text-main uppercase">Join Secure Channel</h2>
                 <p className="text-xs text-gray-500 font-mono">Enter the 6-digit access code provided by the lobby host.</p>
-                
+
                 <div className="flex gap-2 justify-center">
                     {[1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className="w-10 h-12 bg-ui-900 border border-ui-border flex items-center justify-center text-xl font-mono text-ui-text-main focus-within:border-brand transition-colors">
@@ -361,7 +351,7 @@ export default function PlayView() {
                         </h2>
                     </div>
 
-                    <button 
+                    <button
                         onClick={() => { setViewMode('ranked'); setQueueStatus('idle'); }}
                         className={`text-left px-4 py-4 border transition-all group relative overflow-hidden ${viewMode === 'ranked' ? 'bg-brand text-black border-brand' : 'bg-transparent text-gray-500 border-transparent hover:bg-ui-800 hover:text-ui-text-main'}`}
                     >
@@ -374,7 +364,7 @@ export default function PlayView() {
                         </div>
                     </button>
 
-                    <button 
+                    <button
                         onClick={() => setViewMode('create')}
                         className={`text-left px-4 py-4 border transition-all group ${viewMode === 'create' ? 'bg-ui-800 text-ui-text-main border-ui-border' : 'bg-transparent text-gray-500 border-transparent hover:bg-ui-800 hover:text-ui-text-main'}`}
                     >
@@ -387,7 +377,7 @@ export default function PlayView() {
                         </div>
                     </button>
 
-                    <button 
+                    <button
                         onClick={() => setViewMode('join')}
                         className={`text-left px-4 py-4 border transition-all group ${viewMode === 'join' ? 'bg-ui-800 text-ui-text-main border-ui-border' : 'bg-transparent text-gray-500 border-transparent hover:bg-ui-800 hover:text-ui-text-main'}`}
                     >
