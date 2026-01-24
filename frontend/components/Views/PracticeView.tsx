@@ -52,9 +52,9 @@ const SimpleCodeEditor = ({ code, onChange }: { code: string, onChange: (val: st
     };
 
     return (
-        <div className="relative w-full h-full bg-[#0d0d0d] font-mono text-sm group">
+        <div className="relative w-full h-full bg-white dark:bg-[#0d0d0d] font-mono text-sm group">
             {/* Line Numbers (Fake) */}
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-[#1a1a1a] border-r border-[#333] text-gray-600 text-right pr-2 pt-4 select-none leading-6 font-mono text-xs">
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-white dark:bg-[#1a1a1a] border-r border-gray-300 dark:border-[#333] text-black dark:text-gray-600 text-right pr-2 pt-4 select-none leading-6 font-mono text-xs">
                 {Array.from({ length: 20 }).map((_, i) => (
                     <div key={i}>{i + 1}</div>
                 ))}
@@ -64,7 +64,7 @@ const SimpleCodeEditor = ({ code, onChange }: { code: string, onChange: (val: st
                 value={code}
                 onChange={(e) => onChange(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full h-full bg-transparent text-gray-300 pl-10 pt-4 pr-4 border-none resize-none focus:outline-none focus:ring-0 leading-6 custom-scrollbar"
+                className="w-full h-full bg-transparent text-black dark:text-gray-300 pl-10 pt-4 pr-4 border-none resize-none focus:outline-none focus:ring-0 leading-6 custom-scrollbar"
                 spellCheck={false}
             />
         </div>
@@ -205,17 +205,16 @@ export default function PracticeView() {
                     </div>
 
                     {/* RIGHT: EDITOR & CONSOLE */}
-                    <div className="flex-1 flex flex-col bg-[#0d0d0d]">
+                    <div className="flex-1 flex flex-col bg-white dark:bg-[#0d0d0d]">
 
                         {/* Toolbar */}
-                        <div className="h-10 border-b border-[#222] flex items-center justify-between px-4 bg-[#111]">
+                        <div className="h-10 border-b border-gray-300 dark:border-[#222] flex items-center justify-between px-4 bg-white dark:bg-[#111]">
                             <div className="flex gap-4">
-                                <div className="flex items-center gap-1.5 text-gray-500 text-xs font-bold border-b-2 border-brand pb-[11px] translate-y-[1px]">
+                                <div className="flex items-center gap-1.5 text-black dark:text-gray-500 text-xs font-bold border-b-2 border-brand pb-[11px] translate-y-[1px]">
                                     <Code2 size={14} />
                                     CODE
                                 </div>
                             </div>
-                            <span className="text-[10px] font-mono text-gray-600">JAVASCRIPT (NODE)</span>
                         </div>
 
                         {/* Editor Area */}
@@ -224,12 +223,12 @@ export default function PracticeView() {
                         </div>
 
                         {/* Console/Output Area */}
-                        <div className="h-48 border-t border-ui-border bg-[#0a0a0a] flex flex-col">
-                            <div className="h-8 border-b border-[#222] flex items-center justify-between px-4 bg-[#111]">
-                                <span className="text-[10px] font-bold text-gray-500 uppercase">Console Output</span>
+                        <div className="h-48 border-t border-ui-border bg-white dark:bg-[#0a0a0a] flex flex-col">
+                            <div className="h-8 border-b border-[#222] flex items-center justify-between px-4 bg-white dark:bg-[#111]">
+                                <span className="text-[10px] font-bold text-black dark:text-gray-500 uppercase">Console Output</span>
                                 <div className="flex gap-2">
                                     {results && (
-                                        <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${results.success ? 'text-green-500' : 'text-red-500'}`}>
+                                        <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${results.success ? 'text-black dark:text-green-500' : 'text-black dark:text-red-500'}`}>
                                             {results.success ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
                                             {results.success ? 'Success' : 'Failed'}
                                         </span>
@@ -239,24 +238,24 @@ export default function PracticeView() {
 
                             <div className="flex-1 p-4 font-mono text-xs overflow-y-auto custom-scrollbar">
                                 {loading ? (
-                                    <div className="flex items-center gap-2 text-brand animate-pulse">
+                                    <div className="flex items-center gap-2 text-black dark:text-brand animate-pulse">
                                         <div className="w-2 h-2 bg-brand rounded-full"></div>
                                         <span>Compiling and executing test cases...</span>
                                     </div>
                                 ) : results ? (
                                     <div className="space-y-2">
-                                        <div className={results.success ? "text-green-400" : "text-red-400"}>
+                                        <div className={results.success ? "text-black dark:text-green-400" : "text-black dark:text-red-400"}>
                                             &gt; {results.message}
                                         </div>
                                         {results.success && (
-                                            <div className="text-gray-500 mt-2">
+                                            <div className="text-black dark:text-gray-500 mt-2">
                                                 Execution Time: {results.time} <br />
                                                 Memory Usage: {results.memory}
                                             </div>
                                         )}
                                     </div>
                                 ) : (
-                                    <span className="text-gray-700">// Run code to see output...</span>
+                                    <span className="text-black dark:text-gray-700">// Run code to see output...</span>
                                 )}
                             </div>
 
