@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Editor } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 import {
     Swords, Globe, Lock, Users, Zap, Search, Clock,
     AlertTriangle, CheckCircle, XCircle, Terminal, Play,
@@ -20,36 +22,7 @@ const MOCK_PROBLEM = {
     starterCode: "function invertTree(root) {\n    // Your code here\n}"
 };
 
-// Reusing Simple Code Editor
-const SimpleCodeEditor = ({ code, onChange }: { code: string, onChange: (val: string) => void }) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const start = e.currentTarget.selectionStart;
-            const end = e.currentTarget.selectionEnd;
-            const value = e.currentTarget.value;
-            e.currentTarget.value = value.substring(0, start) + "  " + value.substring(end);
-            e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2;
-            onChange(e.currentTarget.value);
-        }
-    };
-    return (
-        <div className="relative w-full h-full bg-[#0d0d0d] font-mono text-sm group">
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-[#1a1a1a] border-r border-[#333] text-gray-600 text-right pr-2 pt-4 select-none leading-6 font-mono text-xs">
-                {Array.from({ length: 30 }).map((_, i) => <div key={i}>{i + 1}</div>)}
-            </div>
-            <textarea
-                ref={textareaRef}
-                value={code}
-                onChange={(e) => onChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full h-full bg-transparent text-gray-300 pl-10 pt-4 pr-4 border-none resize-none focus:outline-none focus:ring-0 leading-6 custom-scrollbar font-mono"
-                spellCheck={false}
-            />
-        </div>
-    );
-};
+
 
 export default function PlayView() {
     const [viewMode, setViewMode] = useState<'ranked' | 'create' | 'join'>('ranked');
@@ -60,6 +33,7 @@ export default function PlayView() {
     const [battleTimer, setBattleTimer] = useState(1200); // 20 mins
     const [code, setCode] = useState(MOCK_PROBLEM.starterCode);
     const [acceptCountdown, setAcceptCountdown] = useState(15);
+    const [editorTheme, setEditorTheme] = useState("vs-dark");
 
     // Simulation Logic
     useEffect(() => {
@@ -91,6 +65,39 @@ export default function PlayView() {
         }
         return () => clearInterval(interval);
     }, [queueStatus]);
+
+    useEffect(() => {
+        // Define custom light theme with white background and black text
+        monaco.editor.defineTheme('custom-light', {
+            base: 'vs',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#ffffff',
+                'editor.foreground': '#000000',
+                'editor.lineHighlightBackground': '#f0f0f0',
+                'editor.selectionBackground': '#add6ff',
+                'editor.inactiveSelectionBackground': '#e5ebf1'
+            }
+        });
+
+        const handleThemeChange = () => {
+            const isLight = document.documentElement.getAttribute("data-theme") === "light";
+            setEditorTheme(isLight ? "custom-light" : "vs-dark");
+        };
+
+        // Initial check
+        handleThemeChange();
+
+        // Listen for theme changes
+        const observer = new MutationObserver(handleThemeChange);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-theme"],
+        });
+
+        return () => observer.disconnect();
+    }, []);
 
     const handleStartSearch = () => {
         setQueueStatus('searching');
@@ -151,13 +158,25 @@ export default function PlayView() {
                                 {MOCK_PROBLEM.description}
                             </div>
                         </div>
-                        <div className="flex-1 flex flex-col bg-[#0d0d0d]">
-                            <div className="h-10 bg-[#111] border-b border-[#222] flex items-center px-4 justify-between">
-                                <span className="text-[10px] text-gray-500 font-bold uppercase">main.js</span>
-                                <span className="text-[10px] text-gray-600 font-mono">JavaScript</span>
+                        <div className="flex-1 flex flex-col bg-white dark:bg-[#0d0d0d]">
+                            <div className="h-10 bg-white dark:bg-[#111] border-b border-gray-300 dark:border-[#222] flex items-center px-4 justify-between">
+                                <span className="text-[10px] text-black dark:text-gray-500 font-bold uppercase">main.js</span>
+                                <span className="text-[10px] text-black dark:text-gray-600 font-mono">JavaScript</span>
                             </div>
                             <div className="flex-1 relative">
-                                <SimpleCodeEditor code={code} onChange={setCode} />
+                                <Editor
+                                    height="100%"
+                                    language="javascript"
+                                    theme={editorTheme}
+                                    value={code}
+                                    onChange={setCode}
+                                    options={{
+                                        minimap: { enabled: false },
+                                        automaticLayout: true,
+                                        fontSize: 14,
+                                        wordWrap: "on",
+                                    }}
+                                />
                             </div>
                             <div className="p-3 bg-ui-800 border-t border-ui-border flex justify-end">
                                 <button className="bg-brand hover:bg-white text-black px-6 py-2 font-bold text-xs uppercase transition-colors">

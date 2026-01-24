@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Editor } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 import { Terminal, Play, SkipForward, AlertCircle, CheckCircle, Cpu, Code2, ChevronRight, X, Settings2 } from "lucide-react";
 
 // --- MOCK DATA ---
@@ -35,42 +37,6 @@ const EXERCISES = {
     ]
 };
 
-// Simple Textarea based Code Editor to avoid heavy Monaco dependency in this env
-const SimpleCodeEditor = ({ code, onChange }: { code: string, onChange: (val: string) => void }) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const start = e.currentTarget.selectionStart;
-            const end = e.currentTarget.selectionEnd;
-            const value = e.currentTarget.value;
-            e.currentTarget.value = value.substring(0, start) + "  " + value.substring(end);
-            e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2;
-            onChange(e.currentTarget.value);
-        }
-    };
-
-    return (
-        <div className="relative w-full h-full bg-white dark:bg-[#0d0d0d] font-mono text-sm group">
-            {/* Line Numbers (Fake) */}
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-white dark:bg-[#1a1a1a] border-r border-gray-300 dark:border-[#333] text-black dark:text-gray-600 text-right pr-2 pt-4 select-none leading-6 font-mono text-xs">
-                {Array.from({ length: 20 }).map((_, i) => (
-                    <div key={i}>{i + 1}</div>
-                ))}
-            </div>
-            <textarea
-                ref={textareaRef}
-                value={code}
-                onChange={(e) => onChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full h-full bg-transparent text-black dark:text-gray-300 pl-10 pt-4 pr-4 border-none resize-none focus:outline-none focus:ring-0 leading-6 custom-scrollbar"
-                spellCheck={false}
-            />
-        </div>
-    );
-};
-
 export default function PracticeView() {
     const [showModal, setShowModal] = useState(true);
     const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
@@ -79,6 +45,48 @@ export default function PracticeView() {
 
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<any>(null);
+    const [editorTheme, setEditorTheme] = useState("vs-dark");
+
+    useEffect(() => {
+        // Define custom light theme with explicit white background and black text
+        monaco.editor.defineTheme('custom-light', {
+            base: 'vs',
+            inherit: true,
+            rules: [
+                { token: '', foreground: '000000', background: 'ffffff' },
+                { token: 'comment', foreground: '008000' },
+                { token: 'keyword', foreground: '0000ff' },
+                { token: 'string', foreground: 'a31515' },
+                { token: 'number', foreground: '098658' }
+            ],
+            colors: {
+                'editor.background': '#ffffff',
+                'editor.foreground': '#000000',
+                'editor.lineHighlightBackground': '#f0f0f0',
+                'editor.selectionBackground': '#add6ff',
+                'editor.inactiveSelectionBackground': '#e5ebf1',
+                'editorCursor.foreground': '#000000',
+                'editorWhitespace.foreground': '#d3d3d3'
+            }
+        });
+
+        const handleThemeChange = () => {
+            const isLight = document.documentElement.getAttribute("data-theme") === "light";
+            setEditorTheme(isLight ? "custom-light" : "vs-dark");
+        };
+
+        // Initial check
+        handleThemeChange();
+
+        // Listen for theme changes
+        const observer = new MutationObserver(handleThemeChange);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-theme"],
+        });
+
+        return () => observer.disconnect();
+    }, []);
 
     // Load random exercise
     const loadExercise = (diff: 'easy' | 'medium' | 'hard') => {
@@ -219,7 +227,19 @@ export default function PracticeView() {
 
                         {/* Editor Area */}
                         <div className="flex-1 relative overflow-hidden">
-                            <SimpleCodeEditor code={code} onChange={setCode} />
+                            <Editor
+                                height="100%"
+                                language="javascript"
+                                theme={editorTheme}
+                                value={code}
+                                onChange={setCode}
+                                options={{
+                                    minimap: { enabled: false },
+                                    automaticLayout: true,
+                                    fontSize: 14,
+                                    wordWrap: "on",
+                                }}
+                            />
                         </div>
 
                         {/* Console/Output Area */}
