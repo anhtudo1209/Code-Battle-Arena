@@ -241,12 +241,12 @@ export default function FriendsView() {
     );
 
     return (
-        <div className="w-full h-full flex bg-ui-900/95 border border-ui-border shadow-hard relative overflow-hidden backdrop-blur-sm">
+    <div className="w-full h-full flex bg-ui-900 border border-ui-border shadow-hard relative overflow-hidden">
 
             {/* LEFT PANEL: Friend List */}
             <div className={`flex-1 flex flex-col transition-all duration-300 ${selectedFriend ? 'w-1/2 hidden md:flex' : 'w-full'}`}>
                 {/* Header */}
-                <div className="p-6 border-b border-ui-border bg-ui-800/80 flex justify-between items-center shrink-0">
+                <div className="p-6 border-b border-ui-border bg-ui-800 flex justify-between items-center shrink-0">
                     <div>
                         <h2 className="text-2xl font-display font-bold text-ui-text-main tracking-wider">FRIENDS LIST</h2>
                         <p className="text-xs text-ui-text-muted font-mono mt-1">NETWORK: <span className="text-brand">SECURE</span></p>
@@ -408,7 +408,7 @@ export default function FriendsView() {
 
             {/* RIGHT PANEL: Chat / Details Overlay */}
             {selectedFriend && (
-                <div className="w-full md:w-[60%] border-l border-ui-border bg-ui-900/90 flex flex-col absolute md:relative inset-0 z-10 animate-fade-in">
+                <div className="w-full md:w-[60%] border-l border-ui-border bg-ui-900 flex flex-col absolute md:relative inset-0 z-10 animate-fade-in">
                     {/* Chat Header */}
                     <div className="h-16 border-b border-ui-border bg-ui-800 flex items-center justify-between px-6 shrink-0">
                         <div className="flex items-center gap-3">

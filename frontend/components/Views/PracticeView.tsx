@@ -150,14 +150,14 @@ export default function PracticeView() {
     };
 
     return (
-        <div className="w-full h-full flex flex-col bg-ui-900/95 border border-ui-border shadow-hard relative overflow-hidden backdrop-blur-sm">
+        <div className="w-full h-full flex flex-col bg-white dark:bg-black border border-ui-border shadow-hard relative overflow-hidden">
 
             {/* --- MODAL: DIFFICULTY SELECTION --- */}
             {showModal && (
-                <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-ui-800 border border-ui-border w-full max-w-md shadow-2xl relative overflow-hidden animate-fade-in">
+                <div className="absolute inset-0 z-50 bg-white dark:bg-black flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-black border border-ui-border w-full max-w-md shadow-2xl relative overflow-hidden animate-fade-in">
                         <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-                        <div className="p-8 text-center">
+                        <div className="p-8 text-center bg-white dark:bg-black">
                             <div className="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Cpu size={32} className="text-brand" />
                             </div>
@@ -186,7 +186,7 @@ export default function PracticeView() {
             )}
 
             {/* --- HEADER --- */}
-            <div className="p-4 border-b border-ui-border bg-black/5 dark:bg-black/40 shrink-0 flex justify-between items-center">
+            <div className="p-4 border-b border-ui-border bg-white dark:bg-black shrink-0 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <Terminal size={20} className="text-brand" />
@@ -195,7 +195,7 @@ export default function PracticeView() {
                     {!showModal && (
                         <button
                             onClick={() => setShowModal(true)}
-                            className="flex items-center gap-2 px-3 py-1 bg-ui-800 border border-ui-border hover:border-brand/50 transition-colors group cursor-pointer"
+                            className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-black border border-ui-border hover:border-brand/50 transition-colors group cursor-pointer"
                             title="Change Difficulty"
                         >
                             <Settings2 size={12} className="text-gray-500 group-hover:text-ui-text-main" />
@@ -220,8 +220,8 @@ export default function PracticeView() {
                 <div className="flex-1 flex overflow-hidden">
 
                     {/* LEFT: PROBLEM DESCRIPTION */}
-                    <div className="w-1/3 border-r border-ui-border bg-ui-800/30 flex flex-col">
-                        <div className="p-4 border-b border-ui-border bg-black/5 dark:bg-black/20">
+                    <div className="w-1/3 border-r border-ui-border bg-white dark:bg-black flex flex-col">
+                        <div className="p-4 border-b border-ui-border bg-white dark:bg-black">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-[10px] font-mono text-gray-500">{currentExercise.id}</span>
                             </div>

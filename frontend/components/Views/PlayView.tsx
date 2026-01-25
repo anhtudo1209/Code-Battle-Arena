@@ -205,7 +205,7 @@ export default function PlayView() {
             return (
                 <div className="flex-1 flex flex-col h-full relative animate-fade-in">
                     {/* Battle Header */}
-                    <div className="h-14 border-b border-ui-border bg-ui-800/80 shrink-0 flex items-center justify-between px-6 shrink-0">
+                    <div className="h-14 border-b border-ui-border bg-white dark:bg-black shrink-0 flex items-center justify-between px-6 shrink-0">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 flex items-center justify-center overflow-hidden border border-white/20" style={{ backgroundColor: '#14b8a6' }}>
@@ -412,7 +412,7 @@ export default function PlayView() {
         <div className="flex-1 flex items-center justify-center p-6 animate-fade-in">
             {/* ... existingJoinRoom UI ... */}
             <div className="w-full max-w-md text-center space-y-6">
-                <div className="w-20 h-20 bg-ui-800 border border-ui-border rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 bg-white dark:bg-black border border-ui-border rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users size={32} className="text-gray-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-ui-text-main uppercase">Join Secure Channel</h2>
@@ -431,7 +431,7 @@ export default function PlayView() {
     );
 
     return (
-        <div className="w-full h-full flex flex-col bg-ui-900/95 border border-ui-border shadow-hard relative overflow-hidden backdrop-blur-sm">
+        <div className="w-full h-full flex flex-col bg-white dark:bg-black border border-ui-border shadow-hard relative overflow-hidden">
             {/* Nav Rail (Left) */}
             <div className="flex h-full">
                 <div className="w-64 bg-black/5 dark:bg-black/20 border-r border-ui-border flex flex-col p-4 gap-2">
@@ -483,7 +483,7 @@ export default function PlayView() {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 bg-ui-900/50 relative flex flex-col">
+                <div className="flex-1 bg-white dark:bg-black relative flex flex-col">
                     {viewMode === 'ranked' && renderRanked()}
                     {viewMode === 'create' && renderCreateRoom()}
                     {viewMode === 'join' && renderJoinRoom()}
