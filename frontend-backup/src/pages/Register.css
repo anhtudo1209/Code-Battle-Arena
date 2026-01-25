@@ -1,0 +1,13 @@
+/* Make text brighter in Register page */
+
+.form input {
+  color: #ffffff;
+}
+
+.form input::placeholder {
+  color: #ffffff;
+}
+
+.error {
+  color: #ffffff !important;
+}

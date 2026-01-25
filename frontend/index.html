@@ -1,15 +1,110 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Code Battle Arena</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  </head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                DEFAULT: '#0bdca8',
+                hover: '#00c996',
+                accent: '#00f0ff',
+              },
+              ui: {
+                900: 'var(--bg-900)', 
+                800: 'var(--bg-800)',
+                700: 'var(--bg-700)',
+                border: 'var(--border-color)',
+                text: {
+                   main: 'var(--text-main)',
+                   muted: 'var(--text-muted)'
+                }
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              display: ['Oxanium', 'display'],
+            },
+            boxShadow: {
+              'hard': '0 0 0 1px var(--border-color), 0 4px 20px rgba(0,0,0,0.05)',
+              'glow': '0 0 15px rgba(11, 220, 168, 0.3)',
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        /* Light Mode Variables - Cleaner, High Contrast */
+        --bg-900: #f8fafc; /* Very subtle off-white for main background */
+        --bg-800: #ffffff; /* Pure white for containers/cards */
+        --bg-700: #f1f5f9; /* Light gray for secondary elements/hovers */
+        --border-color: #e2e8f0; /* Light border */
+        --text-main: #0f172a; /* Slate 900 for primary text */
+        --text-muted: #64748b; /* Slate 500 for secondary text */
+      }
+
+      .dark {
+        /* Dark Mode Variables - Deep Cyberpunk */
+        --bg-900: #050505;
+        --bg-800: #0a0a0a;
+        --bg-700: #1a1a1a;
+        --border-color: #2a2a2a;
+        --text-main: #e2e8f0;
+        --text-muted: #9ca3af;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-900);
+        color: var(--text-main);
+        overflow: hidden;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      /* Tactical Panel */
+      .tactical-panel {
+        background-color: var(--bg-800);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      .tactical-text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      }
+
+      h1, h2, h3, h4, h5, h6, .font-display {
+        font-family: 'Oxanium', display;
+      }
+      
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: var(--bg-900); }
+      ::-webkit-scrollbar-thumb { background: var(--border-color); }
+      ::-webkit-scrollbar-thumb:hover { background: #0bdca8; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+  <script type="module" src="/index.tsx"></script>
+</body>
 </html>
