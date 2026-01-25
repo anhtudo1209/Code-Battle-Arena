@@ -53,7 +53,7 @@ export default function PracticeView() {
             base: 'vs',
             inherit: true,
             rules: [
-                { token: '', foreground: '000000', background: 'ffffff' },
+                { token: '', foreground: '000000' },
                 { token: 'comment', foreground: '008000' },
                 { token: 'keyword', foreground: '0000ff' },
                 { token: 'string', foreground: 'a31515' },
@@ -71,7 +71,7 @@ export default function PracticeView() {
         });
 
         const handleThemeChange = () => {
-            const isLight = document.documentElement.getAttribute("data-theme") === "light";
+            const isLight = !document.documentElement.classList.contains("dark");
             setEditorTheme(isLight ? "custom-light" : "vs-dark");
         };
 
@@ -82,7 +82,7 @@ export default function PracticeView() {
         const observer = new MutationObserver(handleThemeChange);
         observer.observe(document.documentElement, {
             attributes: true,
-            attributeFilter: ["data-theme"],
+            attributeFilter: ["class"],
         });
 
         return () => observer.disconnect();
@@ -228,6 +228,7 @@ export default function PracticeView() {
                         {/* Editor Area */}
                         <div className="flex-1 relative overflow-hidden">
                             <Editor
+                                key={editorTheme}
                                 height="100%"
                                 language="javascript"
                                 theme={editorTheme}

@@ -71,7 +71,9 @@ export default function PlayView() {
         monaco.editor.defineTheme('custom-light', {
             base: 'vs',
             inherit: true,
-            rules: [],
+            rules: [
+                { token: '', foreground: '000000', background: 'ffffff' }
+            ],
             colors: {
                 'editor.background': '#ffffff',
                 'editor.foreground': '#000000',
@@ -82,7 +84,7 @@ export default function PlayView() {
         });
 
         const handleThemeChange = () => {
-            const isLight = document.documentElement.getAttribute("data-theme") === "light";
+            const isLight = !document.documentElement.classList.contains("dark");
             setEditorTheme(isLight ? "custom-light" : "vs-dark");
         };
 
@@ -93,7 +95,7 @@ export default function PlayView() {
         const observer = new MutationObserver(handleThemeChange);
         observer.observe(document.documentElement, {
             attributes: true,
-            attributeFilter: ["data-theme"],
+            attributeFilter: ["class"],
         });
 
         return () => observer.disconnect();
@@ -165,6 +167,7 @@ export default function PlayView() {
                             </div>
                             <div className="flex-1 relative">
                                 <Editor
+                                    key={editorTheme}
                                     height="100%"
                                     language="javascript"
                                     theme={editorTheme}
