@@ -22,36 +22,7 @@ const MOCK_PROBLEM = {
     starterCode: "function invertTree(root) {\n    // Your code here\n}"
 };
 
-// Reusing Simple Code Editor
-const SimpleCodeEditor = ({ code, onChange }: { code: string, onChange: (val: string) => void }) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const start = e.currentTarget.selectionStart;
-            const end = e.currentTarget.selectionEnd;
-            const value = e.currentTarget.value;
-            e.currentTarget.value = value.substring(0, start) + "  " + value.substring(end);
-            e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2;
-            onChange(e.currentTarget.value);
-        }
-    };
-    return (
-        <div className="relative w-full h-full bg-white dark:bg-black font-mono text-sm group border-t border-ui-border">
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-white dark:bg-black border-r border-ui-border text-gray-400 text-right pr-2 pt-4 select-none leading-6 font-mono text-xs z-10">
-                {Array.from({ length: 30 }).map((_, i) => <div key={i}>{i + 1}</div>)}
-            </div>
-            <textarea
-                ref={textareaRef}
-                value={code}
-                onChange={(e) => onChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full h-full bg-white dark:bg-black text-gray-800 dark:text-gray-300 pl-10 pt-4 pr-4 border-none resize-none focus:outline-none focus:ring-0 leading-6 custom-scrollbar font-mono"
-                spellCheck={false}
-            />
-        </div>
-    );
-};
+
 
 
 
@@ -196,7 +167,20 @@ export default function PlayView() {
                                 <span className="text-[10px] text-black dark:text-gray-500 font-bold uppercase">Your code</span>
                             </div>
                             <div className="flex-1 relative">
-                                <SimpleCodeEditor code={code} onChange={setCode} />
+                                <Editor
+                                    key={editorTheme}
+                                    height="100%"
+                                    language="javascript"
+                                    theme={editorTheme}
+                                    value={code}
+                                    onChange={setCode}
+                                    options={{
+                                        minimap: { enabled: false },
+                                        automaticLayout: true,
+                                        fontSize: 14,
+                                        wordWrap: "on",
+                                    }}
+                                />
                             </div>
                             <div className="p-3 bg-white dark:bg-black border-t border-ui-border flex justify-end">
                                 <button className="bg-brand hover:bg-white text-black px-6 py-2 font-bold text-xs uppercase transition-colors">
