@@ -3,39 +3,9 @@ import { Editor } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { Terminal, Play, SkipForward, AlertCircle, CheckCircle, Cpu, Code2, ChevronRight, X, Settings2 } from "lucide-react";
 
-// --- MOCK DATA ---
-const EXERCISES = {
-    easy: [
-        {
-            id: "EZ-01",
-            title: "Binary Sum",
-            content: "Given two binary strings a and b, return their sum as a binary string.\n\nExample:\nInput: a = \"11\", b = \"1\"\nOutput: \"100\"",
-            starterCode: "function binarySum(a, b) {\n  // Your code here\n  return \"\";\n}"
-        },
-        {
-            id: "EZ-02",
-            title: "Array Filter",
-            content: "Write a function that filters out all negative numbers from an array.\n\nExample:\nInput: [1, -2, 3]\nOutput: [1, 3]",
-            starterCode: "function filterNegatives(arr) {\n  // Your code here\n  return [];\n}"
-        }
-    ],
-    medium: [
-        {
-            id: "MD-01",
-            title: "Longest Substring",
-            content: "Find the length of the longest substring without repeating characters.\n\nExample:\nInput: \"abcabcbb\"\nOutput: 3",
-            starterCode: "function lengthOfLongestSubstring(s) {\n  // Your code here\n  return 0;\n}"
-        }
-    ],
-    hard: [
-        {
-            id: "HD-01",
-            title: "Median of Two Sorted Arrays",
-            content: "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.\n\nTime complexity should be O(log (m+n)).",
-            starterCode: "function findMedianSortedArrays(nums1, nums2) {\n  // Your code here\n  return 0.0;\n}"
-        }
-    ]
-};
+import { getExercisesByDifficulty, submitCode, getSubmission, getExercise } from "../../services/practiceService";
+
+// --- MOCK DATA REMOVED ---
 
 export default function PracticeView() {
     const [showModal, setShowModal] = useState(true);
@@ -89,12 +59,28 @@ export default function PracticeView() {
     }, []);
 
     // Load random exercise
-    const loadExercise = (diff: 'easy' | 'medium' | 'hard') => {
-        const list = EXERCISES[diff];
-        const random = list[Math.floor(Math.random() * list.length)];
-        setCurrentExercise(random);
-        setCode(random.starterCode);
-        setResults(null);
+    const loadExercise = async (diff: 'easy' | 'medium' | 'hard') => {
+        try {
+            const response = await getExercisesByDifficulty(diff);
+            const list = response.exercises;
+            if (list && list.length > 0) {
+                const randomSummary = list[Math.floor(Math.random() * list.length)];
+
+                // Fetch full details
+                setLoading(true);
+                const fullExercise = await getExercise(randomSummary.id); // Import getExercise first!
+
+                setCurrentExercise(fullExercise);
+                setCode(fullExercise.starterCode || "// No starter code provided");
+                setResults(null);
+                setLoading(false);
+            } else {
+                alert("No exercises found for this difficulty.");
+            }
+        } catch (error) {
+            console.error("Failed to load exercises", error);
+            setLoading(false);
+        }
     };
 
     const handleDifficultySelect = (diff: 'easy' | 'medium' | 'hard') => {
@@ -103,22 +89,64 @@ export default function PracticeView() {
         setShowModal(false);
     };
 
-    const handleSubmit = () => {
+    const pollSubmission = async (submissionId: number) => {
+        const interval = setInterval(async () => {
+            try {
+                const res = await getSubmission(submissionId);
+                const sub = res.submission;
+                if (sub.status !== 'pending' && sub.status !== 'processing') {
+                    clearInterval(interval);
+                    setLoading(false);
+
+                    if (sub.status === 'compile_error') {
+                        setResults({
+                            success: false,
+                            message: `Compilation Error: ${sub.compilation_error || 'Unknown error'}`
+                        });
+                    } else if (sub.status === 'completed') {
+                        // Check if all test cases passed
+                        // Assuming sub.test_results contains pass/fail info
+                        // For now simplistic check
+                        const allPassed = sub.test_results?.every((t: any) => t.passed);
+                        setResults({
+                            success: allPassed,
+                            message: allPassed ? "All test cases passed!" : "Some test cases failed.",
+                            // Mocking time/memory if not in response
+                            time: "N/A",
+                            memory: "N/A"
+                        });
+                    } else {
+                        setResults({
+                            success: false,
+                            message: `Execution Error: ${sub.status}`
+                        });
+                    }
+                }
+            } catch (err) {
+                clearInterval(interval);
+                setLoading(false);
+                setResults({ success: false, message: "Error polling results" });
+            }
+        }, 1000);
+    };
+
+    const handleSubmit = async () => {
+        if (!currentExercise) return;
         setLoading(true);
         setResults(null);
 
-        // Simulate API Submission
-        setTimeout(() => {
+        try {
+            const res = await submitCode(code, currentExercise.id);
+            if (res.submissionId) {
+                pollSubmission(res.submissionId);
+            } else {
+                setLoading(false);
+                setResults({ success: false, message: "Submission failed to start" });
+            }
+        } catch (err: any) {
             setLoading(false);
-            // Random success/fail for demo
-            const isSuccess = Math.random() > 0.3;
-            setResults({
-                success: isSuccess,
-                message: isSuccess ? "All test cases passed." : "Test case failed: Expected '100', got 'undefined'",
-                time: "42ms",
-                memory: "14.2MB"
-            });
-        }, 1500);
+            setResults({ success: false, message: err.message || "Submission failed" });
+        }
     };
 
     return (

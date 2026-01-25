@@ -1,65 +1,83 @@
-import React from "react";
-import { LeaderboardEntry } from "../../types";
+import React, { useEffect, useState } from "react";
+import { getLeaderboard } from "../../services/authService";
 
-const defaultEntries: LeaderboardEntry[] = [
-  { rank: 1, name: "CyberKing", score: 2470, badge: "gold" },
-  { rank: 2, name: "NeonRider", score: 1938, badge: "silver" },
-  { rank: 3, name: "Glitch_01", score: 1400, badge: "bronze" },
-  { rank: 4, name: "CodeNinja", score: 1250 },
-  { rank: 5, name: "ByteMe", score: 1100 },
-  { rank: 6, name: "NullPointer", score: 980 },
-];
+interface LeaderboardEntry {
+    rank: number;
+    name: string; // mapped from username
+    score: number; // mapped from rating
+    badge?: string;
+}
 
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#a855f7', '#ec4899'];
 
-export default function LeaderboardCard({ entries = defaultEntries }: { entries?: LeaderboardEntry[] }) {
-  return (
-    <div className="w-full h-full flex flex-col bg-ui-900">
-      {/* Header */}
-      <div className="flex px-3 py-2 bg-black/20 border-b border-ui-border text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-          <div className="w-8 text-center">#</div>
-          <div className="flex-1">Agent</div>
-          <div className="text-right">Score</div>
-      </div>
-      
-      {/* Rows */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {entries.map((e, idx) => {
-            const isTop3 = e.rank <= 3;
-            // Generate deterministic color index
-            const colorIndex = e.name.length % COLORS.length;
-            
-            return (
-                <div 
-                    key={e.rank} 
-                    className="flex items-center px-3 py-2 border-b border-ui-border hover:bg-ui-800 transition-colors group"
-                >
-                    <div className="w-8 text-center">
-                        <span className={`text-xs font-mono font-bold ${isTop3 ? 'text-brand' : 'text-gray-600'}`}>
-                            {e.rank}
-                        </span>
-                    </div>
+export default function LeaderboardCard() {
+    const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+    const [loading, setLoading] = useState(true);
 
-                    <div className="flex-1 truncate pr-2 flex items-center gap-2">
-                        {/* Avatar */}
-                        <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center overflow-hidden border border-white/10 rounded-sm" style={{ backgroundColor: COLORS[colorIndex] }}>
-                             <img src={`https://api.dicebear.com/9.x/bottts/svg?seed=${e.name}`} alt={e.name} className="w-full h-full object-cover" />
-                        </div>
+    useEffect(() => {
+        getLeaderboard().then(res => {
+            const mapped = res.leaderboard.map((u: any, idx: number) => ({
+                rank: idx + 1,
+                name: u.username,
+                score: u.rating,
+                badge: idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : undefined
+            }));
+            setEntries(mapped);
+            setLoading(false);
+        }).catch(err => {
+            console.error(err);
+            setLoading(false);
+        });
+    }, []);
 
-                        <span className={`text-xs font-bold ${isTop3 ? 'text-ui-text-main' : 'text-ui-text-muted'} group-hover:text-ui-text-main`}>
-                            {e.name}
-                        </span>
-                    </div>
+    if (loading) {
+        return <div className="p-4 text-center text-xs text-gray-500 animate-pulse">Loading ranking...</div>;
+    }
 
-                    <div className="text-right">
-                        <span className="text-xs font-mono text-gray-500 group-hover:text-brand">
-                            {e.score}
-                        </span>
-                    </div>
-                </div>
-            );
-        })}
-      </div>
-    </div>
-  );
+    return (
+        <div className="w-full h-full flex flex-col bg-ui-900">
+            {/* Header */}
+            <div className="flex px-3 py-2 bg-black/20 border-b border-ui-border text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                <div className="w-8 text-center">#</div>
+                <div className="flex-1">Agent</div>
+                <div className="text-right">Score</div>
+            </div>
+
+            {/* Rows */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {entries.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-gray-500">No data available</div>
+                ) : (
+                    entries.map((e) => {
+                        const isTop3 = e.rank <= 3;
+
+                        return (
+                            <div
+                                key={e.rank}
+                                className="flex items-center px-3 py-2 border-b border-ui-border hover:bg-ui-800 transition-colors group"
+                            >
+                                <div className="w-8 text-center">
+                                    <span className={`text-xs font-mono font-bold ${isTop3 ? 'text-brand' : 'text-gray-600'}`}>
+                                        {e.rank}
+                                    </span>
+                                </div>
+
+                                <div className="flex-1 truncate pr-2 flex items-center gap-2">
+                                    <span className={`text-xs font-bold ${isTop3 ? 'text-ui-text-main' : 'text-ui-text-muted'} group-hover:text-ui-text-main`}>
+                                        {e.name}
+                                    </span>
+                                </div>
+
+                                <div className="text-right">
+                                    <span className="text-xs font-mono text-gray-500 group-hover:text-brand">
+                                        {e.score}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
+            </div>
+        </div>
+    );
 }
