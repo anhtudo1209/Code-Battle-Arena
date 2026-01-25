@@ -22,6 +22,37 @@ const MOCK_PROBLEM = {
     starterCode: "function invertTree(root) {\n    // Your code here\n}"
 };
 
+// Reusing Simple Code Editor
+const SimpleCodeEditor = ({ code, onChange }: { code: string, onChange: (val: string) => void }) => {
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = e.currentTarget.selectionStart;
+            const end = e.currentTarget.selectionEnd;
+            const value = e.currentTarget.value;
+            e.currentTarget.value = value.substring(0, start) + "  " + value.substring(end);
+            e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2;
+            onChange(e.currentTarget.value);
+        }
+    };
+    return (
+        <div className="relative w-full h-full bg-white dark:bg-black font-mono text-sm group border-t border-ui-border">
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-white dark:bg-black border-r border-ui-border text-gray-400 text-right pr-2 pt-4 select-none leading-6 font-mono text-xs z-10">
+                {Array.from({ length: 30 }).map((_, i) => <div key={i}>{i + 1}</div>)}
+            </div>
+            <textarea
+                ref={textareaRef}
+                value={code}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full h-full bg-white dark:bg-black text-gray-800 dark:text-gray-300 pl-10 pt-4 pr-4 border-none resize-none focus:outline-none focus:ring-0 leading-6 custom-scrollbar font-mono"
+                spellCheck={false}
+            />
+        </div>
+    );
+};
+
 
 
 export default function PlayView() {
@@ -123,7 +154,7 @@ export default function PlayView() {
             return (
                 <div className="flex-1 flex flex-col h-full relative animate-fade-in">
                     {/* Battle Header */}
-                    <div className="h-14 border-b border-ui-border bg-ui-800/80 shrink-0 flex items-center justify-between px-6 shrink-0">
+                    <div className="h-14 border-b border-ui-border bg-white dark:bg-black shrink-0 flex items-center justify-between px-6 shrink-0">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 flex items-center justify-center overflow-hidden border border-white/20" style={{ backgroundColor: '#14b8a6' }}>
@@ -165,22 +196,9 @@ export default function PlayView() {
                                 <span className="text-[10px] text-black dark:text-gray-500 font-bold uppercase">Your code</span>
                             </div>
                             <div className="flex-1 relative">
-                                <Editor
-                                    key={editorTheme}
-                                    height="100%"
-                                    language="javascript"
-                                    theme={editorTheme}
-                                    value={code}
-                                    onChange={setCode}
-                                    options={{
-                                        minimap: { enabled: false },
-                                        automaticLayout: true,
-                                        fontSize: 14,
-                                        wordWrap: "on",
-                                    }}
-                                />
+                                <SimpleCodeEditor code={code} onChange={setCode} />
                             </div>
-                            <div className="p-3 bg-ui-800 border-t border-ui-border flex justify-end">
+                            <div className="p-3 bg-white dark:bg-black border-t border-ui-border flex justify-end">
                                 <button className="bg-brand hover:bg-white text-black px-6 py-2 font-bold text-xs uppercase transition-colors">
                                     Submit Solution
                                 </button>
@@ -339,7 +357,7 @@ export default function PlayView() {
     const renderJoinRoom = () => (
         <div className="flex-1 flex items-center justify-center p-6 animate-fade-in">
             <div className="w-full max-w-md text-center space-y-6">
-                <div className="w-20 h-20 bg-ui-800 border border-ui-border rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 bg-white dark:bg-black border border-ui-border rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users size={32} className="text-gray-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-ui-text-main uppercase">Join Secure Channel</h2>
@@ -361,7 +379,7 @@ export default function PlayView() {
     );
 
     return (
-        <div className="w-full h-full flex flex-col bg-ui-900/95 border border-ui-border shadow-hard relative overflow-hidden backdrop-blur-sm">
+        <div className="w-full h-full flex flex-col bg-white dark:bg-black border border-ui-border shadow-hard relative overflow-hidden">
             {/* Nav Rail (Left) */}
             <div className="flex h-full">
                 <div className="w-64 bg-black/5 dark:bg-black/20 border-r border-ui-border flex flex-col p-4 gap-2">
@@ -413,7 +431,7 @@ export default function PlayView() {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 bg-ui-900/50 relative flex flex-col">
+                <div className="flex-1 bg-white dark:bg-black relative flex flex-col">
                     {viewMode === 'ranked' && renderRanked()}
                     {viewMode === 'create' && renderCreateRoom()}
                     {viewMode === 'join' && renderJoinRoom()}

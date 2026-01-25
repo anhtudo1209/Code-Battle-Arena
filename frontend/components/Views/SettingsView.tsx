@@ -75,10 +75,10 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-ui-900/95 border border-ui-border shadow-hard relative overflow-hidden backdrop-blur-sm">
+    <div className="w-full h-full flex flex-col bg-ui-900 border border-ui-border shadow-hard relative overflow-hidden">
         
         {/* Header */}
-        <div className="p-6 border-b border-ui-border bg-ui-800/80 shrink-0">
+        <div className="p-6 border-b border-ui-border bg-ui-800 shrink-0">
              <h2 className="text-2xl font-display font-bold text-ui-text-main tracking-wider flex items-center gap-2">
                 <Cpu size={24} className="text-brand" />
                 SYSTEM CONFIGURATION
@@ -125,7 +125,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-ui-900/50">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-ui-900">
                 <div className="max-w-3xl mx-auto">
                     
                     {/* PROFILE TAB */}
@@ -203,11 +203,11 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-gray-500 uppercase">Agent ID (Username)</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             value={profile.username}
                                             disabled
-                                            className="w-full bg-ui-900/50 border border-ui-border p-3 text-sm text-gray-500 font-mono cursor-not-allowed"
+                                            className="w-full bg-ui-900 border border-ui-border p-3 text-sm text-gray-500 font-mono cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
@@ -319,7 +319,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
 
                     {/* OTHER TABS (Placeholder) */}
                     {(activeTab === 'editor' || activeTab === 'notifications') && (
-                         <div className="flex flex-col items-center justify-center h-64 border border-dashed border-ui-border bg-ui-800/50">
+                         <div className="flex flex-col items-center justify-center h-64 border border-dashed border-ui-border bg-ui-800">
                             <Terminal size={32} className="text-gray-600 mb-4" />
                             <h3 className="text-sm font-bold text-gray-500 uppercase">Module Offline</h3>
                             <p className="text-xs font-mono text-gray-600 mt-1">This configuration module is currently under maintenance.</p>

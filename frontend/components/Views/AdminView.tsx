@@ -197,7 +197,7 @@ export default function AdminView() {
 
                         <div className="flex-1 bg-ui-800 border border-ui-border overflow-hidden flex flex-col">
                             {/* Table Header */}
-                            <div className="grid grid-cols-12 gap-2 p-3 border-b border-ui-border bg-black/5 dark:bg-black/20 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                            <div className="grid grid-cols-12 gap-2 p-3 border-b border-ui-border bg-ui-800 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                                 <div className="col-span-2">ID</div>
                                 <div className="col-span-3">Username</div>
                                 <div className="col-span-3">Email</div>
@@ -263,9 +263,9 @@ export default function AdminView() {
                     <div className="h-full flex p-6 gap-6 animate-fade-in">
                         {/* List View */}
                         <div className="w-1/3 flex flex-col bg-ui-800 border border-ui-border">
-                            <div className="p-3 border-b border-ui-border flex justify-between items-center bg-black/5 dark:bg-black/20">
+                            <div className="p-3 border-b border-ui-border flex justify-between items-center bg-ui-800">
                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Training Modules</span>
-                                <button 
+                                <button
                                     onClick={() => { setSelectedExercise(null); setIsCreatingExercise(true); }}
                                     className="p-1.5 bg-brand text-black hover:bg-white transition-colors"
                                 >
@@ -389,7 +389,7 @@ export default function AdminView() {
                     <div className="h-full flex p-6 gap-6 animate-fade-in">
                          {/* Ticket List */}
                          <div className="w-80 flex flex-col bg-ui-800 border border-ui-border">
-                            <div className="p-3 border-b border-ui-border bg-black/5 dark:bg-black/20">
+                            <div className="p-3 border-b border-ui-border bg-ui-800">
                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Incoming Transmissions</span>
                             </div>
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
@@ -442,7 +442,7 @@ export default function AdminView() {
                                         </div>
                                     </div>
 
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 bg-black/5 dark:bg-black/30">
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 bg-ui-900">
                                         {activeTicket.messages.map((msg, idx) => {
                                             const isAdmin = msg.sender === 'admin';
                                             return (

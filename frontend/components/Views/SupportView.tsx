@@ -118,10 +118,10 @@ export default function SupportView() {
     const activeTicket = tickets.find(t => t.id === activeTicketId);
 
     return (
-        <div className="w-full h-full flex flex-col bg-ui-900/95 border border-ui-border shadow-hard relative overflow-hidden backdrop-blur-sm">
+    <div className="w-full h-full flex flex-col bg-ui-900 border border-ui-border shadow-hard relative overflow-hidden">
             
             {/* Header */}
-            <div className="p-6 border-b border-ui-border bg-ui-800/80 shrink-0 flex justify-between items-center">
+            <div className="p-6 border-b border-ui-border bg-ui-800 shrink-0 flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-display font-bold text-ui-text-main tracking-wider flex items-center gap-2">
                         <Terminal size={24} className="text-brand" />
@@ -146,10 +146,10 @@ export default function SupportView() {
                 
                 {/* LIST PANEL (Hidden on mobile if detailing) */}
                 <div className={`
-                    w-full md:w-80 border-r border-ui-border flex flex-col bg-black/5 dark:bg-black/20
+                    w-full md:w-80 border-r border-ui-border flex flex-col bg-ui-800
                     ${(activeTicketId || showCreateForm) ? 'hidden md:flex' : 'flex'}
                 `}>
-                    <div className="p-3 border-b border-ui-border bg-ui-800/50">
+                    <div className="p-3 border-b border-ui-border bg-ui-800">
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Your Tickets</span>
                     </div>
                     
@@ -259,7 +259,7 @@ export default function SupportView() {
                     {!showCreateForm && activeTicket && (
                         <div className="flex-1 flex flex-col h-full">
                             {/* Chat Header */}
-                            <div className="p-4 border-b border-ui-border bg-ui-800/80 flex items-center justify-between shrink-0">
+                            <div className="p-4 border-b border-ui-border bg-ui-800 flex items-center justify-between shrink-0">
                                 <div className="flex items-center gap-3">
                                     <button onClick={() => setActiveTicketId(null)} className="md:hidden text-gray-400 hover:text-ui-text-main">
                                         <ChevronLeft size={20} />
@@ -281,7 +281,7 @@ export default function SupportView() {
                             </div>
 
                             {/* Messages Area */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-black/5 dark:bg-black/20">
+                            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-ui-900">
                                 {/* Ticket Context */}
                                 <div className="flex justify-center mb-6">
                                     <div className="bg-ui-800 border border-ui-border p-3 max-w-lg text-center shadow-sm">

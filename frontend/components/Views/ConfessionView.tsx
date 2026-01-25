@@ -115,10 +115,10 @@ export default function ConfessionView() {
     });
 
   return (
-    <div className="w-full h-full flex flex-col bg-ui-900/95 border border-ui-border shadow-hard relative overflow-hidden backdrop-blur-sm">
+    <div className="w-full h-full flex flex-col bg-ui-900 border border-ui-border shadow-hard relative overflow-hidden">
         
         {/* Header Bar */}
-        <div className="h-16 border-b border-ui-border bg-ui-800/80 shrink-0 flex items-center justify-between px-6 z-10">
+        <div className="h-16 border-b border-ui-border bg-ui-800 shrink-0 flex items-center justify-between px-6 z-10">
             <div>
                 <h2 className="text-xl font-display font-bold text-ui-text-main tracking-wider flex items-center gap-2">
                     <Ghost className="text-brand" size={20} />
@@ -139,7 +139,7 @@ export default function ConfessionView() {
         <div className="flex-1 flex overflow-hidden">
             
             {/* LEFT SIDEBAR: FILTERS & STATS (Hidden on mobile) */}
-            <div className="hidden md:flex w-64 border-r border-ui-border bg-black/5 dark:bg-black/20 flex-col p-4 gap-6">
+            <div className="hidden md:flex w-64 border-r border-ui-border bg-ui-800 flex-col p-4 gap-6">
                 
                 {/* Global Stats */}
                 <div className="bg-ui-800 border border-ui-border p-4 relative overflow-hidden group">
@@ -232,7 +232,7 @@ export default function ConfessionView() {
                         ></textarea>
                         
                         {/* Footer Controls */}
-                        <div className="flex flex-col md:flex-row justify-between items-center p-3 border-t border-ui-border bg-black/5 dark:bg-black/20 gap-3">
+                        <div className="flex flex-col md:flex-row justify-between items-center p-3 border-t border-ui-border bg-ui-700 gap-3">
                             
                             {/* Category Selector */}
                             <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto custom-scrollbar pb-1 md:pb-0">
@@ -276,7 +276,7 @@ export default function ConfessionView() {
                     {filteredConfessions.map((post) => {
                         const categoryStyle = CATEGORIES[post.category];
                         return (
-                            <div key={post.id} className="bg-ui-800/80 border border-ui-border hover:border-ui-text-muted/30 transition-all flex flex-col group animate-fade-in relative overflow-hidden">
+                            <div key={post.id} className="bg-ui-800 border border-ui-border hover:border-ui-text-muted/30 transition-all flex flex-col group animate-fade-in relative overflow-hidden">
                                 {/* Decor line on left */}
                                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${categoryStyle.color.replace('text-', 'bg-').split(' ')[0]}`}></div>
                                 
@@ -329,9 +329,9 @@ export default function ConfessionView() {
                                     </div>
                                 </div>
 
-                                {/* Expanded Comments (Mock) */}
+                                {/* Expanded Comments (Solid Background) */}
                                 {post.expanded && (
-                                    <div className="bg-black/5 dark:bg-black/30 border-t border-ui-border p-4 pl-16 animate-fade-in">
+                                    <div className="bg-ui-900 border-t border-ui-border p-4 pl-16 animate-fade-in">
                                         <div className="space-y-4 mb-4">
                                             {MOCK_COMMENTS.map(comment => (
                                                 <div key={comment.id} className="flex gap-3">
