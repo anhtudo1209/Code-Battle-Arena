@@ -44,32 +44,18 @@ function App() {
         setCurrentView('home');
     };
 
-<<<<<<< HEAD
     // Handle Logout (called via onNavigate('login'))
     const handleNavigate = (view: string) => {
         if (view === 'login') {
             setIsAuthenticated(false);
-            localStorage.removeItem('token');
-            sessionStorage.removeItem('token');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
+            setIsDark(true); // Always revert to dark mode on login screen
         }
         setCurrentView(view);
     };
-=======
-  return (
-    <div className={`h-screen w-screen bg-ui-900 text-ui-text-main font-sans overflow-hidden relative flex flex-col transition-colors duration-300`}>
-        
-        {/* 1. BACKGROUND LAYER (Global fallback) */}
-        <div className="absolute inset-0 z-0">
-            <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-[60s] ease-linear hover:scale-105 opacity-20 dark:opacity-40"
-                style={{
-                  backgroundImage: `url('https://wallpapers.com/images/hd/cyberpunk-city-street-scenery-l650493264.jpg')`,
-                }}
-            />
-            {/* Overlay for readability - lighter in light mode, darker in dark mode */}
-            <div className="absolute inset-0 bg-white/80 dark:bg-black/60 pointer-events-none transition-colors duration-300" />
-        </div>
->>>>>>> b366175880e1d5195e5d05bb7f2add90cf1508cd
 
     return (
         <div className={`h-screen w-screen bg-ui-900 text-ui-text-main font-sans overflow-hidden relative flex flex-col transition-colors duration-300`}>
@@ -86,7 +72,6 @@ function App() {
                 <div className="absolute inset-0 bg-white/80 dark:bg-black/60 pointer-events-none transition-colors duration-300" />
             </div>
 
-<<<<<<< HEAD
             {/* 2. UI LAYER (Solid Blocks) */}
             <div className="relative z-10 flex flex-col h-full">
 
@@ -94,19 +79,6 @@ function App() {
                 {currentView === 'login' && (
                     <div className="w-full h-full z-50">
                         <LoginView onLoginSuccess={handleLoginSuccess} />
-=======
-                {/* Main Workspace - Layout with Gaps */}
-                <div
-                    className="flex-1 flex p-4 gap-4 overflow-hidden min-h-0 bg-cover bg-center transition-all duration-300"
-                    style={{
-                        backgroundImage: `url('${isDark ? mainDarkBg : mainLightBg}')`
-                    }}
-                >
-                    
-                    {/* Left Sidebar - Solid opaque block */}
-                    <div className="w-[320px] shrink-0 flex flex-col h-full bg-ui-800 border border-ui-border shadow-hard">
-                        <Sidebar onNavigate={handleNavigate} />
->>>>>>> b366175880e1d5195e5d05bb7f2add90cf1508cd
                     </div>
                 )}
 

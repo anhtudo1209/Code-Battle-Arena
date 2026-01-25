@@ -20,6 +20,7 @@ interface UserProfile {
     avatarAnimal: string;
     avatarColor: string;
 
+
 }
 
 const ANIMALS = [
@@ -55,6 +56,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
         displayName: "",
         avatarAnimal: "robot",
         avatarColor: "teal",
+
 
     });
     const [isSaving, setIsSaving] = useState(false);
@@ -125,10 +127,10 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
     };
 
     return (
-        <div className="w-full h-full flex flex-col bg-ui-900 border border-ui-border shadow-hard relative overflow-hidden">
+        <div className="w-full h-full flex flex-col bg-white dark:bg-black border border-ui-border shadow-hard relative overflow-hidden">
 
             {/* Header */}
-            <div className="p-6 border-b border-ui-border bg-ui-800 shrink-0">
+            <div className="p-6 border-b border-ui-border bg-white dark:bg-black shrink-0">
                 <h2 className="text-2xl font-display font-bold text-ui-text-main tracking-wider flex items-center gap-2">
                     <Cpu size={24} className="text-brand" />
                     SYSTEM CONFIGURATION
@@ -141,7 +143,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
             <div className="flex-1 flex overflow-hidden">
 
                 {/* Sidebar Tabs */}
-                <div className="w-64 border-r border-ui-border bg-black/5 dark:bg-black/20 flex flex-col p-4 gap-2">
+                <div className="w-64 border-r border-ui-border bg-gray-50 dark:bg-ui-900 flex flex-col p-4 gap-2">
                     {[
                         { id: 'profile', icon: User, label: 'Identity' },
                         { id: 'account', icon: Shield, label: 'Security' },
@@ -175,7 +177,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-ui-900">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-white dark:bg-black">
                     <div className="max-w-3xl mx-auto">
 
                         {/* PROFILE TAB */}
@@ -187,7 +189,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
                                 </div>
 
                                 {/* Avatar Section */}
-                                <div className="bg-ui-800 border border-ui-border p-6 shadow-sm">
+                                <div className="bg-gray-50 dark:bg-ui-800 border border-ui-border p-6 shadow-sm">
                                     <div className="flex flex-col md:flex-row gap-8">
                                         <div className="flex flex-col items-center gap-4">
                                             <div
@@ -223,12 +225,12 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Avatar Base</label>
-                                                <div className="grid grid-cols-6 gap-2 h-48 overflow-y-auto custom-scrollbar pr-2 border border-ui-border p-2 bg-ui-900">
+                                                <div className="grid grid-cols-6 gap-2 h-48 overflow-y-auto custom-scrollbar pr-2 border border-ui-border p-2 bg-zinc-900/90 rounded-md">
                                                     {ANIMALS.map(animal => (
                                                         <button
                                                             key={animal}
                                                             onClick={() => setProfile({ ...profile, avatarAnimal: animal })}
-                                                            className={`p-1 border hover:bg-ui-700 transition-colors rounded ${profile.avatarAnimal === animal ? 'border-brand bg-brand/10' : 'border-transparent'}`}
+                                                            className={`p-1 border transition-colors rounded ${profile.avatarAnimal === animal ? 'border-brand bg-brand/20' : 'border-transparent hover:bg-white/10'}`}
                                                             title={animal}
                                                         >
                                                             <img src={`https://ssl.gstatic.com/docs/common/profile/${animal}_lg.png`} alt={animal} className="w-full h-full object-contain" />
@@ -241,7 +243,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
                                 </div>
 
                                 {/* Info Form */}
-                                <div className="bg-ui-800 border border-ui-border p-6 space-y-4 shadow-sm">
+                                <div className="bg-gray-50 dark:bg-ui-800 border border-ui-border p-6 space-y-4 shadow-sm">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-bold text-gray-500 uppercase">Callsign (Display Name)</label>
@@ -262,15 +264,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
                                             />
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase">Mission Statement (Bio)</label>
-                                        <textarea
-                                            rows={3}
-                                            value={profile.bio}
-                                            onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                                            className="w-full bg-ui-900 border border-ui-border p-3 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono resize-none transition-colors"
-                                        />
-                                    </div>
+
 
                                     <div className="pt-4 flex items-center justify-end gap-4">
                                         {saveStatus === 'success' && (
@@ -302,7 +296,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
                                     <p className="text-xs text-ui-text-muted font-mono">Manage access credentials and account termination.</p>
                                 </div>
 
-                                <div className="bg-ui-800 border border-ui-border p-6 space-y-6 shadow-sm">
+                                <div className="bg-gray-50 dark:bg-ui-800 border border-ui-border p-6 space-y-6 shadow-sm">
                                     <h4 className="text-sm font-bold text-ui-text-main flex items-center gap-2">
                                         <Key size={16} className="text-brand" />
                                         Change Access Code
@@ -322,14 +316,14 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
                                             placeholder="New Password"
                                             value={passwordForm.new}
                                             onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                                            className="w-full bg-ui-900 border border-ui-border p-3 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors"
+                                            className="w-full bg-white dark:bg-ui-900 border border-ui-border p-3 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors"
                                         />
                                         <input
                                             type="password"
                                             placeholder="Confirm New Password"
                                             value={passwordForm.confirm}
                                             onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                                            className="w-full bg-ui-900 border border-ui-border p-3 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors"
+                                            className="w-full bg-white dark:bg-ui-900 border border-ui-border p-3 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors"
                                         />
 
                                         {passMessage && (
@@ -370,7 +364,7 @@ export default function SettingsView({ onNavigate }: SettingsViewProps) {
 
                         {/* OTHER TABS (Placeholder) */}
                         {(activeTab === 'editor' || activeTab === 'notifications') && (
-                            <div className="flex flex-col items-center justify-center h-64 border border-dashed border-ui-border bg-ui-800">
+                            <div className="flex flex-col items-center justify-center h-64 border border-dashed border-ui-border bg-gray-50 dark:bg-ui-800">
                                 <Terminal size={32} className="text-gray-600 mb-4" />
                                 <h3 className="text-sm font-bold text-gray-500 uppercase">Module Offline</h3>
                                 <p className="text-xs font-mono text-gray-600 mt-1">This configuration module is currently under maintenance.</p>
