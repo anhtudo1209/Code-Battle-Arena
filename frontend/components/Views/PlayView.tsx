@@ -162,8 +162,7 @@ export default function PlayView() {
                         </div>
                         <div className="flex-1 flex flex-col bg-white dark:bg-[#0d0d0d]">
                             <div className="h-10 bg-white dark:bg-[#111] border-b border-gray-300 dark:border-[#222] flex items-center px-4 justify-between">
-                                <span className="text-[10px] text-black dark:text-gray-500 font-bold uppercase">main.js</span>
-                                <span className="text-[10px] text-black dark:text-gray-600 font-mono">JavaScript</span>
+                                <span className="text-[10px] text-black dark:text-gray-500 font-bold uppercase">Your code</span>
                             </div>
                             <div className="flex-1 relative">
                                 <Editor

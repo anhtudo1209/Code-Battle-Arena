@@ -46,10 +46,10 @@ function App() {
         
         {/* 1. BACKGROUND LAYER */}
         <div className="absolute inset-0 z-0">
-            <div 
+            <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-[60s] ease-linear hover:scale-105 opacity-20 dark:opacity-40"
-                style={{ 
-                  backgroundImage: `url('https://wallpapers.com/images/hd/cyberpunk-city-street-scenery-l650493264.jpg')`, 
+                style={{
+                  backgroundImage: currentView === 'home' ? `url(${isDark ? '/img/maindark.png' : '/img/mainlight.png'})` : `url('https://wallpapers.com/images/hd/cyberpunk-city-street-scenery-l650493264.jpg')`,
                 }}
             />
             {/* Overlay for readability - lighter in light mode, darker in dark mode */}
@@ -80,7 +80,7 @@ function App() {
                 </div>
 
                 {/* Main Workspace - Layout with Gaps */}
-                <div className="flex-1 flex p-4 gap-4 overflow-hidden min-h-0">
+                <div className="flex-1 flex p-4 gap-4 overflow-hidden min-h-0" style={{ backgroundImage: currentView === 'home' ? `url(${isDark ? '/img/maindark.png' : '/img/mainlight.png'})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
                     
                     {/* Left Sidebar - Solid opaque block */}
                     <div className="w-[320px] shrink-0 flex flex-col h-full bg-ui-800 border border-ui-border shadow-hard">
