@@ -139,13 +139,10 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
 
   // --- RENDER ---
   return (
-    <div className="w-full h-full flex items-center justify-center p-4 relative overflow-hidden">
-      
-      {/* Background Ambience */}
-      <div className="absolute inset-0 bg-black/60 dark:bg-black/60 z-0"></div>
-      
+    <div className="w-full h-full flex items-center justify-center p-4 relative overflow-hidden bg-black">
+
       {/* Main Card */}
-      <div className="w-full max-w-md bg-ui-800/90 border border-ui-border shadow-hard relative z-10 backdrop-blur-md animate-fade-in">
+      <div className="w-full max-w-md bg-zinc-900 border border-ui-border shadow-hard relative z-10 animate-fade-in">
          <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
          
          {/* Header */}
@@ -153,7 +150,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
              <div className="w-12 h-12 bg-brand mx-auto mb-4 flex items-center justify-center font-black text-xl text-black skew-x-[-10deg]">
                  <span className="skew-x-[10deg]">CB</span>
              </div>
-             <h2 className="text-2xl font-display font-bold text-ui-text-main tracking-widest uppercase">
+             <h2 className="text-2xl font-display font-bold text-white tracking-widest uppercase">
                  {mode === 'login' ? "System Access" : mode === 'register' ? "New Operative" : "Recovery"}
              </h2>
              <p className="text-xs text-ui-text-muted font-mono mt-1">
@@ -171,12 +168,12 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                             <div className="absolute left-3 top-3 text-gray-500 group-focus-within:text-brand transition-colors">
                                 <User size={18} />
                             </div>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 placeholder="Username or Email"
                                 value={username}
                                 onChange={e => setUsername(e.target.value)}
-                                className="w-full bg-ui-900 border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors"
+                                className="w-full bg-black border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors"
                             />
                         </div>
                     </div>
@@ -186,12 +183,12 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                             <div className="absolute left-3 top-3 text-gray-500 group-focus-within:text-brand transition-colors">
                                 <Lock size={18} />
                             </div>
-                            <input 
-                                type={showPass ? "text" : "password"} 
+                            <input
+                                type={showPass ? "text" : "password"}
                                 placeholder="Password"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                className="w-full bg-ui-900 border border-ui-border py-3 pl-10 pr-10 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors"
+                                className="w-full bg-black border border-ui-border py-3 pl-10 pr-10 text-sm text-white focus:border-brand focus:outline-none font-mono transition-colors"
                             />
                             <button 
                                 type="button"
@@ -211,7 +208,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                             <input type="checkbox" className="hidden" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
                             <span className="text-gray-500 font-bold uppercase group-hover:text-ui-text-muted">Remember Me</span>
                         </label>
-                        <button type="button" onClick={() => setMode('forgot')} className="text-brand hover:text-ui-text-main font-bold uppercase transition-colors">
+                        <button type="button" onClick={() => setMode('forgot')} className="text-brand hover:text-white font-bold uppercase transition-colors">
                             Forgot Password?
                         </button>
                     </div>
@@ -251,7 +248,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     <div className="text-center mt-4">
                         <p className="text-xs font-mono text-gray-500">
                             Don't have an account?{" "}
-                            <button type="button" onClick={() => setMode('register')} className="text-brand font-bold underline decoration-brand/50 underline-offset-4 hover:text-ui-text-main transition-colors">
+                            <button type="button" onClick={() => setMode('register')} className="text-brand font-bold underline decoration-brand/50 underline-offset-4 hover:text-white transition-colors">
                                 Register
                             </button>
                         </p>
@@ -265,25 +262,25 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     <div className="space-y-1">
                         <div className="relative group">
                             <div className="absolute left-3 top-3 text-gray-500 group-focus-within:text-brand transition-colors"><User size={18} /></div>
-                            <input type="text" placeholder="Username" value={regUsername} onChange={e => setRegUsername(e.target.value)} className="w-full bg-ui-900 border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors" required />
+                            <input type="text" placeholder="Username" value={regUsername} onChange={e => setRegUsername(e.target.value)} className="w-full bg-black border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors" required />
                         </div>
                     </div>
                     <div className="space-y-1">
                         <div className="relative group">
                             <div className="absolute left-3 top-3 text-gray-500 group-focus-within:text-brand transition-colors"><Mail size={18} /></div>
-                            <input type="email" placeholder="Email" value={regEmail} onChange={e => setRegEmail(e.target.value)} className="w-full bg-ui-900 border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors" required />
+                            <input type="email" placeholder="Email" value={regEmail} onChange={e => setRegEmail(e.target.value)} className="w-full bg-black border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors" required />
                         </div>
                     </div>
                     <div className="space-y-1">
                         <div className="relative group">
                             <div className="absolute left-3 top-3 text-gray-500 group-focus-within:text-brand transition-colors"><Lock size={18} /></div>
-                            <input type="password" placeholder="Password" value={regPassword} onChange={e => setRegPassword(e.target.value)} className="w-full bg-ui-900 border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors" required />
+                            <input type="password" placeholder="Password" value={regPassword} onChange={e => setRegPassword(e.target.value)} className="w-full bg-black border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors" required />
                         </div>
                     </div>
                     <div className="space-y-1">
                         <div className="relative group">
                             <div className="absolute left-3 top-3 text-gray-500 group-focus-within:text-brand transition-colors"><Lock size={18} /></div>
-                            <input type="password" placeholder="Confirm Password" value={regConfirmPassword} onChange={e => setRegConfirmPassword(e.target.value)} className="w-full bg-ui-900 border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors" required />
+                            <input type="password" placeholder="Confirm Password" value={regConfirmPassword} onChange={e => setRegConfirmPassword(e.target.value)} className="w-full bg-black border border-ui-border py-3 pl-10 pr-4 text-sm text-ui-text-main focus:border-brand focus:outline-none font-mono transition-colors" required />
                         </div>
                     </div>
 
@@ -312,7 +309,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     <div className="text-center mt-4">
                         <p className="text-xs font-mono text-gray-500">
                             Already have an account?{" "}
-                            <button type="button" onClick={() => setMode('login')} className="text-brand font-bold underline decoration-brand/50 underline-offset-4 hover:text-ui-text-main transition-colors">
+                            <button type="button" onClick={() => setMode('login')} className="text-brand font-bold underline decoration-brand/50 underline-offset-4 hover:text-white transition-colors">
                                 Login
                             </button>
                         </p>
@@ -327,7 +324,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                          <div className="w-12 h-12 bg-ui-900 rounded-full flex items-center justify-center mx-auto mb-3 text-brand border border-ui-border">
                              <Mail size={24} />
                          </div>
-                         <h3 className="text-ui-text-main font-bold uppercase">Recovery Protocol</h3>
+                         <h3 className="text-white font-bold uppercase">Recovery Protocol</h3>
                          <p className="text-xs text-gray-500 mt-2 font-mono">Enter your neural link email to receive a reset token.</p>
                      </div>
 
@@ -358,9 +355,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                         <div className="text-center mt-4">
                             <p className="text-xs font-mono text-gray-500">
                                 Remember your password?{" "}
-                                <button type="button" onClick={() => setMode('login')} className="text-brand font-bold underline decoration-brand/50 underline-offset-4 hover:text-ui-text-main transition-colors">
-                                    Login
-                                </button>
+                        <button type="button" onClick={() => setMode('login')} className="text-brand font-bold underline decoration-brand/50 underline-offset-4 hover:text-white transition-colors">
+                            Login
+                        </button>
                             </p>
                         </div>
                      </form>
