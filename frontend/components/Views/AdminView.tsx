@@ -140,7 +140,7 @@ export default function AdminView() {
         <div className="w-full h-full flex flex-col bg-ui-900/95 border border-ui-border shadow-hard relative overflow-hidden backdrop-blur-sm">
             
             {/* Header */}
-            <div className="p-6 border-b border-ui-border bg-ui-800/80 shrink-0 flex justify-between items-center">
+            <div className="p-6 border-b border-ui-border bg-white dark:bg-black shrink-0 flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-display font-bold text-ui-text-main tracking-wider flex items-center gap-2">
                         <Shield size={24} className="text-brand" />
@@ -176,7 +176,7 @@ export default function AdminView() {
             </div>
 
             {/* MAIN CONTENT AREA */}
-            <div className="flex-1 overflow-hidden relative">
+            <div className="flex-1 overflow-hidden relative bg-white dark:bg-black">
                 
                 {/* --- TAB: USERS --- */}
                 {activeTab === 'users' && (
@@ -188,7 +188,7 @@ export default function AdminView() {
                                     placeholder="SEARCH DATABASE..." 
                                     value={userSearch}
                                     onChange={e => setUserSearch(e.target.value)}
-                                    className="bg-ui-800 border border-ui-border text-xs text-ui-text-main px-4 py-2 w-64 focus:border-brand focus:outline-none placeholder:text-gray-600 font-mono transition-colors"
+                                    className="bg-white dark:bg-black border border-ui-border text-xs text-ui-text-main px-4 py-2 w-64 focus:border-brand focus:outline-none placeholder:text-gray-600 font-mono transition-colors"
                                 />
                                 <Search size={14} className="absolute right-3 top-2.5 text-gray-500" />
                             </div>
@@ -197,7 +197,7 @@ export default function AdminView() {
 
                         <div className="flex-1 bg-ui-800 border border-ui-border overflow-hidden flex flex-col">
                             {/* Table Header */}
-                            <div className="grid grid-cols-12 gap-2 p-3 border-b border-ui-border bg-black/5 dark:bg-black/20 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                            <div className="grid grid-cols-12 gap-2 p-3 border-b border-ui-border bg-white dark:bg-black text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                                 <div className="col-span-2">ID</div>
                                 <div className="col-span-3">Username</div>
                                 <div className="col-span-3">Email</div>
@@ -262,10 +262,10 @@ export default function AdminView() {
                 {activeTab === 'exercises' && (
                     <div className="h-full flex p-6 gap-6 animate-fade-in">
                         {/* List View */}
-                        <div className="w-1/3 flex flex-col bg-ui-800 border border-ui-border">
-                            <div className="p-3 border-b border-ui-border flex justify-between items-center bg-black/5 dark:bg-black/20">
+                        <div className="w-1/3 flex flex-col bg-white dark:bg-black border border-ui-border">
+                            <div className="p-3 border-b border-ui-border flex justify-between items-center bg-ui-800">
                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Training Modules</span>
-                                <button 
+                                <button
                                     onClick={() => { setSelectedExercise(null); setIsCreatingExercise(true); }}
                                     className="p-1.5 bg-brand text-black hover:bg-white transition-colors"
                                 >
@@ -388,8 +388,8 @@ export default function AdminView() {
                 {activeTab === 'tickets' && (
                     <div className="h-full flex p-6 gap-6 animate-fade-in">
                          {/* Ticket List */}
-                         <div className="w-80 flex flex-col bg-ui-800 border border-ui-border">
-                            <div className="p-3 border-b border-ui-border bg-black/5 dark:bg-black/20">
+                         <div className="w-80 flex flex-col bg-white dark:bg-black border border-ui-border">
+                            <div className="p-3 border-b border-ui-border bg-ui-800">
                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Incoming Transmissions</span>
                             </div>
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
@@ -421,10 +421,10 @@ export default function AdminView() {
                          </div>
 
                          {/* Chat View */}
-                         <div className="flex-1 bg-ui-800 border border-ui-border flex flex-col relative">
+                         <div className="flex-1 bg-white dark:bg-black border border-ui-border flex flex-col relative">
                             {activeTicket ? (
                                 <>
-                                    <div className="p-4 border-b border-ui-border bg-black/5 dark:bg-black/20 flex justify-between items-center">
+                                    <div className="p-4 border-b border-ui-border bg-white dark:bg-black flex justify-between items-center">
                                         <div>
                                             <h3 className="text-sm font-bold text-ui-text-main">{activeTicket.subject}</h3>
                                             <p className="text-[10px] text-gray-500 font-mono uppercase">Initiator: {activeTicket.user} // ID: {activeTicket.id}</p>
@@ -442,7 +442,7 @@ export default function AdminView() {
                                         </div>
                                     </div>
 
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 bg-black/5 dark:bg-black/30">
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 bg-ui-900">
                                         {activeTicket.messages.map((msg, idx) => {
                                             const isAdmin = msg.sender === 'admin';
                                             return (

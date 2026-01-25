@@ -10,6 +10,10 @@ import PracticeView from './components/Views/PracticeView';
 import PlayView from './components/Views/PlayView';
 import LoginView from './components/Views/LoginView';
 
+// Import background images
+import mainDarkBg from './components/img/maindark.png';
+import mainLightBg from './components/img/mainlight.png';
+
 function App() {
   const [isDark, setIsDark] = useState(true);
   const [currentView, setCurrentView] = useState('login'); // Default to login
@@ -44,12 +48,12 @@ function App() {
   return (
     <div className={`h-screen w-screen bg-ui-900 text-ui-text-main font-sans overflow-hidden relative flex flex-col transition-colors duration-300`}>
         
-        {/* 1. BACKGROUND LAYER */}
+        {/* 1. BACKGROUND LAYER (Global fallback) */}
         <div className="absolute inset-0 z-0">
             <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-[60s] ease-linear hover:scale-105 opacity-20 dark:opacity-40"
                 style={{
-                  backgroundImage: currentView === 'home' ? `url(${isDark ? '/img/maindark.png' : '/img/mainlight.png'})` : `url('https://wallpapers.com/images/hd/cyberpunk-city-street-scenery-l650493264.jpg')`,
+                  backgroundImage: `url('https://wallpapers.com/images/hd/cyberpunk-city-street-scenery-l650493264.jpg')`,
                 }}
             />
             {/* Overlay for readability - lighter in light mode, darker in dark mode */}
@@ -80,7 +84,12 @@ function App() {
                 </div>
 
                 {/* Main Workspace - Layout with Gaps */}
-                <div className="flex-1 flex p-4 gap-4 overflow-hidden min-h-0" style={{ backgroundImage: currentView === 'home' ? `url(${isDark ? '/img/maindark.png' : '/img/mainlight.png'})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <div
+                    className="flex-1 flex p-4 gap-4 overflow-hidden min-h-0 bg-cover bg-center transition-all duration-300"
+                    style={{
+                        backgroundImage: `url('${isDark ? mainDarkBg : mainLightBg}')`
+                    }}
+                >
                     
                     {/* Left Sidebar - Solid opaque block */}
                     <div className="w-[320px] shrink-0 flex flex-col h-full bg-ui-800 border border-ui-border shadow-hard">
