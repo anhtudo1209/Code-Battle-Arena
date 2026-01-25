@@ -207,7 +207,7 @@ router.post("/logout", async (req, res) => {
 router.get("/leaderboard", async (req, res) => {
     try {
         const result = await query(
-            "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 5"
+            "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 10"
         );
         res.json({ leaderboard: result.rows });
     } catch (err) {
@@ -220,7 +220,7 @@ router.get("/leaderboard", async (req, res) => {
 router.get("/me", authMiddleware, async (req, res) => {
     try {
         const result = await query(
-            "SELECT id, username, email, role, rating, win_streak, loss_streak, daily_streak, display_name, avatar_animal, avatar_color, created_at FROM users WHERE id = $1",
+            "SELECT id, username, email, role, rating, win_streak, loss_streak, daily_streak, max_streak, display_name, avatar_animal, avatar_color, created_at FROM users WHERE id = $1",
             [req.userId]
         );
 

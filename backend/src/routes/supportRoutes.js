@@ -4,7 +4,7 @@ import { query } from "../database/db-postgres.js";
 const router = express.Router();
 
 // Create a new ticket
-router.post("/", async (req, res) => {
+router.post("/create", async (req, res) => {
     const { subject, content } = req.body;
     const userId = req.userId;
 
@@ -38,7 +38,7 @@ router.post("/", async (req, res) => {
 });
 
 // Get user's tickets
-router.get("/", async (req, res) => {
+router.get("/tickets", async (req, res) => {
     const userId = req.userId;
 
     try {

@@ -824,9 +824,14 @@ async function updateDailyStreak(userId) {
            WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN daily_streak + 1
            ELSE 1
          END,
+         max_streak = GREATEST(max_streak, CASE
+           WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE THEN daily_streak
+           WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN daily_streak + 1
+           ELSE 1
+         END),
          last_activity_date = CURRENT_DATE
        WHERE id = $1
-       RETURNING daily_streak`,
+       RETURNING daily_streak, max_streak`,
       [userId]
     );
     if (res.rows.length > 0) {
