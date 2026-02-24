@@ -77,6 +77,15 @@ router.post("/login", async (req, res) => {
             return res.status(401).send({ message: "Invalid credentials" });
         }
 
+        // Reset daily streak in DB if it has expired (keeps column value accurate)
+        await query(
+            `UPDATE users SET daily_streak = 0
+             WHERE id = $1
+               AND (last_activity_date IS NULL
+                    OR last_activity_date < CURRENT_DATE - INTERVAL '1 day')`,
+            [user.id]
+        );
+
         // Revoke old refresh tokens
         await query("DELETE FROM refresh_tokens WHERE user_id = $1", [user.id]);
 
@@ -129,6 +138,15 @@ router.post("/oauth-login", async (req, res) => {
                 [userId, provider, provider_user_id]
             );
         }
+
+        // Reset daily streak in DB if it has expired (keeps column value accurate)
+        await query(
+            `UPDATE users SET daily_streak = 0
+             WHERE id = $1
+               AND (last_activity_date IS NULL
+                    OR last_activity_date < CURRENT_DATE - INTERVAL '1 day')`,
+            [userId]
+        );
 
         // Revoke old refresh tokens
         await query("DELETE FROM refresh_tokens WHERE user_id = $1", [userId]);
@@ -220,7 +238,9 @@ router.get("/leaderboard", async (req, res) => {
 router.get("/me", authMiddleware, async (req, res) => {
     try {
         const result = await query(
-            "SELECT id, username, email, role, rating, win_streak, loss_streak, daily_streak, display_name, avatar_animal, avatar_color, created_at FROM users WHERE id = $1",
+            `SELECT id, username, email, role, rating, win_streak, loss_streak,
+               daily_streak, display_name, avatar_animal, avatar_color, created_at
+             FROM users WHERE id = $1`,
             [req.userId]
         );
 
