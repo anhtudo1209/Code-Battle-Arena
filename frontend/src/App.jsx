@@ -5,7 +5,6 @@ import Home from "./pages/Home";
 import Practice from "./pages/Practice";
 import Admin from "./pages/Admin";
 import ResetPassword from "./pages/ResetPassword";
-import ThemeSwitch from "./components/ThemeToggle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import CreateRoom from "./pages/CreateRoom";
@@ -25,10 +24,7 @@ export default function App() {
           path="/home"
           element={
             <ProtectedRoute>
-              <>
-                <ThemeSwitch />
-                <Home />
-              </>
+              <Home />
             </ProtectedRoute>
           }
         />
