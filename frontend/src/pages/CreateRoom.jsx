@@ -244,10 +244,13 @@ export default function CreateRoom() {
     if (!battle?.battle?.id) return;
     if (!window.confirm("Confirm resign?")) return;
     try {
-      await post(`/battle/${battle.battle.id}/resign`, {});
+      const res = await post(`/battle/${battle.battle.id}/resign`, {});
       const b = await get("/battle/active");
       setBattle(b);
-      if (b.battle?.status === "completed") await showBattleResult(b.battle);
+      if (b.battle?.status === "completed") {
+        // Pass the delta directly from the resign response to avoid race condition
+        await showBattleResult(b.battle, res.ratingDelta ?? null);
+      }
     } catch (e) {
       setError(e.message);
     }
@@ -352,7 +355,7 @@ export default function CreateRoom() {
     }
   };
 
-  const showBattleResult = async (battleData) => {
+  const showBattleResult = async (battleData, overrideDelta = null) => {
     if (!battleData || !user || shownResultBattleId.current === battleData.id)
       return;
     const me = await get("/auth/me");
@@ -363,8 +366,13 @@ export default function CreateRoom() {
         ? "win"
         : "loss"
       : "draw";
+    // Use overrideDelta if provided (resign path), otherwise compute from pre-battle rating
     const delta =
-      preBattleRating != null ? me.user.rating - preBattleRating : 0;
+      overrideDelta !== null
+        ? overrideDelta
+        : preBattleRating != null
+          ? me.user.rating - preBattleRating
+          : 0;
     setResultPopupData({ outcome, delta });
     setShowResultPopup(true);
     shownResultBattleId.current = battleData.id;

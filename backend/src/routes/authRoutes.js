@@ -239,7 +239,8 @@ router.get("/me", authMiddleware, async (req, res) => {
     try {
         const result = await query(
             `SELECT id, username, email, role, rating, win_streak, loss_streak,
-               daily_streak, display_name, avatar_animal, avatar_color, created_at
+               daily_streak, COALESCE(max_streak, 0) AS max_streak,
+               display_name, avatar_animal, avatar_color, created_at
              FROM users WHERE id = $1`,
             [req.userId]
         );

@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FaPlay,
-  FaTrophy,
-  FaFire,
-  FaCheckCircle,
-  FaMedal,
-} from "react-icons/fa";
-import Stepper, { Step } from "../components/Stepper";
+import { FaTrophy, FaFire } from "react-icons/fa6";
 import Header from "../components/Header";
 import PageTitle from "../components/PageTitle";
 import { get } from "../services/httpClient";
@@ -17,6 +10,8 @@ export default function Home() {
   const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState([]);
   const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
+  const [recentBattles, setRecentBattles] = useState([]);
 
   useEffect(() => {
     // Parallel fetch
@@ -25,7 +20,13 @@ export default function Home() {
         setLeaderboard(data.leaderboard || [])
       ),
       get("/auth/me")
-        .then((data) => setStreak(data.user?.daily_streak || 0))
+        .then((data) => {
+          setStreak(data.user?.daily_streak || 0);
+          setMaxStreak(data.user?.max_streak || 0);
+        })
+        .catch(() => { }),
+      get("/battle/recent")
+        .then((data) => setRecentBattles(data.battles || []))
         .catch(() => { }),
     ]).catch((err) => console.error("Failed to load home data", err));
   }, []);
@@ -33,6 +34,8 @@ export default function Home() {
   const handleGetStarted = () => {
     navigate("/create-room", { state: { view: "find-match" } });
   };
+
+
 
   return (
     <div className="home-page">
@@ -62,19 +65,9 @@ export default function Home() {
           <div className="glass-card streak">
             <h2>{streak} Day Streak</h2>
             <p>Take a lesson today to start a new streak!</p>
-            <div className="streak-days">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-                (day, i) => (
-                  <div key={i} className="day">
-                    {day}
-                  </div>
-                )
-              )}
-            </div>
-            <div className="streak-dots">
-              {[...Array(7)].map((_, i) => (
-                <div key={i} className="dot"></div>
-              ))}
+            <div className="streak-best">
+              <FaTrophy className="streak-best-icon" />
+              <span>Best: <strong>{maxStreak}</strong> day{maxStreak !== 1 ? 's' : ''}</span>
             </div>
           </div>
 
@@ -90,12 +83,12 @@ export default function Home() {
                     <span className="font-bold flex items-center gap-2">
                       <span
                         className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${index === 0
-                            ? "bg-yellow-500/20 text-yellow-400"
-                            : index === 1
-                              ? "bg-slate-300/20 text-slate-300"
-                              : index === 2
-                                ? "bg-amber-700/20 text-amber-600"
-                                : "bg-slate-800 text-slate-500"
+                          ? "bg-yellow-500/20 text-yellow-400"
+                          : index === 1
+                            ? "bg-slate-300/20 text-slate-300"
+                            : index === 2
+                              ? "bg-amber-700/20 text-amber-600"
+                              : "bg-slate-800 text-slate-500"
                           }`}
                       >
                         {index + 1}
@@ -267,59 +260,29 @@ export default function Home() {
             GET STARTED
           </button>
 
-          <div
-            className="tutorial-section"
-            style={{
-              marginTop: "50px",
-              textAlign: "center",
-            }}
-          >
-            <h2
-              className="tutorial-title"
-              style={{
-                fontSize: "24px",
-                fontWeight: "600",
-                marginBottom: "10px",
-                color: "#7af2b2",
-              }}
-            >
-              How to Get Started
+          <div className="recent-battles">
+            <h2 className="recent-battles-title">
+              <FaFire className="recent-battles-icon" />
+              Recent Battles
             </h2>
-            <Stepper
-              initialStep={1}
-              onStepChange={(step) => {
-                console.log(step);
-              }}
-              onFinalStepCompleted={() => console.log("All steps completed!")}
-              backButtonText="Previous"
-              nextButtonText="Next"
-              style={{ maxWidth: "600px", margin: "0 auto" }}
-            >
-              <Step>
-                <h3>Step 1: Register an Account</h3>
-                <p>
-                  Create your account to access all features of Code Battle
-                  Arena.
-                </p>
-              </Step>
-              <Step>
-                <h3>Step 2: Choose Your Language</h3>
-                <p>
-                  Select your preferred programming language and start coding.
-                </p>
-              </Step>
-              <Step>
-                <h3>Step 3: Join a Battle</h3>
-                <p>
-                  Enter the arena and compete against other coders in real-time
-                  challenges.
-                </p>
-              </Step>
-              <Step>
-                <h3>Step 4: Climb the Leaderboard</h3>
-                <p>Win battles to earn points and climb the global rankings.</p>
-              </Step>
-            </Stepper>
+            {recentBattles.length === 0 ? (
+              <p className="recent-battles-empty">
+                No battles yet — hit <strong>GET STARTED</strong> to play your first match!
+              </p>
+            ) : (
+              <ul className="battle-list">
+                {recentBattles.map((b) => (
+                  <li key={b.id} className="battle-row">
+                    <span className={`result-badge result-${b.result}`}>
+                      {b.result.toUpperCase()}
+                    </span>
+                    <span className="battle-opponent">vs {b.opponent}</span>
+                    <span className="battle-exercise">{b.exerciseId}</span>
+
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </main>
       </div>

@@ -23,24 +23,31 @@
   --dot-bg: rgba(255, 255, 255, 0.2);
   --dot-border: #06b6d4;
 
-  --bg-pattern-opacity: 1; /* Hiển thị pattern trong dark mode */
+  --bg-pattern-opacity: 1;
+  /* Hiển thị pattern trong dark mode */
 }
 
 /* LIGHT MODE OVERRIDES */
 [data-theme="light"] {
-  --bg-color: #f3f4f6; /* Xám trắng sáng */
-  --text-color: #1e293b; /* Đen xám đậm */
-  --text-sub: #475569; /* Xám vừa */
+  --bg-color: #f3f4f6;
+  /* Xám trắng sáng */
+  --text-color: #1e293b;
+  /* Đen xám đậm */
+  --text-sub: #475569;
+  /* Xám vừa */
 
-  --glass-bg: rgba(255, 255, 255, 0.85); /* Kính đục hơn */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  /* Kính đục hơn */
   --glass-border: rgba(0, 0, 0, 0.1);
   --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 
   --primary-gradient: linear-gradient(120deg, #10b981, #0ea5e9);
   --primary-gradient-hover: linear-gradient(120deg, #0ea5e9, #10b981);
 
-  --accent-color: #059669; /* Xanh lá đậm */
-  --glow-filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.4)); /* Giảm chói */
+  --accent-color: #059669;
+  /* Xanh lá đậm */
+  --glow-filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.4));
+  /* Giảm chói */
 
   --monitor-fill: #10b981;
   --monitor-stroke: #0284c7;
@@ -48,7 +55,8 @@
   --dot-bg: #cbd5e1;
   --dot-border: #0ea5e9;
 
-  --bg-pattern-opacity: 0.15; /* Làm mờ pattern nền đi */
+  --bg-pattern-opacity: 0.15;
+  /* Làm mờ pattern nền đi */
 }
 
 /* --- 2. GLOBAL RESET & BASE --- */
@@ -74,39 +82,29 @@
 .bg-pattern {
   opacity: var(--bg-pattern-opacity);
   transition: opacity 0.4s ease;
-  background-image: repeating-linear-gradient(
-      0deg,
+  background-image: repeating-linear-gradient(0deg,
       rgba(255, 255, 255, 0.04) 0,
       rgba(255, 255, 255, 0.04) 1px,
       transparent 1px,
-      transparent 40px
-    ),
-    repeating-linear-gradient(
-      45deg,
+      transparent 40px),
+    repeating-linear-gradient(45deg,
       rgba(0, 255, 128, 0.09) 0,
       rgba(0, 255, 128, 0.09) 1px,
       transparent 1px,
-      transparent 20px
-    ),
-    repeating-linear-gradient(
-      -45deg,
+      transparent 20px),
+    repeating-linear-gradient(-45deg,
       rgba(255, 0, 128, 0.1) 0,
       rgba(255, 0, 128, 0.1) 1px,
       transparent 1px,
-      transparent 30px
-    ),
-    repeating-linear-gradient(
-      90deg,
+      transparent 30px),
+    repeating-linear-gradient(90deg,
       rgba(255, 255, 255, 0.03) 0,
       rgba(255, 255, 255, 0.03) 1px,
       transparent 1px,
-      transparent 80px
-    ),
-    radial-gradient(
-      circle at 60% 40%,
+      transparent 80px),
+    radial-gradient(circle at 60% 40%,
       rgba(0, 255, 128, 0.05) 0,
-      transparent 60%
-    );
+      transparent 60%);
   background-size: 80px 80px, 40px 40px, 60px 60px, 80px 80px, 100% 100%;
   background-position: 0 0, 0 0, 0 0, 40px 40px, center;
 }
@@ -146,6 +144,7 @@
   position: relative;
   z-index: 2;
 }
+
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -156,12 +155,15 @@
 }
 
 .glass-card {
-  background: var(--glass-bg); /* Dùng biến */
-  border: 1px solid var(--glass-border); /* Dùng biến */
+  background: var(--glass-bg);
+  /* Dùng biến */
+  border: 1px solid var(--glass-border);
+  /* Dùng biến */
   border-radius: 20px;
   padding: 20px;
   backdrop-filter: blur(15px);
-  box-shadow: var(--card-shadow); /* Dùng biến */
+  box-shadow: var(--card-shadow);
+  /* Dùng biến */
   animation: fadeInUp 0.8s ease;
   position: relative;
   z-index: 3;
@@ -171,29 +173,19 @@
 .glass-card h2 {
   font-size: 18px;
   margin-bottom: 10px;
-  color: var(--text-color); /* Dùng biến */
+  color: var(--text-color);
+  /* Dùng biến */
 }
 
 .glass-card p,
 .text-sub,
 .subtitle {
   font-size: 14px;
-  color: var(--text-sub); /* Dùng biến */
+  color: var(--text-sub);
+  /* Dùng biến */
 }
 
-.day {
-  color: var(--text-color);
-  font-size: 12px;
-  font-weight: bold;
-}
 
-.dot {
-  background: var(--dot-bg); /* Dùng biến */
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid var(--dot-border);
-}
 
 .leaderboard ul li {
   border-color: var(--glass-border);
@@ -209,6 +201,7 @@
   padding: 12px 20px;
   transition: all 0.3s ease;
 }
+
 .btn:hover {
   background: var(--primary-gradient-hover);
   box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
@@ -219,6 +212,7 @@
   fill: var(--monitor-fill);
   stroke: var(--monitor-stroke);
 }
+
 .monitor-stand {
   fill: var(--monitor-stroke);
   stroke: var(--monitor-stroke);
@@ -237,6 +231,7 @@
 .tutorial-title {
   color: var(--accent-color) !important;
 }
+
 .tutorial-title::after {
   background: var(--primary-gradient);
 }
@@ -247,12 +242,132 @@
   flex: 2;
   margin-top: 40px;
 }
-.streak-days,
-.streak-dots {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
+
+/* Recent Battles */
+.recent-battles {
+  margin-top: 48px;
+  text-align: left;
 }
+
+.recent-battles-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.recent-battles-icon {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.recent-battles-empty {
+  font-size: 14px;
+  color: var(--text-sub);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.battle-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.battle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 10px 16px;
+  transition: background 0.2s ease;
+}
+
+.battle-row:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.result-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  padding: 3px 8px;
+  min-width: 44px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.result-win {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+.result-loss {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.result-draw {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.battle-opponent {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.battle-exercise {
+  font-size: 12px;
+  color: var(--text-sub);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+
+.streak-best {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+
+.streak-best strong {
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
+.streak-best-icon {
+  color: #f59e0b;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
 .battle-area {
   display: flex;
   align-items: center;
@@ -261,6 +376,7 @@
   margin: 40px 0;
   z-index: 3;
 }
+
 .icon-wrap {
   width: auto;
   height: auto;
@@ -268,15 +384,18 @@
   align-items: center;
   justify-content: center;
 }
+
 .person-svg.mirrored {
   transform: scaleX(-1);
 }
+
 .monitor-svg {
   width: 160px;
   height: 120px;
   display: block;
   filter: var(--glow-filter);
 }
+
 .vs {
   font-size: 42px;
   font-weight: 900;
@@ -285,11 +404,13 @@
   letter-spacing: 2px;
   animation: pulseVS 2s ease-in-out infinite alternate;
 }
+
 .play-btn {
   padding: 8px 16px;
   font-size: 14px;
   border-radius: 8px;
 }
+
 .start-btn {
   font-size: 18px;
   padding: 15px 30px;
@@ -305,23 +426,28 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 @keyframes glowPulse {
   from {
     box-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
   }
+
   to {
     box-shadow: 0 0 25px rgba(6, 182, 212, 0.7);
   }
 }
+
 @keyframes pulseVS {
   0% {
     text-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
   }
+
   100% {
     text-shadow: 0 0 35px rgba(6, 182, 212, 1);
   }
@@ -332,14 +458,17 @@
     flex-direction: column;
     padding: 20px;
   }
+
   .person-svg {
     width: 40px;
     height: 70px;
   }
+
   .monitor-svg {
     width: 120px;
     height: 90px;
   }
+
   .vs {
     font-size: 28px;
   }

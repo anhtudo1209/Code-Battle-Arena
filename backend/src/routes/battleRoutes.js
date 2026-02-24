@@ -379,6 +379,7 @@ router.post('/:id/resign', async (req, res) => {
 
     // Update ratings: winner gets points, resigner loses points
     // Use a simplified rating calculation for resignation
+    let deltaLoser = -1; // default minimum penalty
     try {
       await query('BEGIN');
 
@@ -403,7 +404,7 @@ router.post('/:id/resign', async (req, res) => {
 
           // Winner gets 1.0, loser gets 0.0 for resignation
           let deltaWinner = Math.round(kWinner * (1.0 - expectedWinner));
-          let deltaLoser = Math.round(kLoser * (0.0 - expectedLoser));
+          deltaLoser = Math.round(kLoser * (0.0 - expectedLoser));
 
           // Ensure minimum changes
           if (deltaWinner < 1) deltaWinner = 1;
@@ -453,7 +454,30 @@ router.post('/:id/resign', async (req, res) => {
       [[battle.player1_id, battle.player2_id]]
     );
 
-    res.json({ success: true, message: 'You have resigned from the battle' });
+    // Update daily streak for the winner — resign path bypasses the worker,
+    // so streak must be updated here directly.
+    const streakSQL = `
+      UPDATE users
+      SET
+        daily_streak = CASE
+          WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE THEN daily_streak
+          WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN daily_streak + 1
+          ELSE 1
+        END,
+        last_activity_date = CURRENT_DATE,
+        max_streak = GREATEST(
+          COALESCE(max_streak, 0),
+          CASE
+            WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE THEN daily_streak
+            WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN daily_streak + 1
+            ELSE 1
+          END
+        )
+      WHERE id = $1`;
+    try { await query(streakSQL, [winnerId]); } catch (e) { console.error('Streak update failed for winner:', e.message); }
+
+
+    res.json({ success: true, message: 'You have resigned from the battle', ratingDelta: deltaLoser, winnerId });
   } catch (err) {
     console.error('Error resigning from battle:', err);
     res.status(500).json({ error: 'Failed to resign from battle' });
@@ -603,6 +627,53 @@ router.get("/submissions/:id", async (req, res) => {
   } catch (error) {
     console.error("Error fetching submission:", error);
     res.status(500).json({ error: "Failed to fetch submission" });
+  }
+});
+
+// Get recent completed battles for the current user
+router.get("/recent", async (req, res) => {
+  const userId = req.userId;
+  try {
+    const result = await query(
+      `SELECT
+         b.id,
+         b.exercise_id,
+         b.winner_id,
+         b.ended_at,
+         b.player1_id,
+         b.player2_id,
+         u.username  AS opponent_username,
+         u.display_name AS opponent_display_name
+       FROM battles b
+       JOIN users u ON u.id = CASE
+         WHEN b.player1_id = $1 THEN b.player2_id
+         ELSE b.player1_id
+       END
+       WHERE (b.player1_id = $1 OR b.player2_id = $1)
+         AND b.status = 'completed'
+       ORDER BY b.ended_at DESC
+       LIMIT 5`,
+      [userId]
+    );
+
+    const battles = result.rows.map((b) => {
+      let result = "draw";
+      if (b.winner_id === userId) result = "win";
+      else if (b.winner_id !== null) result = "loss";
+
+      return {
+        id: b.id,
+        exerciseId: b.exercise_id,
+        result,
+        opponent: b.opponent_display_name || b.opponent_username,
+        endedAt: b.ended_at,
+      };
+    });
+
+    res.json({ battles });
+  } catch (error) {
+    console.error("Error fetching recent battles:", error);
+    res.status(500).json({ error: "Failed to fetch recent battles" });
   }
 });
 

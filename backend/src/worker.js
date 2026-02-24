@@ -541,7 +541,12 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
     return;
   }
 
-  // Idempotent finalize: only transition if still active
+  // Update player ratings FIRST — before marking battle complete.
+  // This eliminates the race where the frontend detects status='completed'
+  // and calls /auth/me before ratings are committed.
+  await updatePlayerRatings({ battle, perf1, perf2, outcome });
+
+  // Idempotent finalize: only transition if still active.
   const res = await query(
     `UPDATE battles 
      SET status = $1, winner_id = $2, ended_at = CURRENT_TIMESTAMP 
@@ -551,29 +556,22 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
   );
 
   if (res.rowCount === 0) {
-    console.log(`Battle ${battleId} already finalized or not active, skipping finalization`);
-    // Best-effort: remove scheduled timeout job if present
+    console.log(`Battle ${battleId} already finalized or not active, skipping`);
     try {
-      const timeoutJobId = `battle-timeout-${battleId}`;
-      await battleTimeoutQueue.remove(timeoutJobId);
-      console.log(`Removed timeout job ${timeoutJobId} (if it existed)`);
-    } catch (err) {
-      // ignore removal errors
-    }
+      await battleTimeoutQueue.remove(`battle-timeout-${battleId}`);
+    } catch (err) { }
     return;
   }
 
-  // Mark both players' queue entries as completed (if they exist)
+  // Mark both players' queue entries as completed
   await query(
-    `UPDATE match_queue 
-     SET status = 'completed' 
-     WHERE user_id = ANY($1)`,
+    `UPDATE match_queue SET status = 'completed' WHERE user_id = ANY($1)`,
     [[battle.player1_id, battle.player2_id]]
   );
 
   console.log(`Battle ${battleId} completed. Winner: ${outcome.winnerId || 'Draw'}`);
 
-  // Remove the scheduled timeout job now that the battle is finishing
+  // Remove the scheduled timeout job
   try {
     const timeoutJobId = `battle-timeout-${battleId}`;
     await battleTimeoutQueue.remove(timeoutJobId);
@@ -581,9 +579,9 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
   } catch (err) {
     console.warn(`Could not remove timeout job for battle ${battleId}:`, err.message || err);
   }
-
-  await updatePlayerRatings({ battle, perf1, perf2, outcome });
 }
+
+
 
 function buildSubmissionStats(submission, battleStart) {
   const testResultsRaw = submission.test_results;
@@ -736,6 +734,7 @@ async function updatePlayerRatings({ battle, perf1, perf2, outcome }) {
       `Ratings updated: Player ${player1.id} ${player1.rating}→${newRating1} (${delta1 >= 0 ? '+' : ''}${delta1}), ` +
       `Player ${player2.id} ${player2.rating}→${newRating2} (${delta2 >= 0 ? '+' : ''}${delta2})`
     );
+
   } catch (err) {
     console.error(`Error updating ratings for battle ${battle.id}:`, err);
     try { await query('ROLLBACK'); } catch (e) { }
@@ -816,6 +815,7 @@ async function getExerciseDifficulty(exerciseId) {
 async function updateDailyStreak(userId) {
   try {
     // Atomic DB Update - handles all date comparisons in DB
+    // Also tracks max_streak: only ever increases
     const res = await query(
       `UPDATE users
        SET
@@ -824,19 +824,28 @@ async function updateDailyStreak(userId) {
            WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN daily_streak + 1
            ELSE 1
          END,
-         last_activity_date = CURRENT_DATE
+         last_activity_date = CURRENT_DATE,
+         max_streak = GREATEST(
+           COALESCE(max_streak, 0),
+           CASE
+             WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE THEN daily_streak
+             WHEN last_activity_date IS NOT NULL AND last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN daily_streak + 1
+             ELSE 1
+           END
+         )
        WHERE id = $1
-       RETURNING daily_streak`,
+       RETURNING daily_streak, max_streak`,
       [userId]
     );
     if (res.rows.length > 0) {
-      console.log(`Updated streak for user ${userId}: Now ${res.rows[0].daily_streak}`);
+      console.log(`Updated streak for user ${userId}: current=${res.rows[0].daily_streak}, max=${res.rows[0].max_streak}`);
     }
 
   } catch (error) {
     console.error("Error updating streak:", error);
   }
 }
+
 
 
 function clamp(value, min, max) {
