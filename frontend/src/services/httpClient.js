@@ -28,7 +28,7 @@ async function request(path, options = {}) {
     ...options,
     headers,
   });
-  
+
   // Try to parse JSON, but handle errors gracefully
   let data = {};
   try {
@@ -41,7 +41,7 @@ async function request(path, options = {}) {
     // If it's not JSON, try to get error message from response
     data = { message: `Invalid response from server (${res.status})` };
   }
-  
+
   if (!res.ok) {
     // If 401 Unauthorized, try to refresh token
     if (res.status === 401 && !options._retry) {
@@ -55,9 +55,12 @@ async function request(path, options = {}) {
           });
           if (refreshResponse.ok) {
             const refreshData = await refreshResponse.json();
-            // Store new tokens
-            window.localStorage.setItem("accessToken", refreshData.accessToken);
-            window.localStorage.setItem("refreshToken", refreshData.refreshToken);
+            // Write back to whichever storage the refresh token came from
+            const storage = window.localStorage.getItem("refreshToken")
+              ? window.localStorage
+              : window.sessionStorage;
+            storage.setItem("accessToken", refreshData.accessToken);
+            storage.setItem("refreshToken", refreshData.refreshToken);
             // Retry the original request with new token
             return request(path, { ...options, _retry: true });
           }

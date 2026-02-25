@@ -7,7 +7,9 @@ export default function AdminProtectedRoute({ children }) {
   const [isAdmin, setIsAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const accessToken =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    typeof window !== "undefined"
+      ? localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken")
+      : null;
 
   useEffect(() => {
     if (!accessToken) {

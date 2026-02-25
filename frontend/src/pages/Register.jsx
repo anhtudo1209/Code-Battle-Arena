@@ -49,7 +49,8 @@ export default function Register({ onSwitchToLogin }) {
               });
             })
             .then((data) => {
-              window.localStorage.setItem("token", data.token);
+              localStorage.setItem("accessToken", data.accessToken);
+              localStorage.setItem("refreshToken", data.refreshToken);
               window.location.href = "/home";
             })
             .catch(() => {
@@ -104,7 +105,8 @@ export default function Register({ onSwitchToLogin }) {
     setLoading(true);
     try {
       const data = await registerService({ username, email, password });
-      window.localStorage.setItem("token", data.token);
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
       window.location.href = "/home";
     } catch (err) {
       setError(err.message || "Registration failed");
@@ -176,7 +178,7 @@ export default function Register({ onSwitchToLogin }) {
       </form>
 
       <div className="social-login">
-        
+
         <button
           className="social-btn facebook"
           onClick={handleFacebookLogin}
@@ -196,7 +198,8 @@ export default function Register({ onSwitchToLogin }) {
                 email: user.email,
                 username: user.name,
               });
-              window.localStorage.setItem("token", data.token);
+              localStorage.setItem("accessToken", data.accessToken);
+              localStorage.setItem("refreshToken", data.refreshToken);
               window.location.href = "/home";
             } catch {
               setError("Google login failed");

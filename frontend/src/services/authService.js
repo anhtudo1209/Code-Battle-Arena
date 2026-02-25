@@ -1,23 +1,11 @@
 import { post } from "./httpClient";
 
 export function login({ username, password }) {
-  return post("/auth/login", { username, password }).then(response => {
-    if (response.accessToken && response.refreshToken) {
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("refreshToken", response.refreshToken);
-    }
-    return response;
-  });
+  return post("/auth/login", { username, password });
 }
 
 export function register({ username, email, password }) {
-  return post("/auth/register", { username, email, password }).then(response => {
-    if (response.accessToken && response.refreshToken) {
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("refreshToken", response.refreshToken);
-    }
-    return response;
-  });
+  return post("/auth/register", { username, email, password });
 }
 
 export function oauthLogin({ provider, provider_user_id, email, username }) {
@@ -26,12 +14,6 @@ export function oauthLogin({ provider, provider_user_id, email, username }) {
     provider_user_id,
     email,
     username
-  }).then(response => {
-    if (response.accessToken && response.refreshToken) {
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("refreshToken", response.refreshToken);
-    }
-    return response;
   });
 }
 
@@ -51,6 +33,4 @@ export function resetPassword(token, newPassword) {
   return post("/auth/reset-password", { token, newPassword });
 }
 
-export default { login, register, refreshToken, logout, forgotPassword, resetPassword };
-
-
+export default { login, register, oauthLogin, refreshToken, logout, forgotPassword, resetPassword };

@@ -202,7 +202,7 @@ export default function Settings() {
   };
 
   const handleLogout = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken");
     try {
       await logout(refreshToken);
     } catch (error) {
@@ -210,6 +210,8 @@ export default function Settings() {
     }
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
     navigate("/");
   };
 
@@ -237,6 +239,8 @@ export default function Settings() {
       // Perform logout client-side cleanup
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("refreshToken");
       navigate("/");
     } catch (error) {
       console.error("Delete account error:", error);

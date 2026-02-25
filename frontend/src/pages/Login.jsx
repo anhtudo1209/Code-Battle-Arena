@@ -52,7 +52,8 @@ export default function Login({
             })
             .then((data) => {
               const storage = rememberMe ? window.localStorage : window.sessionStorage;
-              storage.setItem("token", data.token);
+              storage.setItem("accessToken", data.accessToken);
+              storage.setItem("refreshToken", data.refreshToken);
               navigate("/home");
             })
             .catch((e) => {
@@ -147,7 +148,8 @@ export default function Login({
     try {
       const data = await loginService({ username: usernameOrEmail, password });
       const storage = rememberMe ? window.localStorage : window.sessionStorage;
-      storage.setItem("token", data.token);
+      storage.setItem("accessToken", data.accessToken);
+      storage.setItem("refreshToken", data.refreshToken);
       navigate("/home");
     } catch (err) {
       setError(err.message || "Login failed");
@@ -230,7 +232,8 @@ export default function Login({
                 username: userInfo.name
               });
               const storage = rememberMe ? window.localStorage : window.sessionStorage;
-              storage.setItem("token", data.token);
+              storage.setItem("accessToken", data.accessToken);
+              storage.setItem("refreshToken", data.refreshToken);
               navigate("/home");
             } catch (err) {
               setError("Google login failed");

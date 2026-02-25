@@ -387,7 +387,7 @@ export default function CreateRoom() {
   };
 
   const handleLogout = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken");
     try {
       await logout(refreshToken);
     } catch (error) {
@@ -395,6 +395,8 @@ export default function CreateRoom() {
     }
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
     navigate("/");
   };
 

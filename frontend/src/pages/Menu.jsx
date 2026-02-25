@@ -34,7 +34,7 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
     e.preventDefault();
     e.stopPropagation();
 
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken");
 
     try {
       await logout(refreshToken);
@@ -44,6 +44,8 @@ export default function Menu({ isOpen, menuPopupRef, onItemClick }) {
 
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
 
     closeMenu();
     navigate("/");

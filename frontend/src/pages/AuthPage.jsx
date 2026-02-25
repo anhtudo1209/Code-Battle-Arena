@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { Navigate } from "react-router-dom";
 import PageTitle from "../components/PageTitle";
 import "./Auth.css";
 import Login from "./Login";
@@ -8,6 +9,13 @@ import LiquidEther from "../components/LiquidEther";
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
+
+  // If already logged in, skip auth page
+  const accessToken =
+    localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+  if (accessToken) {
+    return <Navigate to="/home" replace />;
+  }
 
   // Memoize LiquidEther to prevent re-renders when rememberMe changes
   const liquidEtherBackground = useMemo(

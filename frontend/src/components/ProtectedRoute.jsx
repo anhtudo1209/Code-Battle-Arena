@@ -4,7 +4,9 @@ import { Navigate, useLocation } from "react-router-dom";
 export default function ProtectedRoute({ children }) {
   const location = useLocation();
   const accessToken =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    typeof window !== "undefined"
+      ? localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken")
+      : null;
 
   if (!accessToken) {
     return <Navigate to="/" replace state={{ from: location }} />;
