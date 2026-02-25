@@ -128,8 +128,8 @@ export default function Login({
 
     setForgotPasswordLoading(true);
     try {
-      await forgotPassword(forgotPasswordEmail);
-      setForgotPasswordMessage("If an account with that email exists, a password reset link has been sent.");
+      const response = await forgotPassword(forgotPasswordEmail);
+      setForgotPasswordMessage(response.message);
       setForgotPasswordEmail("");
     } catch (err) {
       setForgotPasswordMessage("Failed to send reset email. Please try again.");

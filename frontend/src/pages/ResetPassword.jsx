@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import PageTitle from "../components/PageTitle";
-import { FaLock, FaEnvelope, FaFacebook, FaGoogle, FaGithub } from "react-icons/fa";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { FaLock } from "react-icons/fa";
+import { useSearchParams, useNavigate, Navigate } from "react-router-dom";
 import { resetPassword } from "../services/authService";
 import "./Auth.css";
 import "./ResetPassword.css";
@@ -12,10 +12,6 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailMessage, setEmailMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -53,30 +49,6 @@ export default function ResetPassword() {
     }
   };
 
-  const handleSendResetLink = async (e) => {
-    e?.preventDefault();
-    if (emailLoading) return;
-    setEmailMessage("");
-
-    if (!email) {
-      setEmailMessage("Please enter your email address");
-      return;
-    }
-
-    setEmailLoading(true);
-    try {
-      // call forgotPassword service to send reset email
-      await (await import("../services/authService")).forgotPassword(email);
-      setEmailSent(true);
-      setEmailMessage("If an account with that email exists, a password reset link has been sent.");
-      setEmail("");
-    } catch (err) {
-      setEmailMessage(err.message || "Failed to send reset email. Please try again.");
-    } finally {
-      setEmailLoading(false);
-    }
-  };
-
   const liquidEtherBackground = useMemo(
     () => (
       <LiquidEther
@@ -86,49 +58,9 @@ export default function ResetPassword() {
     ), []
   );
 
-  // If token is not present -> show the 'Forgot Password' email form
+  // If token is not present -> redirect to login
   if (!token) {
-    return (
-      <div className="auth-page">
-        <PageTitle title="Forgot Password" />
-        <div className="bg-image" />
-        <div className="bg-overlay" />
-        <div className="liquid-ether-wrapper">{liquidEtherBackground}</div>
-
-        <div className="glass-card">
-          <h1 className="title">CODE BATTLE ARENA</h1>
-          <div className="reset-password-form forgot-form">
-            <h2 className="subtitle">Forgot Password</h2>
-            <p className="desc">Enter your email address and we'll send you a link to reset your password.</p>
-
-            <form className="form" onSubmit={handleSendResetLink}>
-              <div className="input-container">
-                <FaEnvelope className="input-icon" />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              {emailMessage && (
-                <div className="message" style={{ color: emailSent ? "#34d399" : "#f87171", marginBottom: 8 }}>
-                  {emailMessage}
-                </div>
-              )}
-
-              <button type="submit" className="btn send-btn" disabled={emailLoading}>
-                {emailLoading ? "Sending..." : "SEND RESET LINK"}
-              </button>
-
-              <p className="remember-login">Remember your password? <span className="link" onClick={() => navigate("/")}>Login</span></p>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   if (success) {

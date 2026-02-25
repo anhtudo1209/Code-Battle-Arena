@@ -4,7 +4,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendPasswordResetEmail = async (email, resetToken) => {
     try {
-        const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
+        const resetUrl = `https://codebattlearena.id.vn/reset-password?token=${resetToken}`;
 
         const { data, error } = await resend.emails.send({
             from: 'Code Battle Arena <noreply@codebattlearena.id.vn>',
