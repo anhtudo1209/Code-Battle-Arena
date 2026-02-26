@@ -225,7 +225,7 @@ router.post("/logout", async (req, res) => {
 router.get("/leaderboard", async (req, res) => {
     try {
         const result = await query(
-            "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 5"
+            "SELECT username, display_name, rating FROM users ORDER BY rating DESC LIMIT 5"
         );
         res.json({ leaderboard: result.rows });
     } catch (err) {

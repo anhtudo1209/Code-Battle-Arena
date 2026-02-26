@@ -93,7 +93,7 @@ export default function Home() {
                       >
                         {index + 1}
                       </span>
-                      {player.username}
+                      {player.display_name || player.username}
                     </span>
                     <span className="text-emerald-400 text-sm font-mono">
                       {player.rating}
