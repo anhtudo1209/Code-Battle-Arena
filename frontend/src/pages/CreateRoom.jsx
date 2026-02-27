@@ -96,6 +96,18 @@ export default function CreateRoom() {
     loadStatus();
   }, []);
 
+  // Leave the queue automatically if user closes or navigates away mid-search
+  useEffect(() => {
+    const handleUnload = () => {
+      if (queue?.status === "queued") {
+        post("/battle/leave-queue", {}, { keepalive: true }).catch(() => { });
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [queue?.status]);
+
   // --- Timers & Polling ---
   useEffect(() => {
     let intervalId = null;

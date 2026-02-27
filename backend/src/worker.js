@@ -28,7 +28,7 @@ const connection = new IORedis({
 
 const judge = new CodeJudge();
 
-const MAX_BATTLE_DURATION_MS = 20 * 60 * 1000; // 2 minutes
+const MAX_BATTLE_DURATION_MS = 20 * 60 * 1000; // 20 minutes
 
 const worker = new Worker('judgeQueue', async (job) => {
   const { submissionId, userId, exerciseId, code, language, battleId } = job.data;

@@ -26,8 +26,8 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: dbPassword,
-  ssl: process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('rds.amazonaws.com') 
-    ? { rejectUnauthorized: false } 
+  ssl: process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('rds.amazonaws.com')
+    ? { rejectUnauthorized: false }
     : false,
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
@@ -69,7 +69,6 @@ export const getClient = async () => {
     console.error('A client has been checked out for more than 5 seconds!');
   }, 5000);
 
-  // Monkey patch the query method to keep track of the last query executed
   client.query = (...args) => {
     client.lastQuery = args;
     return query(...args);
@@ -78,7 +77,6 @@ export const getClient = async () => {
   client.release = () => {
     // Clear the timeout
     clearTimeout(timeout);
-    // Set the query method back to its old un-monkey-patched version
     client.query = query;
     release();
   };

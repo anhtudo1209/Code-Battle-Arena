@@ -199,28 +199,19 @@ const matchQueue = new Queue('matchQueue', { connection });
 // Retry configuration for "no opponent found" cases
 matchWorker.on('failed', async (job, err) => {
   if (err.message === 'No opponent found') {
-    // Retry after 5 seconds if no opponent found (up to 20 attempts)
-    if (job.attemptsMade < 20) {
-      const retryDelay = 5000;
-      console.log(`Retrying match for user ${job.data.userId} in ${retryDelay}ms (attempt ${job.attemptsMade + 1}/20)`);
+    // Retry infinitely every 1 second if no opponent found
+    const retryDelay = 1000;
+    console.log(`Retrying match for user ${job.data.userId} in ${retryDelay}ms...`);
 
-      // Re-add job with delay
-      await matchQueue.add('match', job.data, {
-        delay: retryDelay,
-        attempts: job.attemptsMade + 1,
-        backoff: {
-          type: 'fixed',
-          delay: retryDelay
-        }
-      });
-    } else {
-      console.log(`Match timeout for user ${job.data.userId} after 20 attempts`);
-      // Remove from queue after max attempts
-      await query(
-        'UPDATE match_queue SET status = $1 WHERE user_id = $2',
-        ['cancelled', job.data.userId]
-      );
-    }
+    // Re-add job with delay
+    await matchQueue.add('match', job.data, {
+      delay: retryDelay,
+      attempts: job.attemptsMade + 1,
+      backoff: {
+        type: 'fixed',
+        delay: retryDelay
+      }
+    });
   } else {
     console.error(`Match job ${job.id} failed:`, err);
   }
