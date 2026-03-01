@@ -143,21 +143,33 @@ async function handleAcceptTimeout(battleId) {
     // Cancel the battle
     await query(`UPDATE battles SET status = $1 WHERE id = $2 AND status = 'pending'`, ['cancelled', battleId]);
 
-    // Set players back to waiting in match_queue (best-effort)
-    await query(
-      `UPDATE match_queue SET status = 'waiting' WHERE user_id = ANY($1)`,
-      [[battle.player1_id, battle.player2_id]]
-    );
+    const toRequeue = [];
+    const toKick = [];
 
-    // Re-add match jobs for both players so they re-enter matching loop
-    try {
-      await matchQueue.add('match', { userId: battle.player1_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
-    } catch (e) { }
-    try {
-      await matchQueue.add('match', { userId: battle.player2_id }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
-    } catch (e) { }
+    if (battle.player1_accepted) toRequeue.push(battle.player1_id); else toKick.push(battle.player1_id);
+    if (battle.player2_accepted) toRequeue.push(battle.player2_id); else toKick.push(battle.player2_id);
 
-    console.log(`Battle ${battleId} cancelled due to accept timeout; players requeued`);
+    // Kick players who went AFK from the queue completely
+    if (toKick.length > 0) {
+      await query(`UPDATE match_queue SET status = 'cancelled' WHERE user_id = ANY($1)`, [toKick]);
+    }
+
+    // Set players who accepted back to waiting in match_queue
+    if (toRequeue.length > 0) {
+      await query(
+        `UPDATE match_queue SET status = 'waiting' WHERE user_id = ANY($1)`,
+        [toRequeue]
+      );
+
+      // Re-add match jobs for the players who accepted so they re-enter matching loop
+      for (const uid of toRequeue) {
+        try {
+          await matchQueue.add('match', { userId: uid }, { attempts: 0, backoff: { type: 'fixed', delay: 5000 } });
+        } catch (e) { }
+      }
+    }
+
+    console.log(`Battle ${battleId} cancelled due to accept timeout; accepting players requeued, afk kicked`);
   } catch (err) {
     console.error(`Error handling accept timeout for battle ${battleId}:`, err);
   }
@@ -176,7 +188,7 @@ async function processBattleIfReady(battleId) {
 
   // Use DB-side time arithmetic to avoid timezone/clock skew issues
   const timeoutCheck = await query(
-    `SELECT (CURRENT_TIMESTAMP >= started_at + INTERVAL '2 minutes') AS timed_out, started_at AT TIME ZONE 'UTC' AS started_at_utc FROM battles WHERE id = $1`,
+    `SELECT (CURRENT_TIMESTAMP >= started_at + INTERVAL '20 minutes') AS timed_out, started_at AT TIME ZONE 'UTC' AS started_at_utc FROM battles WHERE id = $1`,
     [battleId]
   );
   const timedOut = timeoutCheck.rows[0]?.timed_out === true;
@@ -468,7 +480,7 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
   }
 
   // Use DB-side determination to avoid timezone mismatches
-  const timeoutCheck = await query(`SELECT (CURRENT_TIMESTAMP >= started_at + INTERVAL '2 minutes') AS timed_out FROM battles WHERE id = $1`, [battleId]);
+  const timeoutCheck = await query(`SELECT (CURRENT_TIMESTAMP >= started_at + INTERVAL '20 minutes') AS timed_out FROM battles WHERE id = $1`, [battleId]);
   const timedOut = timeoutCheck.rows[0]?.timed_out === true;
 
   // If there are NO recorded submissions and the battle hasn't timed out, do NOT finalize as it would be premature
@@ -510,8 +522,8 @@ async function finalizeBattleAndRatings(battle, battleId, outcome, perf1, perf2)
     const latestStartedAt = battle.started_at ? new Date(battle.started_at).getTime() : Date.now();
     const isTimedOut = (Date.now() - latestStartedAt) >= MAX_BATTLE_DURATION_MS;
 
-    if (!hasPassed && !bothSubmitted && !isTimedOut) {
-      console.log(`Finalization blocked for battle ${battleId}: no pass, not both submitted, not timed out (subStatuses=${JSON.stringify([...subMap.entries()])})`);
+    if (!hasPassed && !isTimedOut) {
+      console.log(`Finalization blocked for battle ${battleId}: no pass, not timed out (subStatuses=${JSON.stringify([...subMap.entries()])})`);
       return;
     }
 

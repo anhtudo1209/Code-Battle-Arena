@@ -51,6 +51,7 @@ export default function CreateRoom() {
   const editorRef = useRef(null);
   const [results, setResults] = useState(null);
   const [submissionId, setSubmissionId] = useState(null);
+  const [isAccepted, setIsAccepted] = useState(false);
 
   // --- Initial Load ---
   const loadUser = async () => {
@@ -174,8 +175,28 @@ export default function CreateRoom() {
           ) {
             setPreBattleRating(user.rating);
           }
-          if (b.battle?.status !== "pending") setAcceptCountdown(null);
-        } catch (e) { }
+
+          if (b.battle?.status === "pending") {
+            const userAccepted = b.battle.isPlayer1 ? b.battle.player1Accepted : b.battle.player2Accepted;
+            if (userAccepted) setIsAccepted(true);
+          } else {
+            setAcceptCountdown(null);
+            setIsAccepted(false);
+          }
+        } catch (e) {
+          // Battle was likely cancelled (opponent didn't accept, 404 returned)
+          setBattle(null);
+          setAcceptCountdown(null);
+          setIsAccepted(false);
+          // Check if we were thrown back into the queue
+          try {
+            const s = await get("/battle/status");
+            setQueue(s);
+            if (s?.status === "queued") {
+              setQueueStartTime(Date.now()); // Restart local visual queue timer
+            }
+          } catch (err) { }
+        }
       }, 1500);
     }
     return () => clearInterval(interval);
@@ -244,11 +265,13 @@ export default function CreateRoom() {
   const handleAccept = async () => {
     if (!battle?.battle?.id) return;
     try {
+      setIsAccepted(true);
       await post(`/battle/${battle.battle.id}/accept`, {});
       const b = await get("/battle/active");
       setBattle(b);
     } catch (e) {
       setError(e.message);
+      setIsAccepted(false);
     }
   };
 
@@ -702,9 +725,13 @@ export default function CreateRoom() {
                       </div>
                       <button
                         onClick={handleAccept}
-                        className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-2xl font-black text-xl transition"
+                        disabled={isAccepted}
+                        className={`w-full py-5 rounded-2xl font-black text-xl transition ${isAccepted
+                            ? "bg-emerald-900/50 text-emerald-500 border border-emerald-500/30 cursor-not-allowed"
+                            : "bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                          }`}
                       >
-                        ACCEPT BATTLE
+                        {isAccepted ? "ACCEPTED" : "ACCEPT BATTLE"}
                       </button>
                     </div>
                   </div>
