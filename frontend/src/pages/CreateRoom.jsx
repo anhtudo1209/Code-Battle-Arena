@@ -40,7 +40,10 @@ export default function CreateRoom() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [acceptCountdown, setAcceptCountdown] = useState(null);
-  const [preBattleRating, setPreBattleRating] = useState(null);
+  const [preBattleRating, setPreBattleRating] = useState(() => {
+    const stored = sessionStorage.getItem("preBattleRating");
+    return stored !== null ? Number(stored) : null;
+  });
   const [showResultPopup, setShowResultPopup] = useState(false);
   const [resultPopupData, setResultPopupData] = useState(null);
   const [queueStartTime, setQueueStartTime] = useState(null);
@@ -85,6 +88,15 @@ export default function CreateRoom() {
           }
         } else if (b.battle?.status === "active") {
           setSidebarView("find-match");
+	  // Restore preBattleRating from sessionStorage on refresh,
+          // or capture it now if not yet stored
+          const stored = sessionStorage.getItem("preBattleRating");
+          if (stored !== null) {
+            setPreBattleRating(Number(stored));
+          } else if (user?.rating != null) {
+            setPreBattleRating(user.rating);
+            sessionStorage.setItem("preBattleRating", String(user.rating));
+          }	
         }
       } else if (s.status === "queued") {
         setSidebarView("find-match");
@@ -126,7 +138,13 @@ export default function CreateRoom() {
     let intervalId = null;
     if (battle?.battle?.status === "active") {
       const MAX_BATTLE_TIME = 1200;
-      if (!battleStartTimeRef.current) battleStartTimeRef.current = Date.now();
+      if (!battleStartTimeRef.current) {
+        if (battle.battle.startedAt) {
+          battleStartTimeRef.current = new Date(battle.battle.startedAt).getTime();
+        } else {
+          battleStartTimeRef.current = Date.now();
+        }
+      }
       const updateTimer = () => {
         const elapsed = Math.floor(
           (Date.now() - battleStartTimeRef.current) / 1000
@@ -174,6 +192,7 @@ export default function CreateRoom() {
             user?.rating != null
           ) {
             setPreBattleRating(user.rating);
+	    sessionStorage.setItem("preBattleRating", String(user.rating));
           }
 
           if (b.battle?.status === "pending") {
@@ -251,7 +270,10 @@ export default function CreateRoom() {
         rating: res.rating,
         searchDifficulty: res.searchDifficulty,
       });
-      if (user?.rating) setPreBattleRating(user.rating);
+      if (user?.rating != null) {
+        setPreBattleRating(user.rating);
+        sessionStorage.setItem("preBattleRating", String(user.rating));
+      }
     });
 
   const handleLeave = () =>
@@ -418,6 +440,8 @@ export default function CreateRoom() {
     setBattle(null);
     setQueue({ status: "none" });
     setCode("");
+    setPreBattleRating(null);
+    sessionStorage.removeItem("preBattleRating");
     setSidebarView("find-match");
   };
 
